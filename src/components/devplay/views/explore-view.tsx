@@ -64,38 +64,36 @@ export function ExploreView() {
 
   return (
     <div className="space-y-4">
-      {/* ===== HERO BANNER ===== */}
-      <div className="relative h-64 sm:h-80 rounded-sm overflow-hidden frame-double">
-        {/* Background image con duotono sepia vintage */}
-        <img
-          src="/uploads/hero-banner.jpg"
-          alt="DevPlay"
-          loading="eager"
-          className="absolute inset-0 w-full h-full object-cover sepia-[0.45] contrast-[0.92] brightness-[0.97]"
-        />
-        {/* Overlay sepia duotono */}
-        <div className="absolute inset-0 bg-sepia-500/55 mix-blend-color" />
-        <div className="absolute inset-0 bg-sepia-700/20 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+      {/* ===== HERO BANNER — placa de tinta sólida, 100% imprenta ===== */}
+      <div className="relative h-72 sm:h-80 rounded-sm overflow-hidden frame-double bg-foreground text-background dark:bg-card dark:text-foreground">
+        {/* Filetes ornamentales decorativos de fondo */}
+        <div className="absolute inset-3 border border-current/15 pointer-events-none" />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-6 text-center">
+        <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 py-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
+            className="flex flex-col items-center"
           >
-            <p className="label-caps text-foreground/80 mb-1">Gaceta de desarrolladores · Est. 2025</p>
-            <h1 className="font-display text-3xl sm:text-5xl font-black tracking-tight text-foreground drop-shadow-sm">
-              Bienvenido a <span className="text-wine-600 dark:text-wine-400">DevPlay</span>
+            <p className="label-caps opacity-70 mb-3">Gaceta de desarrolladores · Est. 2025</p>
+            <div className="rule-ornate w-44 mb-5 opacity-70">
+              <span className="text-[9px] leading-none">◆</span>
+            </div>
+            <h1 className="font-display text-5xl sm:text-7xl font-bold tracking-tight leading-none">
+              Dev<span className="text-wine-400 dark:text-wine-500">Play</span>
             </h1>
-            <p className="text-sm sm:text-base text-foreground/80 mt-1 italic">
+            <p className="text-sm sm:text-lg mt-3 opacity-75 italic">
               Descubre, comparte y crea todo sobre videojuegos
             </p>
-            <div className="flex items-center gap-2 mt-4 justify-center">
+            <div className="rule-ornate w-44 mt-5 mb-6 opacity-70">
+              <span className="text-[9px] leading-none">◆</span>
+            </div>
+            <div className="flex items-center gap-2 justify-center">
               <Button
                 size="sm"
-                className="btn-gradient-primary rounded-sm gap-1.5"
+                className="rounded-sm gap-1.5 bg-background text-foreground border border-border hover:bg-secondary dark:bg-background dark:text-foreground"
                 onClick={() => useUIStore.getState().setView('discover')}
               >
                 <Sparkles className="h-4 w-4" />
@@ -104,7 +102,7 @@ export function ExploreView() {
               <Button
                 size="sm"
                 variant="outline"
-                className="rounded-sm gap-1.5 bg-card/60 border-border text-foreground hover:bg-card"
+                className="rounded-sm gap-1.5 border-current/30 text-current hover:bg-current/10 bg-transparent"
                 onClick={() => useUIStore.getState().setView('betas')}
               >
                 <Gamepad2 className="h-4 w-4" />

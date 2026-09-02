@@ -77,7 +77,7 @@ export function DiscoverView() {
           size="sm"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="rounded-full gap-1.5 text-xs"
+          className="rounded-sm gap-1.5 text-xs"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} />
           Actualizar
@@ -178,7 +178,7 @@ export function DiscoverView() {
                       <span className="flex items-center gap-0.5"><Download className="h-3 w-3" /> {beta.downloads}</span>
                       <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" /> {beta.likesCount}</span>
                       {beta.genre && (
-                        <span className="rounded-full bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
+                        <span className="rounded-sm bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                           {beta.genre}
                         </span>
                       )}
@@ -205,7 +205,7 @@ export function DiscoverView() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.03 }}
-                      className="flex items-center gap-1.5 rounded-full glass px-3 py-1.5 text-xs font-medium transition cursor-pointer"
+                      className="flex items-center gap-1.5 rounded-sm glass px-3 py-1.5 text-xs font-medium transition cursor-pointer"
                     >
                       <Hash className="h-3 w-3 text-muted-foreground" />
                       <span>{meta?.label || tag.tag}</span>
@@ -223,7 +223,7 @@ export function DiscoverView() {
             title="Explorar publicaciones"
             gradient="from-olive-400 to-sepia-500"
             action={
-              <div className="flex gap-1 glass rounded-full p-0.5">
+              <div className="flex gap-1 glass rounded-sm p-0.5">
                 {filters.map(f => {
                   const Icon = f.icon
                   const active = filter === f.id
@@ -232,7 +232,7 @@ export function DiscoverView() {
                       key={f.id}
                       onClick={() => setFilter(f.id)}
                       className={cn(
-                        'flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition',
+                        'flex items-center gap-1 rounded-sm px-2.5 py-1 text-[10px] font-medium transition',
                         active ? 'btn-gradient-primary text-white' : 'text-muted-foreground hover:text-foreground'
                       )}
                     >

@@ -67,8 +67,8 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
       <div ref={scrollRef} className="custom-scroll flex-1 overflow-y-auto p-3 space-y-2.5">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-amber-200 to-bronze-200 dark:from-amber-500/20 dark:to-bronze-500/20">
-              <MessageSquare className="h-8 w-8 text-amber-500" />
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary">
+              <MessageSquare className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="font-medium">Sé el primero en escribir</p>
             <p className="text-xs">en el chat mundial</p>
@@ -89,7 +89,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Escribe un mensaje..."
               maxLength={500}
-              className="rounded-full glass h-9"
+              className="rounded-sm glass h-9"
             />
             <Button type="submit" size="icon" disabled={!input.trim()} className="btn-gradient-primary shrink-0 rounded-sm h-9 w-9">
               <Send className="h-4 w-4" />
@@ -110,15 +110,12 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   if (isFull) {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="mb-4 text-center">
-          <h1 className="text-3xl font-bold gradient-text-peach mb-1">Chat Mundial</h1>
-          <p className="text-sm text-muted-foreground">
-            Conecta con la comunidad DevPlay en tiempo real
-          </p>
-        </div>
-        <div className="glass-card flex h-[70vh] flex-col overflow-hidden">
+        <div className="glass-card flex h-[75vh] flex-col overflow-hidden">
           {chatContent}
         </div>
+        <p className="text-center text-xs text-muted-foreground mt-3 italic">
+          Conecta con la comunidad DevPlay en tiempo real
+        </p>
       </div>
     )
   }

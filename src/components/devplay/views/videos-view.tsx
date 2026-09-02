@@ -70,7 +70,7 @@ export function VideosView() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card card-rose p-5 text-center"
         >
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-sepia-500 text-white">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
             <Film className="h-7 w-7" />
           </div>
           <h3 className="font-bold text-lg">Comparte tu contenido</h3>
@@ -132,7 +132,7 @@ export function VideosView() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass-card p-12 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-wine-300 to-sepia-400 text-white">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
             <Video className="h-8 w-8" />
           </div>
           <p className="font-semibold text-lg">Aún no hay videos</p>

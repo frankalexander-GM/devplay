@@ -73,7 +73,7 @@ export function StreamingView() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Radio} value={streams.length} label="En vivo" color="from-wine-400 to-sepia-500" pulse />
+        <StatCard icon={Radio} value={streams.length} label="En vivo" color="from-wine-500 to-wine-700" pulse />
         <StatCard icon={Users} value="∞" label="Espectadores" color="from-wine-400 to-wine-500" />
         <StatCard icon={Tv} value="3" label="Plataformas" color="from-olive-400 to-sepia-500" />
       </div>

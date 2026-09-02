@@ -235,7 +235,7 @@ function BlockedUsersSection({ blocked, isLoading }: { blocked: any[]; isLoading
   return (
     <div className="glass-card p-4">
       <div className="flex items-center gap-2 mb-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-sepia-500 text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-wine-500 to-wine-700 text-white">
           <Ban className="h-4 w-4" />
         </div>
         <div className="flex-1">

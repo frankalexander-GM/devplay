@@ -388,7 +388,7 @@ function ProfileStats({ userId }: { userId: string }) {
     { icon: FileText, label: 'Posts', value: stats.posts, gradient: 'from-wine-400 to-wine-500' },
     { icon: Users, label: 'Seguidores', value: stats.followers, gradient: 'from-wine-400 to-wine-500' },
     { icon: Download, label: 'Descargas', value: stats.totalDownloads, gradient: 'from-amber-400 to-bronze-500' },
-    { icon: Heart, label: 'Likes', value: stats.totalLikesReceived, gradient: 'from-wine-400 to-sepia-500' },
+    { icon: Heart, label: 'Likes', value: stats.totalLikesReceived, gradient: 'from-wine-500 to-wine-700' },
     { icon: Gamepad2, label: 'Betas', value: stats.betas, gradient: 'from-olive-400 to-sepia-500' },
     { icon: Star, label: 'Nivel', value: stats.level, gradient: 'from-bronze-400 to-wine-500' },
   ] : u ? [
@@ -811,7 +811,7 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
     insights.push({ icon: Download, text: `Tus betas han sido descargadas ${stats.totalDownloads} veces en total`, color: 'from-amber-400 to-bronze-500' })
   }
   if (stats.totalLikesReceived > 0) {
-    insights.push({ icon: Heart, text: `Has recibido ${stats.totalLikesReceived} likes en todas tus publicaciones`, color: 'from-wine-400 to-sepia-500' })
+    insights.push({ icon: Heart, text: `Has recibido ${stats.totalLikesReceived} likes en todas tus publicaciones`, color: 'from-wine-500 to-wine-700' })
   }
   if (stats.followers > 0) {
     insights.push({ icon: Users, text: `Tienes ${stats.followers} seguidores que reciben tus actualizaciones`, color: 'from-wine-400 to-wine-500' })
@@ -913,7 +913,7 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
         <StatBox icon={FileText} label="Publicaciones" value={stats.posts} color="from-wine-400 to-wine-500" />
         <StatBox icon={Gamepad2} label="Betas" value={stats.betas} color="from-amber-400 to-bronze-500" />
         <StatBox icon={Download} label="Descargas" value={stats.totalDownloads} color="from-olive-400 to-sepia-500" />
-        <StatBox icon={Heart} label="Likes recibidos" value={stats.totalLikesReceived} color="from-wine-400 to-sepia-500" />
+        <StatBox icon={Heart} label="Likes recibidos" value={stats.totalLikesReceived} color="from-wine-500 to-wine-700" />
         <StatBox icon={Users} label="Seguidores" value={stats.followers} color="from-wine-400 to-wine-500" />
         <StatBox icon={Users} label="Siguiendo" value={stats.following} color="from-olive-400 to-sepia-500" />
         <StatBox icon={FileText} label="Comentarios" value={stats.comments} color="from-wine-400 to-wine-500" />

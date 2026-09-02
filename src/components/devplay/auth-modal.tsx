@@ -449,7 +449,7 @@ export function AuthModal() {
               <span className="w-full border-t border-border/50" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="glass-strong px-3 text-muted-foreground rounded-full">o continúa con</span>
+              <span className="glass-strong px-3 text-muted-foreground rounded-sm label-caps">o continúa con</span>
             </div>
           </div>
 
@@ -546,7 +546,7 @@ function SocialButton({ provider, onClick, loading }: { provider: 'google' | 'gi
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="flex items-center justify-center gap-2 rounded-md border border-border/60 py-2.5 text-sm font-medium hover:bg-secondary/50 transition disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-2 rounded-sm border border-border/60 py-2.5 text-sm font-medium hover:bg-secondary/50 transition disabled:opacity-50"
     >
       {loading ? (
         <Loader2 className="h-4 w-4 animate-spin" />

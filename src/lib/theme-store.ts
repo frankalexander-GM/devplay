@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// Solo un tema: Prensa Vintage — marfil & tinta, serif editorial
+// Solo un tema: Grafito & Carmesí — imprenta clásica, neutro con acento carmesí
 export type ColorTheme = 'vintage'
 
 export interface ThemeInfo {
@@ -22,11 +22,11 @@ export const COLOR_THEMES: ThemeInfo[] = [
     id: 'vintage',
     label: 'Vintage',
     emoji: '🎩',
-    description: 'Prensa Vintage · Marfil y tinta, serif clásica',
-    primary: 'Tinta',
-    secondary: 'Vino',
-    background: 'Tinta de noche / Marfil',
-    preview: { primary: 'oklch(0.52 0.125 20)', accent: 'oklch(0.55 0.08 72)', bg: 'oklch(0.955 0.018 90)' },
+    description: 'Grafito & Carmesí · Imprenta clásica serif',
+    primary: 'Grafito',
+    secondary: 'Carmesí',
+    background: 'Grafito noche / Porcelana',
+    preview: { primary: 'oklch(0.53 0.145 25)', accent: 'oklch(0.40 0.007 240)', bg: 'oklch(0.962 0.003 240)' },
   },
 ]
 

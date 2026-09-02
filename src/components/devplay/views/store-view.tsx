@@ -93,7 +93,7 @@ const CATEGORY_META: Record<
   avatar: {
     label: 'Avatar',
     icon: Palette,
-    gradient: 'from-wine-400 to-sepia-500',
+    gradient: 'from-wine-500 to-wine-700',
     description: 'Personaliza tu perfil',
   },
   premium: {
@@ -197,7 +197,7 @@ export function StoreView() {
       <div className="space-y-6">
         <StoreHeader balance={0} loading={false} />
         <div className="glass-card p-12 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-bronze-400 to-bronze-600 text-white">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
             <Lock className="h-8 w-8" />
           </div>
           <p className="font-semibold text-lg">Inicia sesión para comprar</p>
@@ -410,32 +410,30 @@ function StoreHeader({ balance, loading }: { balance: number; loading: boolean }
       animate={{ opacity: 1, y: 0 }}
       className="text-center space-y-3"
     >
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text flex items-center justify-center gap-2">
-        <ShoppingBag className="h-7 w-7" />
+      <h1 className="text-section flex items-center justify-center gap-2">
+        <ShoppingBag className="h-7 w-7 text-wine-600 dark:text-wine-400" />
         Tienda DevPlay
       </h1>
       <p className="text-sm text-muted-foreground">
         Gasta tus DevCoins en power-ups, items para tu avatar y funciones premium
       </p>
 
-      {/* Card de balance */}
+      {/* Card de balance — tarjeta editorial con doble filete */}
       <div className="mx-auto max-w-md">
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 p-[1px] shadow-lg shadow-amber-400/20">
-          <div className="rounded-lg bg-gradient-to-br from-bronze-400 to-bronze-600 px-6 py-4 text-white">
-            <div className="flex items-center justify-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                <Coins className="h-6 w-6" />
-              </div>
-              <div className="text-left">
-                <p className="text-[11px] uppercase tracking-wider text-white/80 font-bold">
-                  Tu balance
-                </p>
-                {loading ? (
-                  <Skeleton className="h-7 w-24 bg-white/30" />
-                ) : (
-                  <AnimatedBalance value={balance} />
-                )}
-              </div>
+        <div className="frame-double rounded-sm bg-card px-6 py-4">
+          <div className="flex items-center justify-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-wine-100 dark:bg-wine-500/15 text-wine-600 dark:text-wine-400">
+              <Coins className="h-6 w-6" />
+            </div>
+            <div className="text-left">
+              <p className="label-caps">
+                Tu balance
+              </p>
+              {loading ? (
+                <Skeleton className="h-7 w-24 bg-secondary" />
+              ) : (
+                <AnimatedBalance value={balance} />
+              )}
             </div>
           </div>
         </div>
@@ -452,10 +450,10 @@ function AnimatedBalance({ value }: { value: number }) {
       initial={{ scale: 1.2, opacity: 0.5 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', damping: 18, stiffness: 300 }}
-      className="text-3xl font-black tabular-nums"
+      className="text-3xl font-bold tabular-nums text-wine-600 dark:text-wine-400"
     >
       {value.toLocaleString('es')}
-      <span className="ml-1 text-base font-bold text-white/80">DC</span>
+      <span className="ml-1 text-base font-semibold text-muted-foreground">DC</span>
     </motion.div>
   )
 }

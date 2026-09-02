@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
-import { Lora, Playfair_Display, Geist_Mono } from "next/font/google";
+import { Spectral, Old_Standard_TT, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "@/components/providers";
 
-const lora = Lora({
-  variable: "--font-lora",
+const spectral = Spectral({
+  variable: "--font-spectral",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const oldStandard = Old_Standard_TT({
+  variable: "--font-oldstandard",
   subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -41,9 +43,9 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body
-        className={`${lora.variable} ${playfair.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${spectral.variable} ${oldStandard.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <Providers>
             {children}
             <Toaster />
