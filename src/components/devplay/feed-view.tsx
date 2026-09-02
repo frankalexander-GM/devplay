@@ -94,7 +94,7 @@ export function FeedView() {
                 </div>
               </div>
               <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-48 w-full rounded-xl" />
+              <Skeleton className="h-48 w-full rounded-md" />
             </div>
           ))}
         </div>

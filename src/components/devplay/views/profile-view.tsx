@@ -171,7 +171,7 @@ export function ProfileView({ userId }: { userId: string }) {
                   onClick={handleFollow}
                   disabled={followLoading || user.isBlocked}
                   variant={user.isFollowing ? 'outline' : 'default'}
-                  className={cn('gap-1.5 rounded-full', !user.isFollowing && 'btn-gradient-primary')}
+                  className={cn('gap-1.5 rounded-sm', !user.isFollowing && 'btn-gradient-primary')}
                 >
                   {user.isFollowing ? 'Siguiendo' : 'Seguir'}
                 </Button>
@@ -385,23 +385,23 @@ function ProfileStats({ userId }: { userId: string }) {
   const u = profileData?.user
 
   const cards = isMe && stats ? [
-    { icon: FileText, label: 'Posts', value: stats.posts, gradient: 'from-violet-400 to-violet-500' },
-    { icon: Users, label: 'Seguidores', value: stats.followers, gradient: 'from-violet-400 to-purple-500' },
-    { icon: Download, label: 'Descargas', value: stats.totalDownloads, gradient: 'from-amber-400 to-orange-500' },
-    { icon: Heart, label: 'Likes', value: stats.totalLikesReceived, gradient: 'from-rose-400 to-pink-500' },
-    { icon: Gamepad2, label: 'Betas', value: stats.betas, gradient: 'from-emerald-400 to-teal-500' },
-    { icon: Star, label: 'Nivel', value: stats.level, gradient: 'from-fuchsia-400 to-purple-500' },
+    { icon: FileText, label: 'Posts', value: stats.posts, gradient: 'from-wine-400 to-wine-500' },
+    { icon: Users, label: 'Seguidores', value: stats.followers, gradient: 'from-wine-400 to-wine-500' },
+    { icon: Download, label: 'Descargas', value: stats.totalDownloads, gradient: 'from-amber-400 to-bronze-500' },
+    { icon: Heart, label: 'Likes', value: stats.totalLikesReceived, gradient: 'from-wine-400 to-sepia-500' },
+    { icon: Gamepad2, label: 'Betas', value: stats.betas, gradient: 'from-olive-400 to-sepia-500' },
+    { icon: Star, label: 'Nivel', value: stats.level, gradient: 'from-bronze-400 to-wine-500' },
   ] : u ? [
-    { icon: FileText, label: 'Posts', value: u.postsCount, gradient: 'from-violet-400 to-violet-500' },
-    { icon: Users, label: 'Seguidores', value: u.followersCount, gradient: 'from-violet-400 to-purple-500' },
-    { icon: Users, label: 'Siguiendo', value: u.followingCount, gradient: 'from-emerald-400 to-teal-500' },
-    { icon: Gamepad2, label: 'Betas', value: 0, gradient: 'from-amber-400 to-orange-500' },
+    { icon: FileText, label: 'Posts', value: u.postsCount, gradient: 'from-wine-400 to-wine-500' },
+    { icon: Users, label: 'Seguidores', value: u.followersCount, gradient: 'from-wine-400 to-wine-500' },
+    { icon: Users, label: 'Siguiendo', value: u.followingCount, gradient: 'from-olive-400 to-sepia-500' },
+    { icon: Gamepad2, label: 'Betas', value: 0, gradient: 'from-amber-400 to-bronze-500' },
   ] : []
 
   if (isLoading) {
     return (
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 rounded-md" />)}
       </div>
     )
   }
@@ -464,7 +464,7 @@ function ProfileInicio({ betaPosts, normalPosts, isMe, onPostClick }: any) {
         </div>
         <div className="glass-card card-lavender p-4">
           <div className="flex items-center gap-2 mb-2">
-            <FileText className="h-4 w-4 text-violet-500" />
+            <FileText className="h-4 w-4 text-wine-500" />
             <span className="text-sm font-semibold">Publicaciones</span>
           </div>
           <p className="text-2xl font-bold">{normalPosts.length}</p>
@@ -482,7 +482,7 @@ function ProfileInicio({ betaPosts, normalPosts, isMe, onPostClick }: any) {
                 onClick={() => onPostClick(post.id)}
                 className="glass-card text-left overflow-hidden transition"
               >
-                <div className="aspect-video bg-gradient-to-br from-amber-300 to-orange-400 relative">
+                <div className="aspect-video bg-gradient-to-br from-amber-300 to-bronze-400 relative">
                   {post.beta?.coverImage && (
                     <img src={post.beta.coverImage} alt="" className="w-full h-full object-cover" />
                   )}
@@ -588,7 +588,7 @@ function ProfileInformacion({ user, isMe }: { user: any; isMe: boolean }) {
                 href={socialLinks[p.key]}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl glass p-2.5 transition"
+                className="flex items-center gap-3 rounded-md glass p-2.5 transition"
               >
                 <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-white text-sm', p.color)}>
                   {p.emoji}
@@ -700,7 +700,7 @@ function ProfileFavoritos() {
     queryFn: () => postService.getBookmarks(),
   })
 
-  if (isLoading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+  if (isLoading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-md" />)}</div>
 
   const posts = data?.posts ?? []
   if (posts.length === 0) {
@@ -726,29 +726,29 @@ function ProfileLogros({ userId }: { userId: string }) {
   })
 
   if (!isMe) return <EmptyState icon={Award} title="Logros privados" desc="Los logros detallados solo son visibles para el propio usuario" />
-  if (isLoading) return <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
+  if (isLoading) return <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-28 rounded-md" />)}</div>
 
   const achievements = data?.achievements ?? []
   const unlocked = data?.totalUnlocked ?? 0
   const total = data?.total ?? 0
 
   const tierColors: Record<string, string> = {
-    bronze: 'from-orange-300 to-amber-500',
+    bronze: 'from-bronze-300 to-amber-500',
     silver: 'from-gray-300 to-gray-500',
     gold: 'from-yellow-300 to-amber-500',
-    platinum: 'from-fuchsia-300 to-violet-500',
+    platinum: 'from-bronze-300 to-wine-500',
   }
 
   return (
     <div className="space-y-4">
       <div className="glass-card p-4 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+        <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-bronze-500 text-white">
           <Award className="h-6 w-6" />
         </div>
         <div className="flex-1">
           <p className="text-sm font-semibold">{unlocked} de {total} logros desbloqueados</p>
           <div className="h-2 w-full bg-secondary rounded-full mt-1 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all" style={{ width: `${(unlocked / total) * 100}%` }} />
+            <div className="h-full bg-gradient-to-r from-amber-400 to-bronze-500 transition-all" style={{ width: `${(unlocked / total) * 100}%` }} />
           </div>
         </div>
       </div>
@@ -764,7 +764,7 @@ function ProfileLogros({ userId }: { userId: string }) {
           >
             {a.unlocked && (
               <div className="absolute top-1 right-1">
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                <Check className="h-3.5 w-3.5 text-olive-500" />
               </div>
             )}
             <div className={cn('mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full text-2xl', a.unlocked ? `bg-gradient-to-br ${tierColors[a.tier]}` : 'bg-secondary')}>
@@ -797,7 +797,7 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
   })
 
   if (!isMe) return <EmptyState icon={BarChart3} title="Estadísticas privadas" desc="Las estadísticas detalladas solo son visibles para el propio usuario" />
-  if (isLoading) return <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
+  if (isLoading) return <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-md" />)}</div>
 
   const stats = data?.stats
   if (!stats) return null
@@ -808,19 +808,19 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
   // Indicadores inteligentes
   const insights: { icon: any; text: string; color: string }[] = []
   if (stats.totalDownloads > 0) {
-    insights.push({ icon: Download, text: `Tus betas han sido descargadas ${stats.totalDownloads} veces en total`, color: 'from-amber-400 to-orange-500' })
+    insights.push({ icon: Download, text: `Tus betas han sido descargadas ${stats.totalDownloads} veces en total`, color: 'from-amber-400 to-bronze-500' })
   }
   if (stats.totalLikesReceived > 0) {
-    insights.push({ icon: Heart, text: `Has recibido ${stats.totalLikesReceived} likes en todas tus publicaciones`, color: 'from-rose-400 to-pink-500' })
+    insights.push({ icon: Heart, text: `Has recibido ${stats.totalLikesReceived} likes en todas tus publicaciones`, color: 'from-wine-400 to-sepia-500' })
   }
   if (stats.followers > 0) {
-    insights.push({ icon: Users, text: `Tienes ${stats.followers} seguidores que reciben tus actualizaciones`, color: 'from-violet-400 to-purple-500' })
+    insights.push({ icon: Users, text: `Tienes ${stats.followers} seguidores que reciben tus actualizaciones`, color: 'from-wine-400 to-wine-500' })
   }
   if (stats.betas > 0) {
-    insights.push({ icon: Gamepad2, text: `Has publicado ${stats.betas} beta(s) para la comunidad`, color: 'from-emerald-400 to-teal-500' })
+    insights.push({ icon: Gamepad2, text: `Has publicado ${stats.betas} beta(s) para la comunidad`, color: 'from-olive-400 to-sepia-500' })
   }
   if (weekTotal > 0) {
-    insights.push({ icon: TrendingUp, text: `Has publicado ${weekTotal} veces esta semana`, color: 'from-violet-400 to-violet-500' })
+    insights.push({ icon: TrendingUp, text: `Has publicado ${weekTotal} veces esta semana`, color: 'from-wine-400 to-wine-500' })
   }
 
   return (
@@ -828,7 +828,7 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
       {/* ===== Resumen visual (Estado de la cuenta) ===== */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-purple-500 text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-wine-500 text-white">
             <BarChart3 className="h-4 w-4" />
           </div>
           <h3 className="text-sm font-bold">Estado de la cuenta</h3>
@@ -837,7 +837,7 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
         {/* Nivel + progreso */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-400 to-purple-500 text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-bronze-400 to-wine-500 text-white">
               <Star className="h-5 w-5" />
             </div>
             <div>
@@ -855,14 +855,14 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
             initial={{ width: 0 }}
             animate={{ width: `${stats.progressToNext}%` }}
             transition={{ duration: 1, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-fuchsia-400 to-purple-500"
+            className="h-full bg-gradient-to-r from-bronze-400 to-wine-500"
           />
         </div>
 
         {/* Resumen rápido */}
         <div className="grid grid-cols-3 gap-2 mt-3">
           <div className="text-center glass rounded-lg p-2">
-            <Users className="h-4 w-4 mx-auto text-violet-500" />
+            <Users className="h-4 w-4 mx-auto text-wine-500" />
             <p className="text-lg font-bold mt-0.5">{stats.followers}</p>
             <p className="text-[9px] text-muted-foreground">Seguidores</p>
           </div>
@@ -872,7 +872,7 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
             <p className="text-[9px] text-muted-foreground">Descargas</p>
           </div>
           <div className="text-center glass rounded-lg p-2">
-            <Heart className="h-4 w-4 mx-auto text-rose-500" />
+            <Heart className="h-4 w-4 mx-auto text-wine-500" />
             <p className="text-lg font-bold mt-0.5">{stats.totalLikesReceived}</p>
             <p className="text-[9px] text-muted-foreground">Likes</p>
           </div>
@@ -910,14 +910,14 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
 
       {/* ===== Grid de stats detalladas ===== */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <StatBox icon={FileText} label="Publicaciones" value={stats.posts} color="from-violet-400 to-violet-500" />
-        <StatBox icon={Gamepad2} label="Betas" value={stats.betas} color="from-amber-400 to-orange-500" />
-        <StatBox icon={Download} label="Descargas" value={stats.totalDownloads} color="from-emerald-400 to-teal-500" />
-        <StatBox icon={Heart} label="Likes recibidos" value={stats.totalLikesReceived} color="from-rose-400 to-pink-500" />
-        <StatBox icon={Users} label="Seguidores" value={stats.followers} color="from-violet-400 to-purple-500" />
-        <StatBox icon={Users} label="Siguiendo" value={stats.following} color="from-emerald-400 to-teal-500" />
-        <StatBox icon={FileText} label="Comentarios" value={stats.comments} color="from-violet-400 to-violet-500" />
-        <StatBox icon={Bookmark} label="Guardados" value={stats.bookmarks} color="from-amber-400 to-orange-500" />
+        <StatBox icon={FileText} label="Publicaciones" value={stats.posts} color="from-wine-400 to-wine-500" />
+        <StatBox icon={Gamepad2} label="Betas" value={stats.betas} color="from-amber-400 to-bronze-500" />
+        <StatBox icon={Download} label="Descargas" value={stats.totalDownloads} color="from-olive-400 to-sepia-500" />
+        <StatBox icon={Heart} label="Likes recibidos" value={stats.totalLikesReceived} color="from-wine-400 to-sepia-500" />
+        <StatBox icon={Users} label="Seguidores" value={stats.followers} color="from-wine-400 to-wine-500" />
+        <StatBox icon={Users} label="Siguiendo" value={stats.following} color="from-olive-400 to-sepia-500" />
+        <StatBox icon={FileText} label="Comentarios" value={stats.comments} color="from-wine-400 to-wine-500" />
+        <StatBox icon={Bookmark} label="Guardados" value={stats.bookmarks} color="from-amber-400 to-bronze-500" />
       </div>
 
       {/* ===== Gráfica de actividad ===== */}
@@ -968,7 +968,7 @@ function StatBox({ icon: Icon, label, value, color }: { icon: any; label: string
 function EmptyState({ icon: Icon, title, desc }: { icon: any; title: string; desc: string }) {
   return (
     <div className="glass-card p-8 text-center">
-      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-secondary">
         <Icon className="h-7 w-7 text-muted-foreground" />
       </div>
       <p className="font-semibold">{title}</p>
@@ -982,14 +982,14 @@ function ProfileSkeleton() {
   return (
     <div className="space-y-4">
       <Skeleton className="h-9 w-24 rounded-full" />
-      <Skeleton className="h-56 w-full rounded-2xl" />
+      <Skeleton className="h-56 w-full rounded-lg" />
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 rounded-md" />)}
       </div>
       <Skeleton className="h-10 w-full rounded-full" />
       <div className="space-y-3">
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <Skeleton className="h-48 w-full rounded-2xl" />
+        <Skeleton className="h-48 w-full rounded-lg" />
+        <Skeleton className="h-48 w-full rounded-lg" />
       </div>
     </div>
   )
@@ -1080,7 +1080,7 @@ function EditProfileDialog({ open, onClose, user, onSaved }: any) {
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.95 }}
-        className="glass-strong w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scroll rounded-2xl"
+        className="glass-strong w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scroll rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header con preview de portada + avatar */}
@@ -1237,7 +1237,7 @@ function EditProfileDialog({ open, onClose, user, onSaved }: any) {
         {/* Footer */}
         <div className="sticky bottom-0 flex gap-2 p-4 border-t border-border/50 bg-background/80 backdrop-blur">
           <Button variant="outline" onClick={onClose} className="rounded-full flex-1">Cancelar</Button>
-          <Button onClick={handleSave} disabled={saving} className="btn-gradient-primary rounded-full flex-1">
+          <Button onClick={handleSave} disabled={saving} className="btn-gradient-primary rounded-sm flex-1">
             {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</> : 'Guardar cambios'}
           </Button>
         </div>

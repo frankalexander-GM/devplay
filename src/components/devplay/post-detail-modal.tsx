@@ -97,7 +97,7 @@ export function PostDetailModal() {
                           <UserAvatar username={c.user.username} avatar={c.user.avatar} size="sm" />
                         </button>
                         <div className="flex-1 min-w-0">
-                          <div className="glass rounded-2xl rounded-tl-sm px-3 py-2">
+                          <div className="glass rounded-lg rounded-tl-sm px-3 py-2">
                             <div className="flex items-center gap-2 mb-0.5">
                               <button
                                 onClick={() => openProfile(c.user.id)}

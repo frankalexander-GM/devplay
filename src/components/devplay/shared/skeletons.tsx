@@ -20,7 +20,7 @@ export function PostCardSkeleton() {
       </div>
       <Shimmer className="h-4 w-full" />
       <Shimmer className="h-4 w-3/4" />
-      <Shimmer className="h-48 w-full rounded-xl" />
+      <Shimmer className="h-48 w-full rounded-md" />
       <div className="flex gap-4">
         <Shimmer className="h-8 w-16 rounded-full" />
         <Shimmer className="h-8 w-16 rounded-full" />

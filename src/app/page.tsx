@@ -77,7 +77,7 @@ export default function Home() {
         <Sidebar />
 
         <main className="flex-1 min-w-0">
-          <div className="mx-auto max-w-3xl px-3 sm:px-4 py-4">
+          <div className="mx-auto max-w-4xl px-3 sm:px-6 py-4">
             <AnimatePresence mode="wait">
               <motion.div
                 key={isProfileView ? `profile-${profileUserId}` : currentView}
@@ -113,15 +113,15 @@ export default function Home() {
         {!isChatView && <ChatPanel variant="sidebar" />}
       </div>
 
-      <footer className="glass-strong border-t border-border/50 mt-auto">
-        <div className="mx-auto max-w-7xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <p>© 2025 DevPlay — Red social para devs de videojuegos indie</p>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 live-pulse" />
+      <footer className="glass-strong border-t-[3px] border-double border-border mt-auto">
+        <div className="mx-auto max-w-7xl px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="label-caps">© 2025 DevPlay — Gaceta de devs indie</p>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
               Servicio en línea
             </span>
-            <span>MVP v1.0</span>
+            <span className="label-caps">MVP v1.0</span>
           </div>
         </div>
       </footer>

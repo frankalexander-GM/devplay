@@ -119,12 +119,12 @@ export function Header() {
   return (
     <header
       id="devplay-header"
-      className="glass-strong sticky top-0 z-40 flex h-16 items-center gap-2 border-b border-border/50 px-3 sm:px-4"
+      className="glass-strong sticky top-0 z-40 flex h-16 items-center gap-2 border-b-[3px] border-double border-border px-3 sm:px-4"
     >
       {/* Botón menú móvil — hamburguesa animada */}
       <button
         onClick={toggleMobileSidebar}
-        className="lg:hidden relative flex h-10 w-10 items-center justify-center rounded-xl hover:bg-secondary/60 transition"
+        className="lg:hidden relative flex h-10 w-10 items-center justify-center rounded-md hover:bg-secondary/60 transition"
         aria-label="Abrir menú"
       >
         <span className="relative flex h-4 w-5 flex-col justify-between">
@@ -157,18 +157,18 @@ export function Header() {
         <img
           src="/logo-devplay.png"
           alt="DevPlay"
-          className="h-9 w-9 rounded-xl object-cover"
+          className="h-9 w-9 rounded-md object-cover"
         />
-        <span className="hidden sm:block text-lg font-bold gradient-text">DevPlay</span>
+        <span className="hidden sm:block font-display text-xl font-bold tracking-tight text-foreground">DevPlay</span>
       </button>
 
       {/* Search */}
       <div className="hidden md:flex flex-1 max-w-md mx-2">
         <button
           onClick={() => setSearchOpen(true)}
-          className="glass w-full flex items-center gap-2 h-9 rounded-full px-3 text-sm text-muted-foreground hover:bg-secondary/80 transition"
+          className="glass w-full flex items-center gap-2 h-9 rounded-sm px-3 text-sm text-muted-foreground hover:bg-secondary/80 transition italic"
         >
-          <Search className="h-4 w-4" />
+          <Search className="h-4 w-4 shrink-0" />
           <span>Buscar juegos, devs, betas...</span>
         </button>
       </div>
@@ -190,19 +190,19 @@ export function Header() {
       {canCreate && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="btn-gradient-primary hidden sm:flex gap-1.5 rounded-full" data-tour="create">
+            <Button size="sm" className="btn-gradient-primary hidden sm:flex gap-1.5 rounded-sm" data-tour="create">
               <Plus className="h-4 w-4" />
               Crear
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuTrigger asChild>
-            <Button size="icon" className="btn-gradient-primary sm:hidden rounded-full" data-tour="create">
+            <Button size="icon" className="btn-gradient-primary sm:hidden rounded-sm" data-tour="create">
               <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52 rounded-xl">
+          <DropdownMenuContent align="end" className="w-52 rounded-md">
             <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
-              <FileText className="mr-2 h-4 w-4 text-violet-500" />
+              <FileText className="mr-2 h-4 w-4 text-wine-500" />
               Publicación
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreateBeta} className="rounded-lg">
@@ -210,11 +210,11 @@ export function Header() {
               Subir Beta
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
-              <Video className="mr-2 h-4 w-4 text-rose-500" />
+              <Video className="mr-2 h-4 w-4 text-wine-500" />
               Subir Video
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreatePoll} className="rounded-lg">
-              <BarChart3 className="mr-2 h-4 w-4 text-emerald-500" />
+              <BarChart3 className="mr-2 h-4 w-4 text-olive-500" />
               Encuesta
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -232,7 +232,7 @@ export function Header() {
         {mounted && theme === 'dark' ? (
           <Sun className="h-5 w-5 text-amber-400" />
         ) : (
-          <Moon className="h-5 w-5 text-violet-400" />
+          <Moon className="h-5 w-5 text-wine-400" />
         )}
       </Button>
 
@@ -243,13 +243,13 @@ export function Header() {
             <Button variant="ghost" size="icon" className="relative rounded-full">
               <Bell className="h-5 w-5" />
               {unread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-1 text-[10px] font-bold text-white live-pulse">
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-wine-500 to-sepia-500 px-1 text-[10px] font-bold text-white live-pulse">
                   {unread > 9 ? '9+' : unread}
                 </span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto custom-scroll rounded-xl">
+          <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto custom-scroll rounded-md">
             <DropdownMenuLabel className="flex items-center justify-between">
               <span>Notificaciones</span>
               {unread > 0 && <Badge variant="secondary">{unread} nuevas</Badge>}
@@ -269,7 +269,7 @@ export function Header() {
                     <TimeAgo date={n.createdAt} />
                   </div>
                   {n.type === 'LIVE' && (
-                    <span className="rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                    <span className="rounded-full bg-gradient-to-r from-wine-500 to-sepia-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                       LIVE
                     </span>
                   )}
@@ -295,7 +295,7 @@ export function Header() {
           {userMenuOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-              <div className="absolute right-0 top-11 z-50 w-56 glass-strong rounded-xl border border-border/50 shadow-lg overflow-hidden">
+              <div className="absolute right-0 top-11 z-50 w-56 glass-strong rounded-md border border-border/50 shadow-lg overflow-hidden">
                 <div className="p-3 border-b border-border/50">
                   <p className="font-semibold truncate text-sm">{user.username}</p>
                   {user.tags && user.tags.length > 0 ? (
@@ -326,7 +326,7 @@ export function Header() {
           )}
         </div>
       ) : (
-        <Button size="sm" onClick={() => openAuth('login')} className="btn-gradient-primary rounded-full">
+        <Button size="sm" onClick={() => openAuth('login')} className="btn-gradient-primary rounded-sm">
           Entrar
         </Button>
       )}

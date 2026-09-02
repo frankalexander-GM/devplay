@@ -46,7 +46,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
   return (
     <div className="glass-card p-4">
       <div className="flex items-center gap-2 mb-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-purple-500 text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-wine-500 text-white">
           <Palette className="h-4 w-4" />
         </div>
         <div>
@@ -63,7 +63,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
               key={theme.id}
               onClick={() => applyTheme(theme.id)}
               className={cn(
-                'group relative flex items-center gap-3 rounded-xl border-2 p-3 transition-all',
+                'group relative flex items-center gap-3 rounded-md border-2 p-3 transition-all',
                 active ? 'border-primary shadow-md' : 'border-border hover:border-primary/40'
               )}
             >
@@ -96,7 +96,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
 
       {/* Preview grande del tema actual */}
       {mounted && currentTheme && (
-        <div className="mt-3 rounded-xl p-3" style={{ background: currentTheme.preview.bg }}>
+        <div className="mt-3 rounded-md p-3" style={{ background: currentTheme.preview.bg }}>
           <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: currentTheme.preview.accent }}>
             Vista previa · {currentTheme.label}
           </p>
@@ -151,7 +151,7 @@ function ThemeSwitcherModal({
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed left-1/2 top-20 z-50 -translate-x-1/2 w-full max-w-sm glass-strong rounded-2xl border border-border/50 shadow-xl overflow-hidden"
+            className="fixed left-1/2 top-20 z-50 -translate-x-1/2 w-full max-w-sm glass-strong rounded-lg border border-border/50 shadow-xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-3 border-b border-border/50">
@@ -176,7 +176,7 @@ function ThemeSwitcherModal({
                       onClose()
                     }}
                     className={cn(
-                      'group relative flex items-center gap-3 rounded-xl border-2 p-2.5 transition-all',
+                      'group relative flex items-center gap-3 rounded-md border-2 p-2.5 transition-all',
                       active ? 'border-primary shadow-md' : 'border-border hover:border-primary/40'
                     )}
                   >

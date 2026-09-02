@@ -60,7 +60,7 @@ export function ForgotPasswordModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="glass-strong max-w-md rounded-3xl p-0 overflow-hidden border-border/60">
+      <DialogContent className="glass-strong max-w-md rounded-lg p-0 overflow-hidden border-border/60">
         <div className="px-6 pt-6 pb-6">
           <AnimatePresence mode="wait">
             {!sent ? (
@@ -96,7 +96,7 @@ export function ForgotPasswordModal({
                         placeholder="tu@email.com"
                         required
                         autoComplete="email"
-                        className="rounded-xl pl-10 h-11"
+                        className="rounded-md pl-10 h-11"
                       />
                     </div>
                   </div>
@@ -104,7 +104,7 @@ export function ForgotPasswordModal({
                   <Button
                     type="submit"
                     disabled={loading || !email}
-                    className="w-full btn-gradient-primary rounded-xl h-11 font-semibold"
+                    className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
                   >
                     {loading ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
@@ -126,8 +126,8 @@ export function ForgotPasswordModal({
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-4"
               >
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
-                  <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-olive-100 dark:bg-olive-500/20">
+                  <CheckCircle2 className="h-8 w-8 text-olive-500" />
                 </div>
                 <h2 className="text-xl font-bold mb-2">¡Revisa tu email!</h2>
                 <p className="text-sm text-muted-foreground mb-4">
@@ -136,7 +136,7 @@ export function ForgotPasswordModal({
                 </p>
 
                 {resetUrl && (
-                  <div className="rounded-xl bg-amber-100 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 p-3 mb-4 text-left">
+                  <div className="rounded-md bg-amber-100 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 p-3 mb-4 text-left">
                     <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 mb-1">
                       MODO DEMO — Enlace de recuperación:
                     </p>
@@ -172,7 +172,7 @@ export function ForgotPasswordModal({
                 <Button
                   variant="outline"
                   onClick={handleClose}
-                  className="w-full rounded-xl h-10"
+                  className="w-full rounded-md h-10"
                 >
                   Volver a iniciar sesión
                 </Button>
@@ -243,10 +243,10 @@ export function ResetPasswordModal({
   if (done) {
     return (
       <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-        <DialogContent className="glass-strong max-w-md rounded-3xl p-0 overflow-hidden">
+        <DialogContent className="glass-strong max-w-md rounded-lg p-0 overflow-hidden">
           <div className="px-6 py-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
-              <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-olive-100 dark:bg-olive-500/20">
+              <CheckCircle2 className="h-8 w-8 text-olive-500" />
             </div>
             <h2 className="text-xl font-bold mb-2">¡Contraseña actualizada!</h2>
             <p className="text-sm text-muted-foreground mb-4">
@@ -254,7 +254,7 @@ export function ResetPasswordModal({
             </p>
             <Button
               onClick={handleClose}
-              className="w-full btn-gradient-primary rounded-xl h-11"
+              className="w-full btn-gradient-primary rounded-md h-11"
             >
               Iniciar sesión
             </Button>
@@ -266,7 +266,7 @@ export function ResetPasswordModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="glass-strong max-w-md rounded-3xl p-0 overflow-hidden">
+      <DialogContent className="glass-strong max-w-md rounded-lg p-0 overflow-hidden">
         <div className="px-6 pt-6 pb-6">
           <div className="mb-4">
             <h2 className="text-xl font-bold">Restablecer contraseña</h2>
@@ -286,7 +286,7 @@ export function ResetPasswordModal({
                   placeholder="Mínimo 6 caracteres"
                   required
                   minLength={6}
-                  className="rounded-xl pr-10 h-11"
+                  className="rounded-md pr-10 h-11"
                 />
                 <button
                   type="button"
@@ -307,7 +307,7 @@ export function ResetPasswordModal({
                 placeholder="Repite tu contraseña"
                 required
                 minLength={6}
-                className="rounded-xl h-11"
+                className="rounded-md h-11"
               />
               {confirmPassword.length > 0 && password !== confirmPassword && (
                 <p className="text-[10px] text-red-500">Las contraseñas no coinciden</p>
@@ -317,7 +317,7 @@ export function ResetPasswordModal({
             <Button
               type="submit"
               disabled={loading || password.length < 6 || password !== confirmPassword}
-              className="w-full btn-gradient-primary rounded-xl h-11 font-semibold"
+              className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
             >
               {loading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Actualizando...</>

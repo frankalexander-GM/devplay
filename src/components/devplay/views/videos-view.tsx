@@ -70,14 +70,14 @@ export function VideosView() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card card-rose p-5 text-center"
         >
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 text-white">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-sepia-500 text-white">
             <Film className="h-7 w-7" />
           </div>
           <h3 className="font-bold text-lg">Comparte tu contenido</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-3">
             Sube gameplays, trailers o devlogs de tus proyectos
           </p>
-          <Button onClick={openCreatePost} className="btn-gradient-primary rounded-full gap-2">
+          <Button onClick={openCreatePost} className="btn-gradient-primary rounded-sm gap-2">
             <Video className="h-4 w-4" />
             Subir video
           </Button>
@@ -89,7 +89,7 @@ export function VideosView() {
           <p className="text-sm text-muted-foreground mb-3">
             Inicia sesión para subir tus propios videos y gameplays
           </p>
-          <Button onClick={() => openAuth('login')} className="btn-gradient-primary rounded-full">
+          <Button onClick={() => openAuth('login')} className="btn-gradient-primary rounded-sm">
             Entrar
           </Button>
         </div>
@@ -125,14 +125,14 @@ export function VideosView() {
       {/* Content */}
       {isLoading ? (
         <div className="space-y-4">
-          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-64 rounded-lg" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[1,2,3,4].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-48 rounded-md" />)}
           </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass-card p-12 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-300 to-pink-400 text-white">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-wine-300 to-sepia-400 text-white">
             <Video className="h-8 w-8" />
           </div>
           <p className="font-semibold text-lg">Aún no hay videos</p>
@@ -205,7 +205,7 @@ function FeaturedVideoCard({ post, onPlay, onProfile }: { post: Post; onPlay: ()
             <Play className="h-7 w-7 text-white ml-1" fill="white" />
           </div>
         </div>
-        <span className="absolute top-3 left-3 rounded-full bg-rose-500 px-2.5 py-1 text-[10px] font-bold text-white flex items-center gap-1">
+        <span className="absolute top-3 left-3 rounded-full bg-wine-500 px-2.5 py-1 text-[10px] font-bold text-white flex items-center gap-1">
           <Flame className="h-3 w-3" />
           Destacado
         </span>
@@ -322,7 +322,7 @@ function VideoPlayerModal({ post, onClose }: { post: Post; onClose: () => void }
         </button>
 
         {/* Video */}
-        <div className="relative aspect-video bg-black rounded-2xl overflow-hidden">
+        <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
           <video
             src={videoMedia.url}
             className="h-full w-full"

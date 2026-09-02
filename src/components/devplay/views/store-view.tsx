@@ -87,25 +87,25 @@ const CATEGORY_META: Record<
   powerup: {
     label: 'Power-ups',
     icon: Zap,
-    gradient: 'from-amber-400 to-orange-500',
+    gradient: 'from-amber-400 to-bronze-500',
     description: 'Impulsa tu contenido',
   },
   avatar: {
     label: 'Avatar',
     icon: Palette,
-    gradient: 'from-rose-400 to-pink-500',
+    gradient: 'from-wine-400 to-sepia-500',
     description: 'Personaliza tu perfil',
   },
   premium: {
     label: 'Premium',
     icon: Crown,
-    gradient: 'from-emerald-400 to-teal-500',
+    gradient: 'from-olive-400 to-sepia-500',
     description: 'Funciones exclusivas',
   },
   bundle: {
     label: 'Bundles',
     icon: Package,
-    gradient: 'from-violet-400 to-purple-500',
+    gradient: 'from-wine-400 to-wine-500',
     description: 'Ahorra comprando packs',
   },
 }
@@ -197,14 +197,14 @@ export function StoreView() {
       <div className="space-y-6">
         <StoreHeader balance={0} loading={false} />
         <div className="glass-card p-12 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-white">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-bronze-400 to-bronze-600 text-white">
             <Lock className="h-8 w-8" />
           </div>
           <p className="font-semibold text-lg">Inicia sesión para comprar</p>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
             Necesitas una cuenta para ganar y gastar DevCoins en la tienda
           </p>
-          <Button onClick={() => openAuth('login')} className="btn-gradient-primary rounded-full">
+          <Button onClick={() => openAuth('login')} className="btn-gradient-primary rounded-sm">
             Entrar
           </Button>
         </div>
@@ -225,7 +225,7 @@ export function StoreView() {
           </p>
           <Button
             onClick={() => openAuth('register')}
-            className="btn-gradient-primary rounded-full mt-3"
+            className="btn-gradient-primary rounded-sm mt-3"
             size="sm"
           >
             Crear cuenta
@@ -260,7 +260,7 @@ export function StoreView() {
       {itemsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-64 rounded-2xl" />
+            <Skeleton key={i} className="h-64 rounded-lg" />
           ))}
         </div>
       ) : visibleItems.length === 0 ? (
@@ -339,7 +339,7 @@ export function StoreView() {
         {myItemsLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
+              <Skeleton key={i} className="h-24 rounded-md" />
             ))}
           </div>
         ) : myItems.length === 0 ? (
@@ -363,7 +363,7 @@ export function StoreView() {
       <section className="pt-2">
         <Collapsible open={txHistoryOpen} onOpenChange={setTxHistoryOpen}>
           <CollapsibleTrigger asChild>
-            <button className="flex w-full items-center justify-between rounded-xl bg-secondary/40 px-4 py-3 hover:bg-secondary/60 transition">
+            <button className="flex w-full items-center justify-between rounded-md bg-secondary/40 px-4 py-3 hover:bg-secondary/60 transition">
               <span className="flex items-center gap-2 font-semibold">
                 <History className="h-4 w-4 text-primary" />
                 Historial de transacciones
@@ -382,7 +382,7 @@ export function StoreView() {
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="mt-3 rounded-xl border border-border/40 bg-secondary/20 divide-y divide-border/30">
+            <div className="mt-3 rounded-md border border-border/40 bg-secondary/20 divide-y divide-border/30">
               {transactions.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
                   No hay transacciones todavía
@@ -420,8 +420,8 @@ function StoreHeader({ balance, loading }: { balance: number; loading: boolean }
 
       {/* Card de balance */}
       <div className="mx-auto max-w-md">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 p-[1px] shadow-lg shadow-amber-400/20">
-          <div className="rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 px-6 py-4 text-white">
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 p-[1px] shadow-lg shadow-amber-400/20">
+          <div className="rounded-lg bg-gradient-to-br from-bronze-400 to-bronze-600 px-6 py-4 text-white">
             <div className="flex items-center justify-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
                 <Coins className="h-6 w-6" />
@@ -523,7 +523,7 @@ function StoreCard({
       transition={{ delay: Math.min(index * 0.05, 0.4) }}
       className={cn(
         'glass-card group relative flex flex-col overflow-hidden',
-        owned && 'ring-1 ring-emerald-400/40'
+        owned && 'ring-1 ring-olive-400/40'
       )}
     >
       {/* Header con icono */}
@@ -533,13 +533,13 @@ function StoreCard({
           <motion.div
             whileHover={{ scale: 1.1, rotate: 5 }}
             transition={{ type: 'spring', damping: 15 }}
-            className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm"
+            className="flex h-16 w-16 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm"
           >
             <StoreIcon name={item.icon} className="h-8 w-8 text-white" />
           </motion.div>
         </div>
         {owned && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+          <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-olive-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
             <Check className="h-3 w-3" />
             Ya comprado
           </div>
@@ -563,7 +563,7 @@ function StoreCard({
               {item.duration} día{item.duration > 1 ? 's' : ''}
             </Badge>
           ) : (
-            <Badge variant="secondary" className="rounded-full text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+            <Badge variant="secondary" className="rounded-full text-[10px] bg-olive-100 text-olive-700 dark:bg-olive-500/20 dark:text-olive-300">
               Permanente
             </Badge>
           )}
@@ -596,7 +596,7 @@ function StoreCard({
               onClick={onBuy}
               disabled={buying}
               size="sm"
-              className="btn-gradient-primary rounded-full gap-1.5"
+              className="btn-gradient-primary rounded-sm gap-1.5"
             >
               {buying ? (
                 <motion.div
@@ -632,11 +632,11 @@ function OwnedItemCard({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: Math.min(index * 0.04, 0.3) }}
-      className="glass-card flex items-center gap-3 p-3 ring-1 ring-emerald-400/30"
+      className="glass-card flex items-center gap-3 p-3 ring-1 ring-olive-400/30"
     >
       <span
         className={cn(
-          'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white',
+          'flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br text-white',
           meta.gradient
         )}
       >
@@ -645,7 +645,7 @@ function OwnedItemCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <p className="font-semibold text-sm truncate">{purchase.item.name}</p>
-          <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+          <Check className="h-3.5 w-3.5 text-olive-500 shrink-0" />
         </div>
         <p className="text-[10px] text-muted-foreground">
           {purchase.item.duration
@@ -675,8 +675,8 @@ function TransactionRow({ tx }: { tx: DevCoinTransaction }) {
         className={cn(
           'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
           isPositive
-            ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300'
-            : 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300'
+            ? 'bg-olive-100 text-olive-600 dark:bg-olive-500/20 dark:text-olive-300'
+            : 'bg-wine-100 text-wine-600 dark:bg-wine-500/20 dark:text-wine-300'
         )}
       >
         <Icon className="h-4 w-4" />
@@ -693,7 +693,7 @@ function TransactionRow({ tx }: { tx: DevCoinTransaction }) {
       <span
         className={cn(
           'font-bold tabular-nums text-sm',
-          isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+          isPositive ? 'text-olive-600 dark:text-olive-400' : 'text-wine-600 dark:text-wine-400'
         )}
       >
         {isPositive ? '+' : ''}
@@ -708,7 +708,7 @@ function TransactionRow({ tx }: { tx: DevCoinTransaction }) {
 function EmptyState() {
   return (
     <div className="glass-card p-12 text-center">
-      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-yellow-400 text-white">
+      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-amber-300 to-yellow-400 text-white">
         <ShoppingBag className="h-8 w-8" />
       </div>
       <p className="font-semibold text-lg">No hay artículos disponibles</p>

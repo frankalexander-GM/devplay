@@ -40,19 +40,19 @@ interface NavItem {
 }
 
 const MAIN_NAV: NavItem[] = [
-  { id: 'explore', label: 'Inicio', description: 'Feed principal', icon: Home, gradient: 'from-violet-400 to-purple-500' },
-  { id: 'discover', label: 'Descubrir', description: 'Novedades y trending', icon: Sparkles, gradient: 'from-violet-400 to-violet-500' },
-  { id: 'betas', label: 'Betas', description: 'Centro de betas', icon: Gamepad2, gradient: 'from-amber-400 to-orange-500' },
-  { id: 'videos', label: 'Videos', description: 'Gameplays y trailers', icon: Video, gradient: 'from-rose-400 to-pink-500' },
-  { id: 'chat', label: 'Chat Mundial', description: 'Chatea con la comunidad', icon: MessageCircle, gradient: 'from-amber-400 to-orange-500' },
-  { id: 'store', label: 'Tienda', description: 'Power-ups, avatar y premium', icon: ShoppingBag, gradient: 'from-amber-400 to-yellow-500' },
+  { id: 'explore', label: 'Inicio', description: 'Feed principal', icon: Home, gradient: 'from-wine-400 to-wine-500' },
+  { id: 'discover', label: 'Descubrir', description: 'Novedades y trending', icon: Sparkles, gradient: 'from-wine-400 to-wine-500' },
+  { id: 'betas', label: 'Betas', description: 'Centro de betas', icon: Gamepad2, gradient: 'from-amber-400 to-bronze-500' },
+  { id: 'videos', label: 'Videos', description: 'Gameplays y trailers', icon: Video, gradient: 'from-wine-400 to-sepia-500' },
+  { id: 'chat', label: 'Chat Mundial', description: 'Chatea con la comunidad', icon: MessageCircle, gradient: 'from-amber-400 to-bronze-500' },
+  { id: 'store', label: 'Tienda', description: 'Power-ups, avatar y premium', icon: ShoppingBag, gradient: 'from-bronze-400 to-bronze-600' },
 ]
 
 // Vistas rápidas de comunidad (filtros del feed)
 const COMMUNITY_ITEMS = [
-  { id: 'trending' as const, label: 'Trending', desc: 'Lo más popular', icon: Flame, gradient: 'from-rose-400 to-orange-400' },
-  { id: 'betas' as const, label: 'Betas', desc: 'Solo betas', icon: Gamepad2, gradient: 'from-amber-400 to-orange-500' },
-  { id: 'devs' as const, label: 'Devs', desc: 'Desarrolladores top', icon: Users, gradient: 'from-violet-400 to-violet-400' },
+  { id: 'trending' as const, label: 'Trending', desc: 'Lo más popular', icon: Flame, gradient: 'from-wine-400 to-bronze-400' },
+  { id: 'betas' as const, label: 'Betas', desc: 'Solo betas', icon: Gamepad2, gradient: 'from-amber-400 to-bronze-500' },
+  { id: 'devs' as const, label: 'Devs', desc: 'Desarrolladores top', icon: Users, gradient: 'from-wine-400 to-wine-400' },
 ]
 
 export function Sidebar() {
@@ -86,7 +86,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between px-4 py-4 lg:hidden">
         <div className="flex items-center gap-2">
           <img src="/logo-devplay.png" alt="DevPlay" className="h-8 w-8 rounded-lg object-cover" />
-          <span className="font-bold gradient-text text-lg">DevPlay</span>
+          <span className="font-display font-bold text-lg tracking-tight text-foreground">DevPlay</span>
         </div>
         <Button variant="ghost" size="icon" onClick={closeMobileSidebar} className="h-8 w-8 rounded-full">
           <X className="h-4 w-4" />
@@ -118,7 +118,7 @@ export function Sidebar() {
                 key={c.id}
                 onClick={() => handleCommunityClick(c.id)}
                 className={cn(
-                  'group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all',
+                  'group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
                   activeFilter === c.id
                     ? 'nav-active shadow-sm'
                     : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
@@ -144,10 +144,10 @@ export function Sidebar() {
           <div>
             <SectionTitle>Crear contenido</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={FileText} label="Nueva publicación" gradient="from-violet-400 to-violet-500" onClick={openCreatePost} />
-              <CreateButton icon={Gamepad2} label="Subir beta" gradient="from-amber-400 to-orange-500" onClick={openCreateBeta} />
-              <CreateButton icon={Video} label="Subir video" gradient="from-rose-400 to-pink-500" onClick={openCreatePost} />
-              <CreateButton icon={BarChart3} label="Crear encuesta" gradient="from-emerald-400 to-teal-500" onClick={openCreatePoll} />
+              <CreateButton icon={FileText} label="Nueva publicación" gradient="from-wine-400 to-wine-500" onClick={openCreatePost} />
+              <CreateButton icon={Gamepad2} label="Subir beta" gradient="from-amber-400 to-bronze-500" onClick={openCreateBeta} />
+              <CreateButton icon={Video} label="Subir video" gradient="from-wine-400 to-sepia-500" onClick={openCreatePost} />
+              <CreateButton icon={BarChart3} label="Crear encuesta" gradient="from-olive-400 to-sepia-500" onClick={openCreatePoll} />
             </div>
           </div>
         )}
@@ -157,9 +157,9 @@ export function Sidebar() {
           <div>
             <SectionTitle>Mi biblioteca</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={Bookmark} label="Guardados" gradient="from-amber-400 to-orange-500" onClick={() => user && openProfile(user.id, 'favoritos')} />
-              <CreateButton icon={Library} label="Mis betas" gradient="from-violet-400 to-purple-500" onClick={() => user && openProfile(user.id, 'publicaciones')} />
-              <CreateButton icon={Award} label="Logros" gradient="from-rose-400 to-fuchsia-500" onClick={() => user && openProfile(user.id, 'logros')} />
+              <CreateButton icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" onClick={() => user && openProfile(user.id, 'favoritos')} />
+              <CreateButton icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" onClick={() => user && openProfile(user.id, 'publicaciones')} />
+              <CreateButton icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" onClick={() => user && openProfile(user.id, 'logros')} />
             </div>
           </div>
         )}
@@ -171,7 +171,7 @@ export function Sidebar() {
             <CreateButton
               icon={HelpCircle}
               label="Tour guiado"
-              gradient="from-violet-400 to-fuchsia-500"
+              gradient="from-wine-400 to-bronze-500"
               onClick={() => {
                 setOnboardingDone(false)
                 toast.success('Recargando para mostrar el tour...')
@@ -191,8 +191,8 @@ export function Sidebar() {
       {/* Card de bienvenida para invitados */}
       {!canCreate && (
         <div className="px-3 pb-3">
-          <div className="card-rose rounded-2xl p-4 text-center">
-            <Heart className="mx-auto mb-2 h-6 w-6 text-rose-400" />
+          <div className="card-rose rounded-lg p-4 text-center">
+            <Heart className="mx-auto mb-2 h-6 w-6 text-wine-400" />
             <p className="text-xs text-muted-foreground">
               Únete a DevPlay para comentar, dar like y seguir a tus devs favoritos
             </p>
@@ -205,7 +205,7 @@ export function Sidebar() {
         <div className="border-t border-border/50 p-3">
           <button
             onClick={() => openProfile(user.id)}
-            className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-secondary/60 transition"
+            className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-secondary/60 transition"
           >
             <UserAvatar username={user.username} avatar={user.avatar} size="md" />
             <div className="min-w-0 flex-1">
@@ -233,7 +233,7 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-r border-border/50">
+      <aside className="hidden lg:flex w-56 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-r border-border/50">
         {sidebarContent}
       </aside>
 
@@ -327,7 +327,7 @@ function MobileDrawer({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <img src="/logo-devplay.png" alt="DevPlay" className="h-8 w-8 rounded-lg object-cover" />
-                    <span className="font-bold gradient-text text-lg">DevPlay</span>
+                    <span className="font-display font-bold text-lg tracking-tight text-foreground">DevPlay</span>
                   </div>
                   <button
                     onClick={onClose}
@@ -341,7 +341,7 @@ function MobileDrawer({
                 {user ? (
                   <button
                     onClick={() => { openProfile(user.id); onClose() }}
-                    className="flex w-full items-center gap-3 rounded-2xl bg-secondary/40 p-3 text-left hover:bg-secondary/60 transition"
+                    className="flex w-full items-center gap-3 rounded-lg bg-secondary/40 p-3 text-left hover:bg-secondary/60 transition"
                   >
                     <UserAvatar username={user.username} avatar={user.avatar} size="lg" />
                     <div className="min-w-0 flex-1">
@@ -358,7 +358,7 @@ function MobileDrawer({
                   <div className="flex gap-2">
                     <button
                       onClick={() => { openAuth('login'); onClose() }}
-                      className="btn-gradient-primary flex-1 rounded-full py-2 text-xs font-bold"
+                      className="btn-gradient-primary flex-1 rounded-sm py-2 text-xs font-bold"
                     >
                       Entrar
                     </button>
@@ -380,10 +380,10 @@ function MobileDrawer({
                 <div>
                   <SectionTitle>Crear</SectionTitle>
                   <div className="grid grid-cols-2 gap-2">
-                    <QuickAction icon={FileText} label="Publicar" gradient="from-violet-400 to-violet-500" onClick={() => { openCreatePost(); onClose() }} />
-                    <QuickAction icon={Gamepad2} label="Beta" gradient="from-amber-400 to-orange-500" onClick={() => { openCreateBeta(); onClose() }} />
-                    <QuickAction icon={Video} label="Video" gradient="from-rose-400 to-pink-500" onClick={() => { openCreatePost(); onClose() }} />
-                    <QuickAction icon={BarChart3} label="Encuesta" gradient="from-emerald-400 to-teal-500" onClick={() => { openCreatePoll(); onClose() }} />
+                    <QuickAction icon={FileText} label="Publicar" gradient="from-wine-400 to-wine-500" onClick={() => { openCreatePost(); onClose() }} />
+                    <QuickAction icon={Gamepad2} label="Beta" gradient="from-amber-400 to-bronze-500" onClick={() => { openCreateBeta(); onClose() }} />
+                    <QuickAction icon={Video} label="Video" gradient="from-wine-400 to-sepia-500" onClick={() => { openCreatePost(); onClose() }} />
+                    <QuickAction icon={BarChart3} label="Encuesta" gradient="from-olive-400 to-sepia-500" onClick={() => { openCreatePoll(); onClose() }} />
                   </div>
                 </div>
               )}
@@ -418,7 +418,7 @@ function MobileDrawer({
                       key={c.id}
                       onClick={() => handleCommunity(c.id)}
                       className={cn(
-                        'group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all',
+                        'group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
                         activeFilter === c.id
                           ? 'nav-active shadow-sm'
                           : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
@@ -444,9 +444,9 @@ function MobileDrawer({
                 <div>
                   <SectionTitle>Mi biblioteca</SectionTitle>
                   <div className="grid grid-cols-3 gap-2">
-                    <LibraryMini icon={Bookmark} label="Guardados" gradient="from-amber-400 to-orange-500" onClick={() => { if (user) { openProfile(user.id, 'favoritos'); onClose() } }} />
-                    <LibraryMini icon={Library} label="Mis betas" gradient="from-violet-400 to-purple-500" onClick={() => { if (user) { openProfile(user.id, 'publicaciones'); onClose() } }} />
-                    <LibraryMini icon={Award} label="Logros" gradient="from-rose-400 to-fuchsia-500" onClick={() => { if (user) { openProfile(user.id, 'logros'); onClose() } }} />
+                    <LibraryMini icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'favoritos'); onClose() } }} />
+                    <LibraryMini icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" onClick={() => { if (user) { openProfile(user.id, 'publicaciones'); onClose() } }} />
+                    <LibraryMini icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'logros'); onClose() } }} />
                   </div>
                 </div>
               )}
@@ -461,16 +461,16 @@ function MobileDrawer({
                       toast.success('Recargando para mostrar el tour...')
                       setTimeout(() => window.location.reload(), 800)
                     }}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-secondary/60 transition"
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-secondary/60 transition"
                   >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary from-violet-400 to-fuchsia-500">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary from-wine-400 to-bronze-500">
                       <HelpCircle className="h-4 w-4" />
                     </span>
                     <span className="font-semibold text-sm">Tour guiado</span>
                   </button>
                   <button
                     onClick={() => { setView('about'); onClose() }}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-secondary/60 transition"
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-secondary/60 transition"
                   >
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary from-slate-400 to-gray-500">
                       <Info className="h-4 w-4" />
@@ -484,14 +484,14 @@ function MobileDrawer({
             {/* Footer — CTA para invitados */}
             {!canCreate && (
               <div className="border-t border-border/50 p-3">
-                <div className="card-rose rounded-2xl p-3 text-center">
-                  <Heart className="mx-auto mb-1.5 h-5 w-5 text-rose-400" />
+                <div className="card-rose rounded-lg p-3 text-center">
+                  <Heart className="mx-auto mb-1.5 h-5 w-5 text-wine-400" />
                   <p className="text-[11px] text-muted-foreground mb-2">
                     Únete para comentar, dar like y seguir devs
                   </p>
                   <button
                     onClick={() => { openAuth('register'); onClose() }}
-                    className="btn-gradient-primary w-full rounded-full py-2 text-xs font-bold"
+                    className="btn-gradient-primary w-full rounded-sm py-2 text-xs font-bold"
                   >
                     Crear cuenta gratis
                   </button>
@@ -512,7 +512,7 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
     <button
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all',
+        'group flex w-full items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all',
         active
           ? 'nav-active shadow-sm'
           : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
@@ -520,7 +520,7 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
     >
       <span
         className={cn(
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition',
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary transition',
           item.gradient,
           !active && 'opacity-80 group-hover:opacity-100'
         )}
@@ -543,10 +543,10 @@ function QuickAction({ icon: Icon, label, gradient, onClick }: { icon: typeof Pl
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-center gap-1.5 rounded-xl bg-secondary/40 p-3 hover:bg-secondary/70 transition"
+      className="group flex flex-col items-center gap-1.5 rounded-md bg-secondary/40 p-3 hover:bg-secondary/70 transition"
     >
       <span className={cn(
-        'flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm transition group-hover:scale-110',
+        'flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br text-white shadow-sm transition group-hover:scale-110',
         gradient
       )}>
         <Icon className="h-5 w-5" />
@@ -561,7 +561,7 @@ function LibraryMini({ icon: Icon, label, gradient, onClick }: { icon: typeof Pl
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-center gap-1 rounded-xl bg-secondary/40 p-2.5 hover:bg-secondary/70 transition"
+      className="group flex flex-col items-center gap-1 rounded-md bg-secondary/40 p-2.5 hover:bg-secondary/70 transition"
     >
       <span className={cn(
         'flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br text-white transition group-hover:scale-110',
@@ -576,7 +576,8 @@ function LibraryMini({ icon: Icon, label, gradient, onClick }: { icon: typeof Pl
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+    <p className="label-caps flex items-center gap-2 px-3 pb-1.5 pt-1">
+      <span className="inline-block h-px w-3 bg-wine-500/70" />
       {children}
     </p>
   )
@@ -588,7 +589,7 @@ function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; 
     <button
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
+        'group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all',
         active
           ? 'nav-active shadow-sm'
           : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
@@ -625,7 +626,7 @@ function CreateButton({
   return (
     <button
       onClick={onClick}
-      className="group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium hover:bg-secondary/60 transition"
+      className="group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary/60 transition"
     >
       <span
         className={cn(

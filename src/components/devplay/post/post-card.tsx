@@ -111,7 +111,7 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
       animate={{ opacity: 1, y: 0 }}
       className={cn(
         'glass-card overflow-hidden',
-        post.type === 'STREAM' && post.stream?.isLive && 'ring-2 ring-rose-400/40'
+        post.type === 'STREAM' && post.stream?.isLive && 'ring-2 ring-wine-400/40'
       )}
     >
       {/* Repost indicator */}
@@ -131,7 +131,7 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
       {/* Repost: publicación original COMPLETA — clickeable para ver el original */}
       {post.repostOf && (
         <div
-          className="mx-4 mb-2 rounded-xl border border-border/50 overflow-hidden glass cursor-pointer hover:border-primary/40 transition"
+          className="mx-4 mb-2 rounded-md border border-border/50 overflow-hidden glass cursor-pointer hover:border-primary/40 transition"
           onClick={() => openPostDetail(post.repostOf!.id)}
         >
           {/* Header del autor original */}
@@ -179,7 +179,7 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
 
           {/* Beta completa */}
           {post.repostOf.beta && (
-            <div className="mx-3 mb-3 mt-2 card-peach rounded-xl p-3">
+            <div className="mx-3 mb-3 mt-2 card-peach rounded-md p-3">
               <div className="flex items-start gap-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Gamepad2 className="h-5 w-5" />
@@ -189,12 +189,12 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
                   <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{post.repostOf.beta.description}</p>
                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px]">
                     {post.repostOf.beta.genre && (
-                      <span className="rounded-full bg-violet-100 px-1.5 py-0.5 font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                      <span className="rounded-full bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                         {post.repostOf.beta.genre}
                       </span>
                     )}
                     {post.repostOf.beta.downloadType && (
-                      <span className="rounded-full bg-rose-100 px-1.5 py-0.5 font-medium text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">
+                      <span className="rounded-full bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                         {post.repostOf.beta.downloadType === 'DIRECT' ? 'Archivo' : 'Enlace'}
                       </span>
                     )}
@@ -277,12 +277,12 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
             maxLength={2000}
-            className="w-full rounded-xl bg-secondary/50 border border-border/50 p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full rounded-md bg-secondary/50 border border-border/50 p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
             rows={3}
           />
           <div className="flex gap-2 justify-end">
             <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="rounded-full">Cancelar</Button>
-            <Button size="sm" onClick={handleSaveEdit} disabled={editLoading} className="btn-gradient-primary rounded-full">
+            <Button size="sm" onClick={handleSaveEdit} disabled={editLoading} className="btn-gradient-primary rounded-sm">
               {editLoading ? 'Guardando...' : 'Guardar'}
             </Button>
           </div>
@@ -356,7 +356,7 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
           variant="ghost"
           size="sm"
           onClick={handleLike}
-          className={cn('gap-1.5 rounded-full btn-press', liked && 'text-rose-500')}
+          className={cn('gap-1.5 rounded-full btn-press', liked && 'text-wine-500')}
         >
           <Heart className={cn('h-4 w-4', liked && 'fill-current like-pop')} key={liked ? 'on' : 'off'} />
           <span className="text-xs count-bump" key={likesCount}>{likesCount}</span>
@@ -411,16 +411,16 @@ function StreamEmbed({ post }: { post: Post }) {
         {stream.isLive && <LiveBadge />}
         <PlatformBadge platform={stream.platform} />
       </div>
-      <div className="p-3 bg-gradient-to-r from-rose-500/10 via-pink-500/5 to-transparent">
+      <div className="p-3 bg-gradient-to-r from-wine-500/10 via-sepia-500/5 to-transparent">
         <div className="flex items-center gap-2">
-          <Radio className="h-4 w-4 text-rose-500 live-pulse" />
+          <Radio className="h-4 w-4 text-wine-500 live-pulse" />
           <p className="font-semibold text-sm flex-1 truncate">{stream.title}</p>
         </div>
         <a
           href={stream.streamUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-xs text-rose-500 hover:underline"
+          className="mt-2 inline-flex items-center gap-1 text-xs text-wine-500 hover:underline"
         >
           <ExternalLink className="h-3 w-3" />
           Ver directo en {stream.platform}
@@ -435,10 +435,10 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
   const [showDetails, setShowDetails] = useState(false)
 
   return (
-    <div className="mx-4 mb-3 card-peach rounded-2xl overflow-hidden">
+    <div className="mx-4 mb-3 card-peach rounded-lg overflow-hidden">
       {/* Cover image */}
       {beta.coverImage && (
-        <div className="relative h-40 bg-gradient-to-br from-amber-300 to-orange-400">
+        <div className="relative h-40 bg-gradient-to-br from-amber-300 to-bronze-400">
           <img src={beta.coverImage} alt={beta.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between">
@@ -456,7 +456,7 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
       <div className="p-4">
         <div className="flex items-start gap-3">
           {!beta.coverImage && (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/30 overflow-hidden relative">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-accent/30 overflow-hidden relative">
               <span className="text-xl font-black text-primary/50 select-none">
                 {beta.title.charAt(0).toUpperCase()}
               </span>
@@ -474,16 +474,16 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
             {/* Meta info */}
             <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[10px]">
               {beta.genre && (
-                <span className="rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                <span className="rounded-full bg-wine-100 px-2 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                   {beta.genre}
                 </span>
               )}
               {beta.platforms && beta.platforms.length > 0 && (
-                <span className="rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                <span className="rounded-full bg-wine-100 px-2 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                   {beta.platforms.join(', ')}
                 </span>
               )}
-              <span className="rounded-full bg-rose-100 px-2 py-0.5 font-medium text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">
+              <span className="rounded-full bg-wine-100 px-2 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                 {beta.downloadType === 'DIRECT' ? 'Archivo' : `${beta.externalPlatform ?? 'Enlace'}`}
               </span>
               {beta.fileSize && beta.downloadType === 'DIRECT' && (
@@ -562,7 +562,7 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
           </motion.div>
         )}
 
-        <Button onClick={onDownload} className="btn-gradient-beta w-full mt-3 gap-2 rounded-full" size="sm">
+        <Button onClick={onDownload} className="btn-gradient-beta w-full mt-3 gap-2 rounded-sm" size="sm">
           <Download className="h-4 w-4" />
           Ver detalles y descargar
         </Button>
@@ -589,12 +589,12 @@ function AuthorActionsMenu({ onDelete, onEdit }: { onDelete: () => void; onEdit:
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-9 z-50 w-44 glass-strong rounded-xl border border-border/50 shadow-lg overflow-hidden">
+          <div className="absolute right-0 top-9 z-50 w-44 glass-strong rounded-md border border-border/50 shadow-lg overflow-hidden">
             <button
               onClick={() => { onEdit(); setOpen(false) }}
               className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-secondary/60 transition"
             >
-              <Pencil className="h-4 w-4 text-violet-500" />
+              <Pencil className="h-4 w-4 text-wine-500" />
               Editar
             </button>
             <div className="border-t border-border/50" />
@@ -646,7 +646,7 @@ function PostActionsMenu({ postId, authorId, authorName }: { postId: string; aut
         {open && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 top-9 z-50 w-44 glass-strong rounded-xl border border-border/50 shadow-lg overflow-hidden">
+            <div className="absolute right-0 top-9 z-50 w-44 glass-strong rounded-md border border-border/50 shadow-lg overflow-hidden">
               <button
                 onClick={() => { setShowReport(true); setOpen(false) }}
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-secondary/60 transition"

@@ -53,7 +53,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
           <div>
             <h3 className="font-bold text-sm">Chat Mundial</h3>
             <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 live-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
               <span className="text-[10px] text-muted-foreground">{onlineCount} conectados</span>
             </div>
           </div>
@@ -67,7 +67,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
       <div ref={scrollRef} className="custom-scroll flex-1 overflow-y-auto p-3 space-y-2.5">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-200 to-orange-200 dark:from-amber-500/20 dark:to-orange-500/20">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-amber-200 to-bronze-200 dark:from-amber-500/20 dark:to-bronze-500/20">
               <MessageSquare className="h-8 w-8 text-amber-500" />
             </div>
             <p className="font-medium">Sé el primero en escribir</p>
@@ -91,7 +91,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
               maxLength={500}
               className="rounded-full glass h-9"
             />
-            <Button type="submit" size="icon" disabled={!input.trim()} className="btn-gradient-primary shrink-0 rounded-full h-9 w-9">
+            <Button type="submit" size="icon" disabled={!input.trim()} className="btn-gradient-primary shrink-0 rounded-sm h-9 w-9">
               <Send className="h-4 w-4" />
             </Button>
           </form>
@@ -126,7 +126,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   // Sidebar lateral (desktop) + drawer (mobile)
   return (
     <>
-      <aside className="hidden lg:flex w-72 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-l border-border/50">
+      <aside className="hidden lg:flex w-80 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-l border-border/50">
         {chatContent}
       </aside>
 
@@ -216,7 +216,7 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               className={cn(
-                'absolute top-5 z-50 w-36 glass-strong rounded-xl border border-border/50 shadow-lg overflow-hidden',
+                'absolute top-5 z-50 w-36 glass-strong rounded-md border border-border/50 shadow-lg overflow-hidden',
                 isMine ? 'left-0' : 'right-0'
               )}
             >
@@ -228,7 +228,7 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-xs hover:bg-secondary/60 transition"
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? <Check className="h-3.5 w-3.5 text-olive-500" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? 'Copiado' : 'Copiar'}
               </button>
               {!isMine && (

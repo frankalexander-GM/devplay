@@ -130,7 +130,7 @@ export function Header() {
         onClick={() => setView('feed')}
         className="flex items-center gap-2 shrink-0"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/20">
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/20">
           <Gamepad2 className="h-5 w-5" />
         </div>
         <span className="hidden sm:block text-lg font-bold gradient-text">DevPlay</span>

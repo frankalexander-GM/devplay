@@ -164,7 +164,7 @@ export function BetasView() {
       {/* Grid de betas */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-64 rounded-xl" />)}
+          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-64 rounded-md" />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass-card p-12 text-center">
@@ -254,12 +254,12 @@ export function BetasView() {
                   {/* Meta */}
                   <div className="flex flex-wrap items-center gap-1.5 mb-3 text-[10px]">
                     {beta.genre && (
-                      <span className="rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                      <span className="rounded-full bg-wine-100 px-2 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                         {beta.genre}
                       </span>
                     )}
                     {beta.platforms && beta.platforms.length > 0 && (
-                      <span className="rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                      <span className="rounded-full bg-wine-100 px-2 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                         {beta.platforms.join(', ')}
                       </span>
                     )}
@@ -281,7 +281,7 @@ export function BetasView() {
                   {/* Ver detalles button */}
                   <Button
                     size="sm"
-                    className="btn-gradient-beta w-full rounded-full gap-1.5"
+                    className="btn-gradient-beta w-full rounded-sm gap-1.5"
                     onClick={() => openPostDetail(post.id)}
                   >
                     <Download className="h-4 w-4" />

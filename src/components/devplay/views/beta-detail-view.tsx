@@ -60,9 +60,9 @@ export function BetaDetailView({ postId }: { postId: string }) {
   if (isLoading || !data) {
     return (
       <div className="space-y-3 p-6">
-        <Skeleton className="h-48 w-full rounded-2xl" />
+        <Skeleton className="h-48 w-full rounded-lg" />
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-32 w-full rounded-xl" />
+        <Skeleton className="h-32 w-full rounded-md" />
       </div>
     )
   }
@@ -198,7 +198,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
           <Button
             size="sm"
             onClick={handleDownload}
-            className="btn-gradient-beta rounded-full flex-1 gap-1.5"
+            className="btn-gradient-beta rounded-sm flex-1 gap-1.5"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Descargar beta</span>
@@ -208,7 +208,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
             size="sm"
             variant="outline"
             onClick={handleLike}
-            className={cn('rounded-full gap-1.5', liked && 'text-rose-500 border-rose-500/30')}
+            className={cn('rounded-full gap-1.5', liked && 'text-wine-500 border-wine-500/30')}
           >
             <Heart className={cn('h-4 w-4', liked && 'fill-current')} />
             {likesCount}
@@ -234,12 +234,12 @@ export function BetaDetailView({ postId }: { postId: string }) {
         {/* ===== Meta info ===== */}
         <div className="px-4 py-3 flex flex-wrap gap-2 border-b border-border/40">
           {beta.genre && (
-            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+            <span className="rounded-full bg-wine-100 px-2.5 py-1 text-[10px] font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
               {beta.genre}
             </span>
           )}
           {beta.platforms && beta.platforms.length > 0 && (
-            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+            <span className="rounded-full bg-wine-100 px-2.5 py-1 text-[10px] font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
               {beta.platforms.join(', ')}
             </span>
           )}
@@ -248,7 +248,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
               Archivo directo
             </span>
           ) : (
-            <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[10px] font-medium text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">
+            <span className="rounded-full bg-wine-100 px-2.5 py-1 text-[10px] font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
               {beta.externalPlatform ?? 'Enlace externo'}
             </span>
           )}
@@ -305,7 +305,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
                 <div key={step.id} className="flex flex-col items-center gap-1 flex-1">
                   <div className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-full text-xs transition',
-                    isPast && 'bg-emerald-500 text-white',
+                    isPast && 'bg-olive-500 text-white',
                     isCurrent && cn('bg-gradient-to-br text-white scale-110 shadow-lg', statusMeta.color),
                     !isPast && !isCurrent && 'bg-secondary text-muted-foreground'
                   )}>
@@ -318,7 +318,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
                     {step.label}
                   </span>
                   {i < timelineSteps.length - 1 && (
-                    <div className={cn('absolute h-0.5 hidden', isPast && 'bg-emerald-500')} />
+                    <div className={cn('absolute h-0.5 hidden', isPast && 'bg-olive-500')} />
                   )}
                 </div>
               )
@@ -333,13 +333,13 @@ export function BetaDetailView({ postId }: { postId: string }) {
               <Settings2 className="h-3 w-3" /> Información técnica
             </h3>
             {beta.requirements && (
-              <div className="glass rounded-xl p-3">
+              <div className="glass rounded-md p-3">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Requisitos del sistema</p>
                 <pre className="text-xs whitespace-pre-wrap font-sans text-foreground/80">{beta.requirements}</pre>
               </div>
             )}
             {beta.installInstructions && (
-              <div className="glass rounded-xl p-3">
+              <div className="glass rounded-md p-3">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Instrucciones de instalación</p>
                 <pre className="text-xs whitespace-pre-wrap font-sans text-foreground/80">{beta.installInstructions}</pre>
               </div>
@@ -375,7 +375,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
                     <UserAvatar username={c.user.username} avatar={c.user.avatar} size="sm" />
                   </button>
                   <div className="flex-1 min-w-0">
-                    <div className="glass rounded-2xl rounded-tl-sm px-3 py-2">
+                    <div className="glass rounded-lg rounded-tl-sm px-3 py-2">
                       <div className="flex items-center gap-2 mb-0.5">
                         <button
                           onClick={() => { openProfile(c.user.id); useUIStore.getState().closePostDetail() }}

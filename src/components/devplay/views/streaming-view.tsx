@@ -46,14 +46,14 @@ export function StreamingView() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card card-mint p-5 text-center"
         >
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-olive-400 to-sepia-500 text-white">
             <RadioIcon className="h-7 w-7" />
           </div>
           <h3 className="font-bold text-lg">¿Listo para streaminear?</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-3">
             Inicia un directo y tus seguidores recibirán una notificación al instante
           </p>
-          <Button onClick={openGoLive} className="btn-gradient-live rounded-full gap-2">
+          <Button onClick={openGoLive} className="btn-gradient-live rounded-sm gap-2">
             <Radio className="h-4 w-4 live-pulse" />
             Iniciar Directo
           </Button>
@@ -65,7 +65,7 @@ export function StreamingView() {
           <p className="text-sm text-muted-foreground mb-3">
             Inicia sesión para hacer directos y compartir tu proceso de desarrollo
           </p>
-          <Button onClick={() => openAuth('login')} className="btn-gradient-live rounded-full">
+          <Button onClick={() => openAuth('login')} className="btn-gradient-live rounded-sm">
             Entrar
           </Button>
         </div>
@@ -73,19 +73,19 @@ export function StreamingView() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Radio} value={streams.length} label="En vivo" color="from-rose-400 to-pink-500" pulse />
-        <StatCard icon={Users} value="∞" label="Espectadores" color="from-violet-400 to-purple-500" />
-        <StatCard icon={Tv} value="3" label="Plataformas" color="from-emerald-400 to-teal-500" />
+        <StatCard icon={Radio} value={streams.length} label="En vivo" color="from-wine-400 to-sepia-500" pulse />
+        <StatCard icon={Users} value="∞" label="Espectadores" color="from-wine-400 to-wine-500" />
+        <StatCard icon={Tv} value="3" label="Plataformas" color="from-olive-400 to-sepia-500" />
       </div>
 
       {/* Grid de streams */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-64 rounded-xl" />)}
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-64 rounded-md" />)}
         </div>
       ) : streams.length === 0 ? (
         <div className="glass-card p-12 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-300 to-teal-400 text-white">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-olive-300 to-sepia-400 text-white">
             <Tv className="h-8 w-8" />
           </div>
           <p className="font-semibold text-lg">No hay directos ahora mismo</p>
@@ -139,7 +139,7 @@ function StreamCard({ post, onOpen, onProfile }: { post: any; onOpen: () => void
             title={stream.title}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-rose-300 via-pink-300 to-violet-300 dark:from-rose-500/30 dark:via-pink-500/30 dark:to-violet-500/30">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-wine-300 via-sepia-300 to-wine-300 dark:from-wine-500/30 dark:via-sepia-500/30 dark:to-wine-500/30">
             <div className="text-center">
               <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-white/30 backdrop-blur">
                 <Radio className="h-8 w-8 text-white live-pulse" />
@@ -171,7 +171,7 @@ function StreamCard({ post, onOpen, onProfile }: { post: any; onOpen: () => void
           <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{post.content}</p>
         )}
         <div className="flex gap-2 mt-3">
-          <Button size="sm" className="btn-gradient-live rounded-full flex-1 gap-1.5" onClick={onOpen}>
+          <Button size="sm" className="btn-gradient-live rounded-sm flex-1 gap-1.5" onClick={onOpen}>
             <Radio className="h-3.5 w-3.5 live-pulse" />
             Ver directo
           </Button>

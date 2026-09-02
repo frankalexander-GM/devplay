@@ -93,7 +93,7 @@ export function DiscoverView() {
             <DiscoverSection
               icon={Flame}
               title="Tendencias"
-              gradient="from-rose-400 to-orange-500"
+              gradient="from-wine-400 to-bronze-500"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {trending.slice(0, 4).map((post, i) => (
@@ -111,7 +111,7 @@ export function DiscoverView() {
                         <p className="text-xs font-semibold truncate">{post.author.username}</p>
                         <p className="text-[9px] text-muted-foreground">Trending #{i + 1}</p>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-rose-500 font-bold">
+                      <div className="flex items-center gap-1 text-[10px] text-wine-500 font-bold">
                         <Flame className="h-3 w-3" />
                         {post.likesCount + post.commentsCount * 2}
                       </div>
@@ -137,7 +137,7 @@ export function DiscoverView() {
             <DiscoverSection
               icon={Users}
               title="Personas que podrías conocer"
-              gradient="from-violet-400 to-purple-500"
+              gradient="from-wine-400 to-wine-500"
             >
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {recommendedUsers.map((dev, i) => (
@@ -152,7 +152,7 @@ export function DiscoverView() {
             <DiscoverSection
               icon={Gamepad2}
               title="Betas populares"
-              gradient="from-amber-400 to-orange-500"
+              gradient="from-amber-400 to-bronze-500"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {popularBetas.map((beta, i) => (
@@ -165,7 +165,7 @@ export function DiscoverView() {
                     className="glass-card card-peach p-4 text-left transition"
                   >
                     <div className="flex items-start gap-2 mb-2">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-bronze-500 text-white">
                         <Gamepad2 className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -178,7 +178,7 @@ export function DiscoverView() {
                       <span className="flex items-center gap-0.5"><Download className="h-3 w-3" /> {beta.downloads}</span>
                       <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" /> {beta.likesCount}</span>
                       {beta.genre && (
-                        <span className="rounded-full bg-violet-100 px-1.5 py-0.5 font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                        <span className="rounded-full bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
                           {beta.genre}
                         </span>
                       )}
@@ -194,7 +194,7 @@ export function DiscoverView() {
             <DiscoverSection
               icon={Hash}
               title="Tags populares"
-              gradient="from-violet-400 to-violet-500"
+              gradient="from-wine-400 to-wine-500"
             >
               <div className="flex flex-wrap gap-2">
                 {popularTags.map((tag, i) => {
@@ -221,7 +221,7 @@ export function DiscoverView() {
           <DiscoverSection
             icon={Clock}
             title="Explorar publicaciones"
-            gradient="from-emerald-400 to-teal-500"
+            gradient="from-olive-400 to-sepia-500"
             action={
               <div className="flex gap-1 glass rounded-full p-0.5">
                 {filters.map(f => {
@@ -339,7 +339,7 @@ function RecommendedUserCard({ user, delay }: { user: any; delay: number }) {
         variant={following ? 'outline' : 'default'}
         onClick={toggleFollow}
         disabled={loading}
-        className={cn('mt-2 w-full rounded-full text-xs h-7', !following && 'btn-gradient-primary')}
+        className={cn('mt-2 w-full rounded-sm text-xs h-7', !following && 'btn-gradient-primary')}
       >
         {following ? <><UserCheck className="h-3 w-3" /> Siguiendo</> : <><UserPlus className="h-3 w-3" /> Seguir</>}
       </Button>
@@ -354,19 +354,19 @@ function DiscoverSkeleton() {
       <div>
         <Skeleton className="h-8 w-32 rounded-full mb-3" />
         <div className="grid grid-cols-2 gap-3">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-md" />)}
         </div>
       </div>
       <div>
         <Skeleton className="h-8 w-48 rounded-full mb-3" />
         <div className="grid grid-cols-4 gap-3">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-36 rounded-xl" />)}
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-36 rounded-md" />)}
         </div>
       </div>
       <div>
         <Skeleton className="h-8 w-32 rounded-full mb-3" />
         <div className="space-y-3">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
+          {[1,2,3].map(i => <Skeleton key={i} className="h-48 rounded-md" />)}
         </div>
       </div>
     </div>

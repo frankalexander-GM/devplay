@@ -72,10 +72,10 @@ export function CreatePostModal() {
 
   return (
     <Dialog open={createPostOpen} onOpenChange={(o) => !o && closeCreatePost()}>
-      <DialogContent className="glass-strong max-w-lg rounded-2xl">
+      <DialogContent className="glass-strong max-w-lg rounded-lg">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
               <FileText className="h-5 w-5" />
             </div>
             <div>
@@ -98,7 +98,7 @@ export function CreatePostModal() {
               placeholder={`¿Qué quieres compartir, ${user?.username}?`}
               maxLength={maxChars}
               rows={4}
-              className="resize-none rounded-xl text-sm"
+              className="resize-none rounded-md text-sm"
               autoFocus
             />
             <p className="text-[10px] text-muted-foreground text-right mt-1">
@@ -111,7 +111,7 @@ export function CreatePostModal() {
         {media.length > 0 && (
           <div className={media.length === 1 ? 'grid grid-cols-1' : 'grid grid-cols-2 gap-2'}>
             {media.map((m, i) => (
-              <div key={i} className="relative rounded-xl overflow-hidden glass">
+              <div key={i} className="relative rounded-md overflow-hidden glass">
                 {m.kind === 'image' ? (
                   <img src={m.url} alt="" className="w-full h-40 object-cover" />
                 ) : (
@@ -134,14 +134,14 @@ export function CreatePostModal() {
           <label className="cursor-pointer">
             <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFile} />
             <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium hover:bg-accent transition">
-              <ImagePlus className="h-3.5 w-3.5 text-violet-500" />
+              <ImagePlus className="h-3.5 w-3.5 text-wine-500" />
               Imagen
             </span>
           </label>
           <label className="cursor-pointer">
             <input type="file" accept="video/*" className="hidden" onChange={handleFile} />
             <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium hover:bg-accent transition">
-              <Video className="h-3.5 w-3.5 text-violet-500" />
+              <Video className="h-3.5 w-3.5 text-wine-500" />
               Video
             </span>
           </label>
@@ -166,7 +166,7 @@ export function CreatePostModal() {
           <Button
             onClick={handleSubmit}
             disabled={submitting || uploading || (!content.trim() && media.length === 0)}
-            className="btn-gradient-post rounded-full gap-1.5"
+            className="btn-gradient-post rounded-sm gap-1.5"
           >
             {submitting ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Publicando...</>

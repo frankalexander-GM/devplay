@@ -73,11 +73,11 @@ export function ShareModal({
   }
 
   const socialLinks = [
-    { label: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, color: 'from-green-500 to-emerald-600' },
+    { label: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, color: 'from-olive-500 to-olive-600' },
     { label: 'X (Twitter)', icon: Twitter, url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, color: 'from-gray-700 to-gray-900' },
-    { label: 'Facebook', icon: Facebook, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, color: 'from-violet-500 to-violet-700' },
-    { label: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, color: 'from-violet-400 to-violet-500' },
-    { label: 'Instagram', icon: Instagram, url: shareUrl, color: 'from-fuchsia-500 to-pink-600' },
+    { label: 'Facebook', icon: Facebook, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, color: 'from-wine-500 to-wine-700' },
+    { label: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, color: 'from-wine-400 to-wine-500' },
+    { label: 'Instagram', icon: Instagram, url: shareUrl, color: 'from-bronze-500 to-sepia-600' },
   ]
 
   return (
@@ -95,7 +95,7 @@ export function ShareModal({
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-strong rounded-2xl border border-border/50 shadow-xl overflow-hidden"
+            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-strong rounded-lg border border-border/50 shadow-xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50">
@@ -114,7 +114,7 @@ export function ShareModal({
                 {/* Repost destacado */}
                 <button
                   onClick={() => setRepostMode(true)}
-                  className="flex w-full items-center gap-3 rounded-xl border-2 border-primary/30 bg-primary/5 p-3 hover:bg-primary/10 transition"
+                  className="flex w-full items-center gap-3 rounded-md border-2 border-primary/30 bg-primary/5 p-3 hover:bg-primary/10 transition"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg btn-gradient-primary text-white">
                     <Repeat2 className="h-5 w-5" />
@@ -137,7 +137,7 @@ export function ShareModal({
                           href={social.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex flex-col items-center gap-1.5 rounded-xl glass p-3 transition"
+                          className="flex flex-col items-center gap-1.5 rounded-md glass p-3 transition"
                         >
                           <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-white', social.color)}>
                             <Icon className="h-4 w-4" />
@@ -152,7 +152,7 @@ export function ShareModal({
                 {/* Copiar enlace */}
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Enlace</p>
-                  <div className="flex items-center gap-2 rounded-xl glass p-2">
+                  <div className="flex items-center gap-2 rounded-md glass p-2">
                     <input
                       readOnly
                       value={shareUrl}
@@ -166,7 +166,7 @@ export function ShareModal({
 
                 {/* Native share */}
                 {typeof navigator !== 'undefined' && navigator.share && (
-                  <Button onClick={nativeShare} className="w-full rounded-full btn-gradient-primary gap-1.5">
+                  <Button onClick={nativeShare} className="w-full rounded-sm btn-gradient-primary gap-1.5">
                     <Share2 className="h-4 w-4" />
                     Compartir con...
                   </Button>
@@ -181,7 +181,7 @@ export function ShareModal({
                 </div>
 
                 {/* Preview del post original */}
-                <div className="rounded-xl border border-border/50 glass p-3">
+                <div className="rounded-md border border-border/50 glass p-3">
                   <p className="text-[10px] text-muted-foreground mb-1">
                     📎 Publicación original de @{authorName}
                   </p>
@@ -197,7 +197,7 @@ export function ShareModal({
                     placeholder="Añade tu opinión, hashtags o contexto..."
                     rows={3}
                     maxLength={2000}
-                    className="mt-0.5 w-full resize-none rounded-xl border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="mt-0.5 w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                   <p className="text-[10px] text-muted-foreground text-right">{repostText.length}/2000</p>
                 </div>
@@ -206,7 +206,7 @@ export function ShareModal({
                   <Button variant="outline" onClick={() => setRepostMode(false)} className="rounded-full flex-1">
                     Cancelar
                   </Button>
-                  <Button onClick={handleRepost} disabled={reposting} className="btn-gradient-primary rounded-full flex-1 gap-1.5">
+                  <Button onClick={handleRepost} disabled={reposting} className="btn-gradient-primary rounded-sm flex-1 gap-1.5">
                     {reposting ? <><Loader2 className="h-4 w-4 animate-spin" /> Reposteando...</> : <><Repeat2 className="h-4 w-4" /> Repostear</>}
                   </Button>
                 </div>

@@ -80,7 +80,7 @@ export function DownloadBetaModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed left-1/2 top-1/2 z-[66] -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-strong rounded-2xl border border-border/50 shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
+            className="fixed left-1/2 top-1/2 z-[66] -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-strong rounded-lg border border-border/50 shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
           >
             {/* Header */}
             <div className="relative shrink-0">
@@ -119,7 +119,7 @@ export function DownloadBetaModal({
             <div className="flex-1 overflow-y-auto custom-scroll p-4 space-y-3">
               {/* Estado no disponible */}
               {(isEnded || isComingSoon) && (
-                <div className="flex items-center gap-2 rounded-xl border-2 border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="flex items-center gap-2 rounded-md border-2 border-amber-500/30 bg-amber-500/5 p-3">
                   <Clock className="h-5 w-5 text-amber-500 shrink-0" />
                   <div>
                     <p className="text-sm font-bold text-amber-600 dark:text-amber-400">
@@ -135,7 +135,7 @@ export function DownloadBetaModal({
               )}
 
               {/* Info del juego */}
-              <div className="glass rounded-xl p-3 space-y-2">
+              <div className="glass rounded-md p-3 space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                   <Info className="h-3 w-3" /> Información del juego
                 </h3>
@@ -186,7 +186,7 @@ export function DownloadBetaModal({
 
               {/* Requisitos (si hay) */}
               {beta.requirements && (
-                <div className="glass rounded-xl p-3">
+                <div className="glass rounded-md p-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-1">
                     <Monitor className="h-3 w-3" /> Requisitos del sistema
                   </h3>
@@ -196,7 +196,7 @@ export function DownloadBetaModal({
 
               {/* Instrucciones de instalación (si hay) */}
               {beta.installInstructions && (
-                <div className="glass rounded-xl p-3">
+                <div className="glass rounded-md p-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-1">
                     <Gamepad2 className="h-3 w-3" /> Cómo instalar
                   </h3>
@@ -206,7 +206,7 @@ export function DownloadBetaModal({
 
               {/* Advertencia de beta */}
               {!isEnded && !isComingSoon && (
-                <div className="flex items-start gap-2 rounded-xl border-2 border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="flex items-start gap-2 rounded-md border-2 border-amber-500/30 bg-amber-500/5 p-3">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
                   <div className="text-[11px] text-amber-700 dark:text-amber-400">
                     <p className="font-bold">Esto es una versión beta</p>
@@ -220,7 +220,7 @@ export function DownloadBetaModal({
 
               {/* Checkbox de confirmación */}
               {!isEnded && !isComingSoon && (
-                <label className="flex items-start gap-2 cursor-pointer glass rounded-xl p-3">
+                <label className="flex items-start gap-2 cursor-pointer glass rounded-md p-3">
                   <input
                     type="checkbox"
                     checked={agreed}
@@ -239,7 +239,7 @@ export function DownloadBetaModal({
             <div className="shrink-0 border-t border-border/50 p-4">
               {!canDownload && !isEnded && !isComingSoon ? (
                 <Button
-                  className="w-full btn-gradient-beta rounded-full gap-1.5"
+                  className="w-full btn-gradient-beta rounded-sm gap-1.5"
                   onClick={() => openAuth('login')}
                 >
                   <Download className="h-4 w-4" />
@@ -255,13 +255,13 @@ export function DownloadBetaModal({
                   {isEnded ? 'Beta finalizada' : 'Próximamente'}
                 </Button>
               ) : downloaded ? (
-                <div className="flex items-center justify-center gap-2 text-emerald-500 text-sm font-medium">
+                <div className="flex items-center justify-center gap-2 text-olive-500 text-sm font-medium">
                   <Check className="h-5 w-5" />
                   ¡Descarga iniciada!
                 </div>
               ) : (
                 <Button
-                  className="w-full btn-gradient-beta rounded-full gap-1.5"
+                  className="w-full btn-gradient-beta rounded-sm gap-1.5"
                   onClick={handleDownload}
                   disabled={!agreed || downloading}
                 >

@@ -156,7 +156,7 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
         </div>
         <div
           className={cn(
-            'rounded-2xl px-3 py-1.5 text-sm break-words',
+            'rounded-lg px-3 py-1.5 text-sm break-words',
             isMine
               ? 'bg-primary text-primary-foreground rounded-br-sm'
               : 'glass rounded-bl-sm'

@@ -76,14 +76,14 @@ export interface SocialLinks {
 
 export const SOCIAL_PLATFORMS: { key: keyof SocialLinks; label: string; emoji: string; color: string; placeholder: string }[] = [
   { key: 'twitter', label: 'X (Twitter)', emoji: '𝕏', color: 'from-gray-700 to-gray-900', placeholder: 'https://x.com/tuusuario' },
-  { key: 'instagram', label: 'Instagram', emoji: '📷', color: 'from-fuchsia-500 to-pink-600', placeholder: 'https://instagram.com/tuusuario' },
-  { key: 'youtube', label: 'YouTube', emoji: '▶️', color: 'from-red-500 to-rose-600', placeholder: 'https://youtube.com/@tucanal' },
-  { key: 'twitch', label: 'Twitch', emoji: '🟣', color: 'from-violet-500 to-purple-600', placeholder: 'https://twitch.tv/tucanal' },
+  { key: 'instagram', label: 'Instagram', emoji: '📷', color: 'from-bronze-500 to-sepia-600', placeholder: 'https://instagram.com/tuusuario' },
+  { key: 'youtube', label: 'YouTube', emoji: '▶️', color: 'from-red-500 to-wine-600', placeholder: 'https://youtube.com/@tucanal' },
+  { key: 'twitch', label: 'Twitch', emoji: '🟣', color: 'from-wine-500 to-wine-600', placeholder: 'https://twitch.tv/tucanal' },
   { key: 'tiktok', label: 'TikTok', emoji: '🎵', color: 'from-gray-800 to-black', placeholder: 'https://tiktok.com/@tuusuario' },
   { key: 'github', label: 'GitHub', emoji: '🐙', color: 'from-gray-600 to-gray-800', placeholder: 'https://github.com/tuusuario' },
-  { key: 'discord', label: 'Discord', emoji: '💬', color: 'from-indigo-500 to-violet-600', placeholder: 'https://discord.gg/tuinivite' },
-  { key: 'facebook', label: 'Facebook', emoji: '👥', color: 'from-blue-500 to-blue-700', placeholder: 'https://facebook.com/tuusuario' },
-  { key: 'linkedin', label: 'LinkedIn', emoji: '💼', color: 'from-blue-600 to-blue-800', placeholder: 'https://linkedin.com/in/tuusuario' },
+  { key: 'discord', label: 'Discord', emoji: '💬', color: 'from-sepia-500 to-wine-600', placeholder: 'https://discord.gg/tuinivite' },
+  { key: 'facebook', label: 'Facebook', emoji: '👥', color: 'from-sepia-500 to-sepia-700', placeholder: 'https://facebook.com/tuusuario' },
+  { key: 'linkedin', label: 'LinkedIn', emoji: '💼', color: 'from-sepia-600 to-sepia-800', placeholder: 'https://linkedin.com/in/tuusuario' },
 ]
 
 export interface UserSummary {
@@ -161,11 +161,11 @@ export type BetaStatus = 'alpha' | 'closed_beta' | 'open_beta' | 'tech_test' | '
 // Iconos Lucide importados dinámicamente para evitar circular deps
 // Se mapean a strings que se resuelven en el componente
 export const BETA_STATUSES: { id: BetaStatus; label: string; icon: string; color: string; badgeClass: string }[] = [
-  { id: 'alpha', label: 'Alpha', icon: 'FlaskConical', color: 'from-blue-400 to-blue-600', badgeClass: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' },
-  { id: 'closed_beta', label: 'Beta Cerrada', icon: 'Lock', color: 'from-green-400 to-green-600', badgeClass: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300' },
-  { id: 'open_beta', label: 'Beta Abierta', icon: 'Unlock', color: 'from-yellow-400 to-amber-500', badgeClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300' },
-  { id: 'tech_test', label: 'Prueba Técnica', icon: 'Wrench', color: 'from-purple-400 to-purple-600', badgeClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300' },
-  { id: 'early_access', label: 'Acceso Anticipado', icon: 'Rocket', color: 'from-orange-400 to-orange-600', badgeClass: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300' },
+  { id: 'alpha', label: 'Alpha', icon: 'FlaskConical', color: 'from-sepia-400 to-sepia-600', badgeClass: 'bg-sepia-100 text-sepia-700 dark:bg-sepia-500/20 dark:text-sepia-300' },
+  { id: 'closed_beta', label: 'Beta Cerrada', icon: 'Lock', color: 'from-olive-400 to-olive-600', badgeClass: 'bg-olive-100 text-olive-700 dark:bg-olive-500/20 dark:text-olive-300' },
+  { id: 'open_beta', label: 'Beta Abierta', icon: 'Unlock', color: 'from-bronze-300 to-bronze-500', badgeClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300' },
+  { id: 'tech_test', label: 'Prueba Técnica', icon: 'Wrench', color: 'from-wine-400 to-wine-600', badgeClass: 'bg-wine-100 text-wine-700 dark:bg-wine-500/20 dark:text-wine-300' },
+  { id: 'early_access', label: 'Acceso Anticipado', icon: 'Rocket', color: 'from-bronze-400 to-bronze-600', badgeClass: 'bg-bronze-100 text-bronze-700 dark:bg-bronze-500/20 dark:text-bronze-300' },
   { id: 'ended', label: 'Finalizada', icon: 'CircleStop', color: 'from-red-400 to-red-600', badgeClass: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300' },
   { id: 'coming_soon', label: 'Próximamente', icon: 'Clock', color: 'from-gray-400 to-gray-500', badgeClass: 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-300' },
 ]

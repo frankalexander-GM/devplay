@@ -64,7 +64,7 @@ export function AuthModal() {
     if (/[0-9]/.test(pwd)) score++
     if (/[^A-Za-z0-9]/.test(pwd)) score++
     const labels = ['Muy débil', 'Débil', 'Regular', 'Buena', 'Fuerte', 'Muy fuerte']
-    const colors = ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-lime-500', 'bg-emerald-500', 'bg-emerald-600']
+    const colors = ['bg-red-500', 'bg-bronze-500', 'bg-amber-500', 'bg-lime-500', 'bg-olive-500', 'bg-olive-600']
     return { score, label: labels[score] || 'Muy débil', color: colors[score] || 'bg-red-500' }
   }
 
@@ -151,16 +151,16 @@ export function AuthModal() {
 
   return (
     <Dialog open={authModalOpen} onOpenChange={(o) => !o && closeAuth()}>
-      <DialogContent className="glass-strong max-w-md rounded-3xl p-0 overflow-hidden border-border/60">
+      <DialogContent className="glass-strong max-w-md rounded-lg p-0 overflow-hidden border-border/60">
         {/* ===== Header con branding ===== */}
         <div className="relative px-6 pt-6 pb-4 text-center border-b border-border/40">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent" />
           <div className="relative">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg">
-              <img src="/logo-devplay.png" alt="DevPlay" className="h-10 w-10 rounded-xl object-cover" />
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+              <img src="/logo-devplay.png" alt="DevPlay" className="h-10 w-10 rounded-md object-cover" />
             </div>
-            <h2 className="text-2xl font-bold gradient-text">DevPlay</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h2 className="font-display text-3xl font-black tracking-tight text-foreground">DevPlay</h2>
+            <p className="label-caps mt-1">
               Comunidad para devs de videojuegos indie
             </p>
           </div>
@@ -168,12 +168,12 @@ export function AuthModal() {
 
         {/* ===== Tab switcher ===== */}
         <div className="px-6 pt-4">
-          <div className="grid w-full grid-cols-2 gap-1 rounded-2xl bg-secondary/50 p-1">
+          <div className="grid w-full grid-cols-2 gap-1 rounded-lg bg-secondary/50 p-1">
             <button
               type="button"
               onClick={() => { setActiveTab('login'); setErrors([]) }}
               className={cn(
-                'rounded-xl py-2 text-sm font-semibold transition-all',
+                'rounded-md py-2 text-sm font-semibold transition-all',
                 activeTab === 'login'
                   ? 'btn-gradient-primary shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -185,7 +185,7 @@ export function AuthModal() {
               type="button"
               onClick={() => { setActiveTab('register'); setErrors([]) }}
               className={cn(
-                'rounded-xl py-2 text-sm font-semibold transition-all',
+                'rounded-md py-2 text-sm font-semibold transition-all',
                 activeTab === 'register'
                   ? 'btn-gradient-primary shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -223,7 +223,7 @@ export function AuthModal() {
                     required
                     autoComplete="email"
                     className={cn(
-                      'rounded-xl pl-10 pr-4 h-11',
+                      'rounded-md pl-10 pr-4 h-11',
                       getFieldError('loginEmail') && 'border-red-500/50 focus-visible:ring-red-500/30'
                     )}
                   />
@@ -253,7 +253,7 @@ export function AuthModal() {
                     required
                     autoComplete="current-password"
                     className={cn(
-                      'rounded-xl pl-10 pr-10 h-11',
+                      'rounded-md pl-10 pr-10 h-11',
                       getFieldError('loginPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
                     )}
                   />
@@ -283,7 +283,7 @@ export function AuthModal() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full btn-gradient-primary rounded-xl h-11 font-semibold"
+                  className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
                 >
                   {loading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</>
@@ -317,13 +317,13 @@ export function AuthModal() {
                     required
                     autoComplete="email"
                     className={cn(
-                      'rounded-xl pl-10 pr-10 h-11',
+                      'rounded-md pl-10 pr-10 h-11',
                       getFieldError('regEmail') && 'border-red-500/50 focus-visible:ring-red-500/30',
-                      emailValid && regEmail.length > 0 && 'border-emerald-500/50 focus-visible:ring-emerald-500/30'
+                      emailValid && regEmail.length > 0 && 'border-olive-500/50 focus-visible:ring-olive-500/30'
                     )}
                   />
                   {emailValid && regEmail.length > 0 && (
-                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
                   )}
                 </FormField>
 
@@ -342,13 +342,13 @@ export function AuthModal() {
                     required
                     autoComplete="username"
                     className={cn(
-                      'rounded-xl pl-10 pr-10 h-11',
+                      'rounded-md pl-10 pr-10 h-11',
                       getFieldError('regUsername') && 'border-red-500/50 focus-visible:ring-red-500/30',
-                      usernameAvailable && 'border-emerald-500/50 focus-visible:ring-emerald-500/30'
+                      usernameAvailable && 'border-olive-500/50 focus-visible:ring-olive-500/30'
                     )}
                   />
                   {usernameAvailable && (
-                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
                   )}
                 </FormField>
 
@@ -377,7 +377,7 @@ export function AuthModal() {
                     required
                     autoComplete="new-password"
                     className={cn(
-                      'rounded-xl pl-10 pr-10 h-11',
+                      'rounded-md pl-10 pr-10 h-11',
                       getFieldError('regPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
                     )}
                   />
@@ -431,7 +431,7 @@ export function AuthModal() {
                 <Button
                   type="submit"
                   disabled={loading || !agreeTerms}
-                  className="w-full btn-gradient-primary rounded-xl h-11 font-semibold"
+                  className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
                 >
                   {loading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creando...</>
@@ -475,7 +475,7 @@ export function AuthModal() {
             variant="outline"
             onClick={handleGuest}
             disabled={guestLoading}
-            className="w-full rounded-xl h-11 mt-3 gap-2"
+            className="w-full rounded-md h-11 mt-3 gap-2"
           >
             {guestLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -487,7 +487,7 @@ export function AuthModal() {
 
           {/* ===== Security badge ===== */}
           <div className="flex items-center justify-center gap-1.5 mt-4 text-[10px] text-muted-foreground">
-            <Shield className="h-3 w-3 text-emerald-500" />
+            <Shield className="h-3 w-3 text-olive-500" />
             <span>Tus datos están protegidos con cifrado</span>
           </div>
         </div>
@@ -520,7 +520,7 @@ function FormField({
       <Label className="text-xs font-semibold flex items-center justify-between">
         <span>{label}</span>
         {success && (
-          <span className="text-[10px] text-emerald-500 flex items-center gap-0.5">
+          <span className="text-[10px] text-olive-500 flex items-center gap-0.5">
             <Check className="h-3 w-3" /> {success}
           </span>
         )}
@@ -546,7 +546,7 @@ function SocialButton({ provider, onClick, loading }: { provider: 'google' | 'gi
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="flex items-center justify-center gap-2 rounded-xl border border-border/60 py-2.5 text-sm font-medium hover:bg-secondary/50 transition disabled:opacity-50"
+      className="flex items-center justify-center gap-2 rounded-md border border-border/60 py-2.5 text-sm font-medium hover:bg-secondary/50 transition disabled:opacity-50"
     >
       {loading ? (
         <Loader2 className="h-4 w-4 animate-spin" />

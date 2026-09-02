@@ -20,7 +20,7 @@ const platforms = [
     label: 'Twitch',
     icon: Twitch,
     urlHint: 'https://twitch.tv/tu-canal',
-    color: 'from-violet-500 to-purple-600',
+    color: 'from-wine-500 to-wine-600',
     emoji: '🟣',
   },
   {
@@ -28,7 +28,7 @@ const platforms = [
     label: 'YouTube',
     icon: Youtube,
     urlHint: 'https://youtube.com/watch?v=...',
-    color: 'from-red-500 to-rose-600',
+    color: 'from-red-500 to-wine-600',
     emoji: '🔴',
   },
   {
@@ -36,7 +36,7 @@ const platforms = [
     label: 'Kick',
     icon: Video,
     urlHint: 'https://kick.com/tu-canal',
-    color: 'from-emerald-500 to-green-600',
+    color: 'from-olive-500 to-olive-600',
     emoji: '🟢',
   },
 ]
@@ -87,10 +87,10 @@ export function GoLiveModal() {
 
   return (
     <Dialog open={goLiveOpen} onOpenChange={(o) => !o && closeGoLive()}>
-      <DialogContent className="glass-strong max-w-lg rounded-2xl">
+      <DialogContent className="glass-strong max-w-lg rounded-lg">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-emerald-400/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary shadow-olive-400/30">
               <Radio className="h-5 w-5 live-pulse" />
             </div>
             <div>
@@ -118,7 +118,7 @@ export function GoLiveModal() {
                     type="button"
                     onClick={() => setPlatform(p.id)}
                     className={cn(
-                      'group flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 cursor-pointer transition-all',
+                      'group flex flex-col items-center gap-1.5 rounded-md border-2 p-3 cursor-pointer transition-all',
                       active
                         ? 'border-primary bg-primary/10 scale-105 shadow-sm'
                         : 'border-border hover:border-primary/40 hover:bg-secondary/40'
@@ -148,7 +148,7 @@ export function GoLiveModal() {
               value={streamUrl}
               onChange={(e) => setStreamUrl(e.target.value)}
               placeholder={selectedPlatform.urlHint}
-              className="rounded-xl"
+              className="rounded-md"
             />
             <p className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Sparkles className="h-3 w-3" />
@@ -159,7 +159,7 @@ export function GoLiveModal() {
           {/* Título */}
           <div className="space-y-1.5">
             <Label htmlFor="live-title" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Título del directo <span className="text-rose-500 normal-case">*</span>
+              Título del directo <span className="text-wine-500 normal-case">*</span>
             </Label>
             <Input
               id="live-title"
@@ -167,7 +167,7 @@ export function GoLiveModal() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ej: Desarrollando el jefe final en vivo | Pixel Quest"
               maxLength={120}
-              className="rounded-xl"
+              className="rounded-md"
             />
             <p className="text-[10px] text-muted-foreground text-right">{title.length}/120</p>
           </div>
@@ -184,12 +184,12 @@ export function GoLiveModal() {
               placeholder="Hoy programo la IA del boss. ¡Únete y dame ideas!"
               rows={2}
               maxLength={2000}
-              className="resize-none rounded-xl"
+              className="resize-none rounded-md"
             />
           </div>
 
           {/* Info de notificación */}
-          <div className="flex items-center gap-2 rounded-xl bg-emerald-100/50 dark:bg-emerald-500/10 p-2.5 text-[11px] text-emerald-700 dark:text-emerald-300">
+          <div className="flex items-center gap-2 rounded-md bg-olive-100/50 dark:bg-olive-500/10 p-2.5 text-[11px] text-olive-700 dark:text-olive-300">
             <Bell className="h-3.5 w-3.5 shrink-0" />
             <span>Tus seguidores recibirán una notificación push al instante</span>
           </div>
@@ -202,7 +202,7 @@ export function GoLiveModal() {
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="btn-gradient-live rounded-full gap-1.5"
+            className="btn-gradient-live rounded-sm gap-1.5"
           >
             {submitting ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Iniciando...</>

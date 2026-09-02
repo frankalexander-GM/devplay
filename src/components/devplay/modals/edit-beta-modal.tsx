@@ -170,13 +170,13 @@ export function EditBetaModal({
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.95 }}
-            className="glass-strong w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scroll rounded-2xl"
+            className="glass-strong w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scroll rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="sticky top-0 z-10 glass-strong border-b border-border/50 p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-bronze-500 text-white">
                   <Gamepad2 className="h-4 w-4" />
                 </div>
                 <h2 className="font-bold text-sm">Editar Beta</h2>
@@ -192,7 +192,7 @@ export function EditBetaModal({
                 <div className="space-y-3">
                   <div>
                     <Label className="text-xs">Título</Label>
-                    <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-0.5 rounded-xl" maxLength={100} />
+                    <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-0.5 rounded-md" maxLength={100} />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
@@ -200,24 +200,24 @@ export function EditBetaModal({
                       <select
                         value={genre}
                         onChange={(e) => setGenre(e.target.value)}
-                        className="mt-0.5 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                        className="mt-0.5 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                       >
                         {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
                       </select>
                     </div>
                     <div>
                       <Label className="text-xs">Versión</Label>
-                      <Input value={version} onChange={(e) => setVersion(e.target.value)} className="mt-0.5 rounded-xl" maxLength={30} />
+                      <Input value={version} onChange={(e) => setVersion(e.target.value)} className="mt-0.5 rounded-md" maxLength={30} />
                     </div>
                   </div>
                   <div>
                     <Label className="text-xs">Descripción</Label>
-                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={2000} className="mt-0.5 rounded-xl resize-none" />
+                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={2000} className="mt-0.5 rounded-md resize-none" />
                     <p className="text-[10px] text-muted-foreground text-right">{description.length}/2000</p>
                   </div>
                   <div>
                     <Label className="text-xs">Mensaje del feed</Label>
-                    <Textarea value={feedMessage} onChange={(e) => setFeedMessage(e.target.value)} rows={2} maxLength={2000} className="mt-0.5 rounded-xl resize-none" placeholder="Mensaje opcional para el feed" />
+                    <Textarea value={feedMessage} onChange={(e) => setFeedMessage(e.target.value)} rows={2} maxLength={2000} className="mt-0.5 rounded-md resize-none" placeholder="Mensaje opcional para el feed" />
                   </div>
 
                   {/* Estado */}
@@ -278,8 +278,8 @@ export function EditBetaModal({
                           className={cn(
                             'rounded-full border px-2.5 py-0.5 text-[11px] transition',
                             selectedTags.includes(t)
-                              ? 'border-violet-400 bg-violet-100/50 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300'
-                              : 'border-border hover:border-violet-400/50'
+                              ? 'border-wine-400 bg-wine-100/50 text-wine-700 dark:bg-wine-500/20 dark:text-wine-300'
+                              : 'border-border hover:border-wine-400/50'
                           )}
                         >
                           {t}
@@ -297,7 +297,7 @@ export function EditBetaModal({
                   <div>
                     <Label className="text-xs">Portada</Label>
                     {coverImage ? (
-                      <div className="relative rounded-xl overflow-hidden glass mt-1">
+                      <div className="relative rounded-md overflow-hidden glass mt-1">
                         <img src={coverImage} alt="" className="w-full h-28 object-cover" />
                         <button
                           onClick={() => setCoverImage('')}
@@ -307,7 +307,7 @@ export function EditBetaModal({
                         </button>
                       </div>
                     ) : (
-                      <label className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 border-dashed p-4 hover:border-primary/40 transition mt-1">
+                      <label className="flex cursor-pointer flex-col items-center gap-1.5 rounded-md border-2 border-dashed p-4 hover:border-primary/40 transition mt-1">
                         <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
                         {uploadingCover ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6 text-muted-foreground" />}
                         <span className="text-xs">Subir portada</span>
@@ -340,8 +340,8 @@ export function EditBetaModal({
                     )}
                     {screenshots.length < 10 && (
                       <label className={cn(
-                        'flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed p-3 transition mt-1',
-                        'hover:border-violet-400/50'
+                        'flex cursor-pointer flex-col items-center gap-1 rounded-md border-2 border-dashed p-3 transition mt-1',
+                        'hover:border-wine-400/50'
                       )}>
                         <input type="file" accept="image/*" multiple className="hidden" onChange={handleScreenshotsUpload} />
                         {uploadingShots ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
@@ -357,15 +357,15 @@ export function EditBetaModal({
                 <div className="space-y-3">
                   <div>
                     <Label className="text-xs">Requisitos del sistema</Label>
-                    <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} rows={4} className="mt-0.5 rounded-xl resize-none font-mono text-xs" placeholder="SO: Windows 10&#10;RAM: 4 GB&#10;GPU: Cualquiera" />
+                    <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} rows={4} className="mt-0.5 rounded-md resize-none font-mono text-xs" placeholder="SO: Windows 10&#10;RAM: 4 GB&#10;GPU: Cualquiera" />
                   </div>
                   <div>
                     <Label className="text-xs">Instrucciones de instalación</Label>
-                    <Textarea value={installInstructions} onChange={(e) => setInstallInstructions(e.target.value)} rows={3} className="mt-0.5 rounded-xl resize-none text-xs" placeholder="1. Descarga el .zip&#10;2. Extrae&#10;3. Ejecuta" />
+                    <Textarea value={installInstructions} onChange={(e) => setInstallInstructions(e.target.value)} rows={3} className="mt-0.5 rounded-md resize-none text-xs" placeholder="1. Descarga el .zip&#10;2. Extrae&#10;3. Ejecuta" />
                   </div>
                   <div>
                     <Label className="text-xs">Notas de versión / Changelog</Label>
-                    <Textarea value={changelog} onChange={(e) => setChangelog(e.target.value)} rows={3} className="mt-0.5 rounded-xl resize-none text-xs" placeholder="- Nuevo jefe final&#10;- Bug fix" />
+                    <Textarea value={changelog} onChange={(e) => setChangelog(e.target.value)} rows={3} className="mt-0.5 rounded-md resize-none text-xs" placeholder="- Nuevo jefe final&#10;- Bug fix" />
                   </div>
                 </div>
               </Section>
@@ -374,7 +374,7 @@ export function EditBetaModal({
             {/* Footer */}
             <div className="sticky bottom-0 flex gap-2 p-4 border-t border-border/50 glass-strong">
               <Button variant="outline" onClick={onClose} className="rounded-full flex-1">Cancelar</Button>
-              <Button onClick={handleSave} disabled={saving} className="btn-gradient-beta rounded-full flex-1 gap-1.5">
+              <Button onClick={handleSave} disabled={saving} className="btn-gradient-beta rounded-sm flex-1 gap-1.5">
                 {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</> : <><Save className="h-4 w-4" /> Guardar cambios</>}
               </Button>
             </div>
@@ -387,7 +387,7 @@ export function EditBetaModal({
 
 function Section({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
-    <div className="glass rounded-xl p-3">
+    <div className="glass rounded-md p-3">
       <div className="flex items-center gap-1.5 mb-2">
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>

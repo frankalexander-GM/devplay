@@ -65,18 +65,18 @@ export function ExploreView() {
   return (
     <div className="space-y-4">
       {/* ===== HERO BANNER ===== */}
-      <div className="relative h-64 sm:h-80 rounded-2xl overflow-hidden">
-        {/* Background image con tinte violeta para armonizar con el tema */}
+      <div className="relative h-64 sm:h-80 rounded-sm overflow-hidden frame-double">
+        {/* Background image con duotono sepia vintage */}
         <img
           src="/uploads/hero-banner.jpg"
           alt="DevPlay"
           loading="eager"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover sepia-[0.45] contrast-[0.92] brightness-[0.97]"
         />
-        {/* Overlay violeta duotono */}
-        <div className="absolute inset-0 bg-primary/45 mix-blend-color" />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/25 via-transparent to-primary/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        {/* Overlay sepia duotono */}
+        <div className="absolute inset-0 bg-sepia-500/55 mix-blend-color" />
+        <div className="absolute inset-0 bg-sepia-700/20 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-6 text-center">
@@ -85,16 +85,17 @@ export function ExploreView() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <h1 className="text-2xl sm:text-4xl font-bold text-white drop-shadow-lg">
-              Bienvenido a <span className="text-primary">DevPlay</span>
+            <p className="label-caps text-foreground/80 mb-1">Gaceta de desarrolladores · Est. 2025</p>
+            <h1 className="font-display text-3xl sm:text-5xl font-black tracking-tight text-foreground drop-shadow-sm">
+              Bienvenido a <span className="text-wine-600 dark:text-wine-400">DevPlay</span>
             </h1>
-            <p className="text-sm sm:text-base text-white/80 mt-1">
+            <p className="text-sm sm:text-base text-foreground/80 mt-1 italic">
               Descubre, comparte y crea todo sobre videojuegos
             </p>
             <div className="flex items-center gap-2 mt-4 justify-center">
               <Button
                 size="sm"
-                className="btn-gradient-primary rounded-full gap-1.5"
+                className="btn-gradient-primary rounded-sm gap-1.5"
                 onClick={() => useUIStore.getState().setView('discover')}
               >
                 <Sparkles className="h-4 w-4" />
@@ -103,7 +104,7 @@ export function ExploreView() {
               <Button
                 size="sm"
                 variant="outline"
-                className="rounded-full gap-1.5 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="rounded-sm gap-1.5 bg-card/60 border-border text-foreground hover:bg-card"
                 onClick={() => useUIStore.getState().setView('betas')}
               >
                 <Gamepad2 className="h-4 w-4" />
@@ -120,7 +121,7 @@ export function ExploreView() {
           <UserAvatar username={user.username} avatar={user.avatar} size="md" className="shrink-0" />
           <button
             onClick={openCreatePost}
-            className="flex-1 text-left text-sm text-muted-foreground rounded-full bg-secondary/50 px-4 py-2.5 hover:bg-secondary transition"
+            className="flex-1 text-left text-sm text-muted-foreground rounded-sm bg-secondary/50 px-4 py-2.5 hover:bg-secondary transition italic"
           >
             Que estas desarrollando hoy?
           </button>
@@ -138,8 +139,8 @@ export function ExploreView() {
       {discoverBetas.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2 px-1">
-            <h2 className="text-sm font-bold flex items-center gap-1.5">
-              <Compass className="h-4 w-4 text-primary" />
+            <h2 className="text-section flex items-center gap-2">
+              <Compass className="h-5 w-5 text-wine-600 dark:text-wine-400" />
               Descubrir juegos
             </h2>
             <button
@@ -232,7 +233,7 @@ export function ExploreView() {
                 </div>
               </div>
               <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-48 w-full rounded-xl" />
+              <Skeleton className="h-48 w-full rounded-md" />
             </div>
           ))}
         </div>
@@ -250,7 +251,7 @@ export function ExploreView() {
             Se el primero en compartir algo con la comunidad
           </p>
           {isGuest && (
-            <Button className="btn-gradient-primary mt-4 rounded-full" onClick={() => openAuth('register')}>
+            <Button className="btn-gradient-primary mt-4 rounded-sm" onClick={() => openAuth('register')}>
               Crear cuenta para publicar
             </Button>
           )}

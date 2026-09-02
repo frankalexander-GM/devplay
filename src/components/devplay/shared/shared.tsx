@@ -27,12 +27,12 @@ const TAG_ICONS: Record<string, LucideIcon> = {
 
 // ===== Avatar =====
 const AVATAR_GRADIENTS = [
-  'from-rose-300 to-pink-400',
-  'from-violet-300 to-purple-400',
-  'from-amber-300 to-orange-400',
-  'from-emerald-300 to-teal-400',
-  'from-violet-300 to-violet-400',
-  'from-fuchsia-300 to-pink-400',
+  'from-wine-300 to-sepia-400',
+  'from-wine-300 to-wine-400',
+  'from-amber-300 to-bronze-400',
+  'from-olive-300 to-sepia-400',
+  'from-wine-300 to-wine-400',
+  'from-bronze-300 to-sepia-400',
 ]
 
 function pickGradient(username: string) {
@@ -87,7 +87,7 @@ export function LiveBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm shadow-rose-400/40',
+        'inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-wine-400 to-sepia-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm shadow-wine-400/40',
         className
       )}
     >
@@ -105,9 +105,9 @@ export function PlatformBadge({ platform }: { platform: string }) {
     KICK: 'Kick',
   }
   const colors: Record<string, string> = {
-    TWITCH: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300',
-    YOUTUBE: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
-    KICK: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+    TWITCH: 'bg-wine-100 text-wine-700 dark:bg-wine-500/20 dark:text-wine-300',
+    YOUTUBE: 'bg-wine-100 text-wine-700 dark:bg-wine-500/20 dark:text-wine-300',
+    KICK: 'bg-olive-100 text-olive-700 dark:bg-olive-500/20 dark:text-olive-300',
   }
   return (
     <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', colors[platform] ?? 'bg-secondary text-secondary-foreground')}>

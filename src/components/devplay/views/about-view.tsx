@@ -35,8 +35,8 @@ export function AboutView() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center pt-8"
       >
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-accent shadow-lg">
-          <img src="/logo-devplay.png" alt="DevPlay" className="h-14 w-14 rounded-2xl object-cover" />
+        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+          <img src="/logo-devplay.png" alt="DevPlay" className="h-14 w-14 rounded-lg object-cover" />
         </div>
         <h1 className="text-4xl font-bold gradient-text">DevPlay</h1>
         <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
@@ -82,7 +82,7 @@ export function AboutView() {
               transition={{ delay: 0.3 + i * 0.05 }}
               className="glass-card p-4 flex items-start gap-3"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <f.icon className="h-5 w-5" />
               </div>
               <div>
@@ -104,7 +104,7 @@ export function AboutView() {
         <h2 className="text-2xl font-bold mb-4">Tecnologías</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {tech.map((t, i) => (
-            <div key={i} className="flex items-center gap-2 rounded-xl bg-secondary/40 p-3">
+            <div key={i} className="flex items-center gap-2 rounded-md bg-secondary/40 p-3">
               <t.icon className="h-4 w-4 text-primary shrink-0" />
               <span className="text-sm font-medium">{t.name}</span>
             </div>

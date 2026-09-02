@@ -90,7 +90,7 @@ export function SearchModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong max-w-2xl max-h-[80vh] p-0 overflow-hidden rounded-2xl flex flex-col">
+      <DialogContent className="glass-strong max-w-2xl max-h-[80vh] p-0 overflow-hidden rounded-lg flex flex-col">
         <DialogHeader className="sr-only">
           <DialogTitle>Buscar</DialogTitle>
           <DialogDescription>Busca juegos, devs y publicaciones</DialogDescription>
@@ -188,7 +188,7 @@ export function SearchModal({
             </div>
           ) : isLoading ? (
             <div className="space-y-2">
-              {[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+              {[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full rounded-md" />)}
             </div>
           ) : !hasResults ? (
             /* ===== Sin resultados ===== */
@@ -216,7 +216,7 @@ export function SearchModal({
                       <button
                         key={u.id}
                         onClick={() => handleOpenProfile(u.id)}
-                        className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-secondary/60 transition"
+                        className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-secondary/60 transition"
                       >
                         <UserAvatar username={u.username} avatar={u.avatar} size="md" />
                         <div className="min-w-0 flex-1">
@@ -245,11 +245,11 @@ export function SearchModal({
                       <button
                         key={p.id}
                         onClick={() => handleOpenPost(p.id)}
-                        className="flex w-full items-start gap-3 rounded-xl p-2 text-left hover:bg-secondary/60 transition"
+                        className="flex w-full items-start gap-3 rounded-md p-2 text-left hover:bg-secondary/60 transition"
                       >
                         <div className={cn(
                           'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white',
-                          p.type === 'BETA' ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-gradient-to-br from-violet-400 to-violet-500'
+                          p.type === 'BETA' ? 'bg-gradient-to-br from-amber-400 to-bronze-500' : 'bg-gradient-to-br from-wine-400 to-wine-500'
                         )}>
                           {p.type === 'BETA' ? <Gamepad2 className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                         </div>

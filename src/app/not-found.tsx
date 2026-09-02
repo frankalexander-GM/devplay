@@ -154,7 +154,7 @@ export default function NotFound() {
                     'color-mix(in oklch, var(--primary) 45%, transparent)',
                 }}
               />
-              <div className="relative grid place-items-center h-20 w-20 sm:h-24 sm:w-24 rounded-2xl glass-card">
+              <div className="relative grid place-items-center h-20 w-20 sm:h-24 sm:w-24 rounded-lg glass-card">
                 <Gamepad2 className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
               </div>
             </motion.div>
@@ -272,7 +272,7 @@ export default function NotFound() {
           <p>© 2025 DevPlay — Red social para devs de videojuegos indie</p>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 live-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
               Error 404 · Página no encontrada
             </span>
             <span>MVP v1.0</span>

@@ -275,11 +275,11 @@ export function CreateBetaModal() {
 
   return (
     <Dialog open={createBetaOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass-strong max-w-2xl max-h-[92vh] p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="glass-strong max-w-2xl max-h-[92vh] p-0 overflow-hidden rounded-lg">
         {/* Header con pasos */}
         <div className="border-b border-border/50 p-4 pb-3">
           <DialogTitle className="flex items-center gap-2 mb-1">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Gamepad2 className="h-5 w-5" />
             </div>
             <div>
@@ -301,15 +301,15 @@ export function CreateBetaModal() {
                     disabled={s.id > step}
                     className={cn(
                       'flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium transition-all',
-                      active && 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-sm',
-                      done && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 cursor-pointer',
+                      active && 'bg-gradient-to-r from-amber-400 to-bronze-500 text-white shadow-sm',
+                      done && 'bg-olive-100 text-olive-700 dark:bg-olive-500/20 dark:text-olive-300 cursor-pointer',
                       !active && !done && 'text-muted-foreground'
                     )}
                   >
                     <span className={cn(
                       'flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold',
                       active && 'bg-white/20',
-                      done && 'bg-emerald-500 text-white',
+                      done && 'bg-olive-500 text-white',
                       !active && !done && 'bg-secondary'
                     )}>
                       {done ? <Check className="h-3 w-3" /> : <Icon className="h-3 w-3" />}
@@ -317,7 +317,7 @@ export function CreateBetaModal() {
                     <span className="hidden sm:inline">{s.title}</span>
                   </button>
                   {i < STEPS.length - 1 && (
-                    <div className={cn('h-0.5 flex-1 mx-1 rounded-full', step > s.id ? 'bg-emerald-400' : 'bg-border')} />
+                    <div className={cn('h-0.5 flex-1 mx-1 rounded-full', step > s.id ? 'bg-olive-400' : 'bg-border')} />
                   )}
                 </div>
               )
@@ -341,7 +341,7 @@ export function CreateBetaModal() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="beta-title" className="flex items-center gap-1">
-                    Título del juego <span className="text-rose-500">*</span>
+                    Título del juego <span className="text-wine-500">*</span>
                   </Label>
                   <Input
                     id="beta-title"
@@ -349,7 +349,7 @@ export function CreateBetaModal() {
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Ej: Pixel Quest"
                     maxLength={100}
-                    className="rounded-xl"
+                    className="rounded-md"
                   />
                 </div>
 
@@ -360,7 +360,7 @@ export function CreateBetaModal() {
                       id="beta-genre"
                       value={genre}
                       onChange={(e) => setGenre(e.target.value)}
-                      className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
                       {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
@@ -373,7 +373,7 @@ export function CreateBetaModal() {
                       onChange={(e) => setVersion(e.target.value)}
                       placeholder="v0.1, Alpha 1.2..."
                       maxLength={30}
-                      className="rounded-xl"
+                      className="rounded-md"
                     />
                   </div>
                 </div>
@@ -402,7 +402,7 @@ export function CreateBetaModal() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="beta-desc" className="flex items-center gap-1">
-                    Descripción <span className="text-rose-500">*</span>
+                    Descripción <span className="text-wine-500">*</span>
                   </Label>
                   <Textarea
                     id="beta-desc"
@@ -411,7 +411,7 @@ export function CreateBetaModal() {
                     placeholder="Describe tu juego: historia, mecánicas, novedades de esta versión, controles..."
                     maxLength={2000}
                     rows={4}
-                    className="resize-none rounded-xl"
+                    className="resize-none rounded-md"
                   />
                   <p className="text-[11px] text-muted-foreground text-right">{description.length}/2000</p>
                 </div>
@@ -454,8 +454,8 @@ export function CreateBetaModal() {
                         className={cn(
                           'rounded-full border px-2.5 py-0.5 text-[11px] transition',
                           selectedTags.includes(t)
-                            ? 'border-violet-400 bg-violet-100/50 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300'
-                            : 'border-border hover:border-violet-400/50'
+                            ? 'border-wine-400 bg-wine-100/50 text-wine-700 dark:bg-wine-500/20 dark:text-wine-300'
+                            : 'border-border hover:border-wine-400/50'
                         )}
                       >
                         {t}
@@ -481,7 +481,7 @@ export function CreateBetaModal() {
                 <div className="space-y-2">
                   <Label>Imagen de portada</Label>
                   {coverImage ? (
-                    <div className="relative rounded-xl overflow-hidden glass">
+                    <div className="relative rounded-md overflow-hidden glass">
                       <img src={coverImage} alt="" className="w-full h-40 object-cover" />
                       <button
                         onClick={() => setCoverImage('')}
@@ -491,10 +491,10 @@ export function CreateBetaModal() {
                       </button>
                     </div>
                   ) : (
-                    <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 hover:border-rose-400/50 transition">
+                    <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-6 hover:border-wine-400/50 transition">
                       <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
                       {uploadingCover ? (
-                        <><Loader2 className="h-8 w-8 animate-spin text-rose-400" /><p className="text-sm text-muted-foreground">Subiendo...</p></>
+                        <><Loader2 className="h-8 w-8 animate-spin text-wine-400" /><p className="text-sm text-muted-foreground">Subiendo...</p></>
                       ) : (
                         <>
                           <ImageIcon className="h-8 w-8 text-muted-foreground" />
@@ -533,17 +533,17 @@ export function CreateBetaModal() {
                     </div>
                   )}
                   <label className={cn(
-                    'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed p-4 transition',
+                    'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-md border-2 border-dashed p-4 transition',
                     screenshots.length >= 10
                       ? 'opacity-50 pointer-events-none border-border'
-                      : 'hover:border-violet-400/50'
+                      : 'hover:border-wine-400/50'
                   )}>
                     <input type="file" accept="image/*" multiple className="hidden" onChange={handleScreenshotsUpload} disabled={screenshots.length >= 10} />
                     {uploadingShots ? (
-                      <><Loader2 className="h-6 w-6 animate-spin text-violet-400" /><p className="text-xs text-muted-foreground">Subiendo...</p></>
+                      <><Loader2 className="h-6 w-6 animate-spin text-wine-400" /><p className="text-xs text-muted-foreground">Subiendo...</p></>
                     ) : screenshots.length >= 10 ? (
                       <>
-                        <Check className="h-6 w-6 text-emerald-500" />
+                        <Check className="h-6 w-6 text-olive-500" />
                         <p className="text-xs font-medium">Máximo alcanzado (10)</p>
                       </>
                     ) : (
@@ -575,7 +575,7 @@ export function CreateBetaModal() {
                     type="button"
                     onClick={() => setDownloadType('DIRECT')}
                     className={cn(
-                      'flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition',
+                      'flex flex-col items-center gap-2 rounded-md border-2 p-4 transition',
                       downloadType === 'DIRECT'
                         ? 'border-amber-400 bg-amber-100/50 dark:bg-amber-500/15'
                         : 'border-border hover:border-amber-400/50'
@@ -591,13 +591,13 @@ export function CreateBetaModal() {
                     type="button"
                     onClick={() => setDownloadType('LINK')}
                     className={cn(
-                      'flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition',
+                      'flex flex-col items-center gap-2 rounded-md border-2 p-4 transition',
                       downloadType === 'LINK'
-                        ? 'border-violet-400 bg-violet-100/50 dark:bg-violet-500/15'
-                        : 'border-border hover:border-violet-400/50'
+                        ? 'border-wine-400 bg-wine-100/50 dark:bg-wine-500/15'
+                        : 'border-border hover:border-wine-400/50'
                     )}
                   >
-                    <Link2 className="h-6 w-6 text-violet-500" />
+                    <Link2 className="h-6 w-6 text-wine-500" />
                     <div className="text-center">
                       <p className="text-sm font-semibold">Enlace externo</p>
                       <p className="text-[10px] text-muted-foreground">Google Drive, itch.io, Mega...</p>
@@ -609,8 +609,8 @@ export function CreateBetaModal() {
                 {downloadType === 'DIRECT' && (
                   <div className="space-y-2">
                     {file ? (
-                      <div className="glass flex items-center gap-3 rounded-xl p-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                      <div className="glass flex items-center gap-3 rounded-md p-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-bronze-500 text-white">
                           <FileArchive className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -622,10 +622,10 @@ export function CreateBetaModal() {
                         </Button>
                       </div>
                     ) : (
-                      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 hover:border-rose-400/50 transition">
+                      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-6 hover:border-wine-400/50 transition">
                         <input type="file" accept=".zip,.rar,.7z,.tar,.gz,.exe,.apk" className="hidden" onChange={handleFile} />
                         {uploading ? (
-                          <><Loader2 className="h-8 w-8 animate-spin text-rose-400" /><p className="text-sm text-muted-foreground">Subiendo...</p></>
+                          <><Loader2 className="h-8 w-8 animate-spin text-wine-400" /><p className="text-sm text-muted-foreground">Subiendo...</p></>
                         ) : (
                           <>
                             <Upload className="h-8 w-8 text-muted-foreground" />
@@ -657,8 +657,8 @@ export function CreateBetaModal() {
                             className={cn(
                               'flex flex-col items-center gap-1 rounded-lg border-2 p-2.5 transition',
                               externalPlatform === p.id
-                                ? 'border-violet-400 bg-violet-100/50 dark:bg-violet-500/15'
-                                : 'border-border hover:border-violet-400/50'
+                                ? 'border-wine-400 bg-wine-100/50 dark:bg-wine-500/15'
+                                : 'border-border hover:border-wine-400/50'
                             )}
                           >
                             <span className="text-xl">{p.icon}</span>
@@ -673,7 +673,7 @@ export function CreateBetaModal() {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="ext-url" className="flex items-center gap-1">
-                        URL de descarga <span className="text-rose-500">*</span>
+                        URL de descarga <span className="text-wine-500">*</span>
                       </Label>
                       <Input
                         id="ext-url"
@@ -681,14 +681,14 @@ export function CreateBetaModal() {
                         value={externalUrl}
                         onChange={(e) => setExternalUrl(e.target.value)}
                         placeholder="https://..."
-                        className="rounded-xl"
+                        className="rounded-md"
                       />
                       <p className="text-[11px] text-muted-foreground">
                         Los testers serán redirigidos a esta URL al hacer clic en "Probar Beta"
                       </p>
 
                       {/* Alerta de baneo */}
-                      <div className="flex items-start gap-2 rounded-xl border-2 border-red-500/30 bg-red-500/5 p-3 mt-2">
+                      <div className="flex items-start gap-2 rounded-md border-2 border-red-500/30 bg-red-500/5 p-3 mt-2">
                         <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-500" />
                         <div className="text-[11px] text-red-600 dark:text-red-400">
                           <p className="font-bold">Advertencia sobre enlaces</p>
@@ -725,7 +725,7 @@ export function CreateBetaModal() {
                     onChange={(e) => setRequirements(e.target.value)}
                     placeholder={"SO: Windows 10\nRAM: 4 GB\nGPU: Cualquiera\nAlmacenamiento: 200 MB"}
                     rows={4}
-                    className="resize-none rounded-xl font-mono text-xs"
+                    className="resize-none rounded-md font-mono text-xs"
                   />
                 </div>
 
@@ -737,7 +737,7 @@ export function CreateBetaModal() {
                     onChange={(e) => setInstallInstructions(e.target.value)}
                     placeholder={"1. Descarga el archivo .zip\n2. Extrae la carpeta\n3. Ejecuta juego.exe\n4. ¡A jugar!"}
                     rows={4}
-                    className="resize-none rounded-xl text-xs"
+                    className="resize-none rounded-md text-xs"
                   />
                 </div>
 
@@ -749,7 +749,7 @@ export function CreateBetaModal() {
                     onChange={(e) => setChangelog(e.target.value)}
                     placeholder={"- Añadido nuevo jefe final\n- Corregido bug del inventario\n- Mejorados los gráficos"}
                     rows={4}
-                    className="resize-none rounded-xl text-xs"
+                    className="resize-none rounded-md text-xs"
                   />
                 </div>
 
@@ -761,14 +761,14 @@ export function CreateBetaModal() {
                     onChange={(e) => setFeedMessage(e.target.value)}
                     placeholder="¡Probadores! Esta build trae un nuevo jefe final. Necesito feedback sobre la dificultad..."
                     rows={3}
-                    className="resize-none rounded-xl"
+                    className="resize-none rounded-md"
                   />
                 </div>
 
                 {/* Resumen */}
-                <div className="card-rose rounded-xl p-3 space-y-2">
+                <div className="card-rose rounded-md p-3 space-y-2">
                   <div className="flex items-center gap-2 text-xs font-semibold">
-                    <Info className="h-3.5 w-3.5 text-rose-500" />
+                    <Info className="h-3.5 w-3.5 text-wine-500" />
                     Resumen de tu beta
                   </div>
                   <div className="text-[11px] text-muted-foreground space-y-0.5">
@@ -800,7 +800,7 @@ export function CreateBetaModal() {
                 key={s.id}
                 className={cn(
                   'h-1.5 rounded-full transition-all',
-                  step === s.id ? 'w-6 bg-amber-400' : step > s.id ? 'w-1.5 bg-emerald-400' : 'w-1.5 bg-border'
+                  step === s.id ? 'w-6 bg-amber-400' : step > s.id ? 'w-1.5 bg-olive-400' : 'w-1.5 bg-border'
                 )}
               />
             ))}
@@ -810,7 +810,7 @@ export function CreateBetaModal() {
             <Button
               onClick={() => setStep(step + 1)}
               disabled={!canAdvance()}
-              className="btn-gradient-beta rounded-full"
+              className="btn-gradient-beta rounded-sm"
             >
               Siguiente
               <ChevronRight className="h-4 w-4" />
@@ -819,7 +819,7 @@ export function CreateBetaModal() {
             <Button
               onClick={handleSubmit}
               disabled={submitting}
-              className="btn-gradient-beta rounded-full"
+              className="btn-gradient-beta rounded-sm"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {submitting ? 'Publicando...' : 'Publicar Beta'}
@@ -834,7 +834,7 @@ export function CreateBetaModal() {
 function SectionHeader({ icon: Icon, title, desc }: { icon: any; title: string; desc: string }) {
   return (
     <div className="flex items-center gap-3 mb-2">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
         <Icon className="h-5 w-5" />
       </div>
       <div>

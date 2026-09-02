@@ -99,11 +99,11 @@ export function PollWidget({ postId, poll }: PollWidgetProps) {
   const showResults = hasVoted || isClosed
 
   return (
-    <div className="mx-4 mb-3 card-peach rounded-2xl overflow-hidden">
+    <div className="mx-4 mb-3 card-peach rounded-lg overflow-hidden">
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start gap-2.5 mb-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
             <BarChart3 className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -119,7 +119,7 @@ export function PollWidget({ postId, poll }: PollWidgetProps) {
                 </Badge>
               )}
               {isClosed ? (
-                <Badge className="text-[9px] gap-0.5 px-1.5 py-0 bg-rose-500/15 text-rose-600 dark:text-rose-300 hover:bg-rose-500/20">
+                <Badge className="text-[9px] gap-0.5 px-1.5 py-0 bg-wine-500/15 text-wine-600 dark:text-wine-300 hover:bg-wine-500/20">
                   <Lock className="h-2.5 w-2.5" />
                   Cerrada
                 </Badge>
@@ -151,7 +151,7 @@ export function PollWidget({ postId, poll }: PollWidgetProps) {
                   type="button"
                   onClick={() => toggleOption(opt.id)}
                   className={cn(
-                    'group relative w-full flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-sm transition-all',
+                    'group relative w-full flex items-center gap-2.5 rounded-md border px-3 py-2.5 text-left text-sm transition-all',
                     isSelected
                       ? 'border-primary bg-primary/10 text-foreground'
                       : 'border-border/60 bg-background/40 hover:border-primary/40 hover:bg-secondary/40'
@@ -178,7 +178,7 @@ export function PollWidget({ postId, poll }: PollWidgetProps) {
               <div
                 key={opt.id}
                 className={cn(
-                  'relative overflow-hidden rounded-xl border px-3 py-2.5 transition',
+                  'relative overflow-hidden rounded-md border px-3 py-2.5 transition',
                   userVotedThis
                     ? 'border-primary/60 bg-primary/5'
                     : isLeading
@@ -237,7 +237,7 @@ export function PollWidget({ postId, poll }: PollWidgetProps) {
             <Button
               onClick={handleVote}
               disabled={voteMutation.isPending || selectedIds.length === 0}
-              className="btn-gradient-primary rounded-full gap-1.5 flex-1"
+              className="btn-gradient-primary rounded-sm gap-1.5 flex-1"
               size="sm"
             >
               {voteMutation.isPending ? (

@@ -66,7 +66,7 @@ export function SecurityPanel() {
       {/* Score de seguridad */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-olive-400 to-sepia-500 text-white">
             <Shield className="h-6 w-6" />
           </div>
           <div className="flex-1">
@@ -74,7 +74,7 @@ export function SecurityPanel() {
             <p className="text-[10px] text-muted-foreground">Protección de tu cuenta</p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-emerald-500">{securityScore}</p>
+            <p className="text-2xl font-bold text-olive-500">{securityScore}</p>
             <p className="text-[9px] text-muted-foreground">/ 100</p>
           </div>
         </div>
@@ -83,7 +83,7 @@ export function SecurityPanel() {
             initial={{ width: 0 }}
             animate={{ width: `${securityScore}%` }}
             transition={{ duration: 1 }}
-            className="h-full bg-gradient-to-r from-emerald-400 to-teal-500"
+            className="h-full bg-gradient-to-r from-olive-400 to-sepia-500"
           />
         </div>
       </div>
@@ -93,7 +93,7 @@ export function SecurityPanel() {
         icon={Key}
         title="Contraseña"
         desc="Cambia tu contraseña regularmente"
-        gradient="from-amber-400 to-orange-500"
+        gradient="from-amber-400 to-bronze-500"
         action={
           <Button size="sm" variant="outline" className="rounded-full" onClick={() => setShowPasswordModal(true)}>
             Cambiar
@@ -106,7 +106,7 @@ export function SecurityPanel() {
         icon={user?.isPrivate ? Lock : Eye}
         title="Privacidad del perfil"
         desc={user?.isPrivate ? 'Solo tus seguidores pueden ver tu perfil' : 'Tu perfil es visible para todos'}
-        gradient="from-violet-400 to-purple-500"
+        gradient="from-wine-400 to-wine-500"
         action={
           <Button
             size="sm"
@@ -124,7 +124,7 @@ export function SecurityPanel() {
       {/* Dispositivos / Sesiones */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-violet-500 text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-wine-500 text-white">
             <Monitor className="h-4 w-4" />
           </div>
           <div>
@@ -140,7 +140,7 @@ export function SecurityPanel() {
               <div key={event.id} className="flex items-center gap-3 rounded-lg glass p-2">
                 <div className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-lg',
-                  event.success ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-red-100 text-red-600 dark:bg-red-500/20'
+                  event.success ? 'bg-olive-100 text-olive-600 dark:bg-olive-500/20' : 'bg-red-100 text-red-600 dark:bg-red-500/20'
                 )}>
                   {event.success ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
                 </div>
@@ -167,7 +167,7 @@ export function SecurityPanel() {
       {/* Zona de peligro */}
       <div className="glass-card border-2 border-red-500/30 p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-wine-600 text-white">
             <AlertTriangle className="h-4 w-4" />
           </div>
           <div>
@@ -206,7 +206,7 @@ function SecurityCard({
 }) {
   return (
     <div className="glass-card p-4 flex items-center gap-3">
-      <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm', gradient)}>
+      <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gradient-to-br text-white shadow-sm', gradient)}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
@@ -235,7 +235,7 @@ function BlockedUsersSection({ blocked, isLoading }: { blocked: any[]; isLoading
   return (
     <div className="glass-card p-4">
       <div className="flex items-center gap-2 mb-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-rose-400 to-pink-500 text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-sepia-500 text-white">
           <Ban className="h-4 w-4" />
         </div>
         <div className="flex-1">
@@ -272,8 +272,8 @@ function BlockedUsersSection({ blocked, isLoading }: { blocked: any[]; isLoading
         <div className="space-y-2">{[1,2].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
       ) : blocked.length === 0 ? (
         <div className="py-8 text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-500/20">
-            <Check className="h-6 w-6 text-emerald-500" />
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-olive-100 dark:bg-olive-500/20">
+            <Check className="h-6 w-6 text-olive-500" />
           </div>
           <p className="text-sm font-semibold">No tienes usuarios bloqueados</p>
           <p className="text-xs text-muted-foreground mt-1">Cuando bloquees a alguien, aparecerá aquí</p>
@@ -322,7 +322,7 @@ function BlockedUserCard({ user, onUnblock }: { user: any; onUnblock: () => void
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl glass p-2.5">
+    <div className="flex items-center gap-3 rounded-md glass p-2.5">
       <button onClick={() => openProfile(user.id)} className="shrink-0">
         <UserAvatar username={user.username} avatar={user.avatar} size="md" />
       </button>
@@ -395,7 +395,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.95 }}
-        className="glass-strong w-full max-w-md rounded-2xl p-5"
+        className="glass-strong w-full max-w-md rounded-lg p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold mb-1 flex items-center gap-2">
@@ -444,7 +444,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 
         <div className="flex gap-2 mt-5">
           <Button variant="outline" onClick={onClose} className="rounded-full flex-1">Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={loading} className="btn-gradient-primary rounded-full flex-1">
+          <Button onClick={handleSubmit} disabled={loading} className="btn-gradient-primary rounded-sm flex-1">
             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Cambiando...</> : 'Cambiar contraseña'}
           </Button>
         </div>
@@ -490,7 +490,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.95 }}
-        className="glass-strong w-full max-w-md rounded-2xl p-5 border-2 border-red-500/30"
+        className="glass-strong w-full max-w-md rounded-lg p-5 border-2 border-red-500/30"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold mb-1 flex items-center gap-2 text-red-500">
@@ -549,7 +549,7 @@ export function getStrength(password: string): { score: number; label: string; c
   if (/[^A-Za-z0-9]/.test(password)) score++
 
   const labels = ['Muy débil', 'Débil', 'Regular', 'Buena', 'Fuerte', 'Muy fuerte']
-  const colors = ['bg-red-500', 'bg-red-400', 'bg-amber-400', 'bg-yellow-400', 'bg-emerald-400', 'bg-emerald-500']
+  const colors = ['bg-red-500', 'bg-red-400', 'bg-amber-400', 'bg-yellow-400', 'bg-olive-400', 'bg-olive-500']
 
   return { score, label: labels[score] || 'Muy débil', color: colors[score] || 'bg-red-500' }
 }

@@ -128,10 +128,10 @@ export function CreatePollModal() {
 
   return (
     <Dialog open={createPollOpen} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="glass-strong max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto custom-scroll">
+      <DialogContent className="glass-strong max-w-lg rounded-lg max-h-[90vh] overflow-y-auto custom-scroll">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
               <BarChart3 className="h-5 w-5" />
             </div>
             <div>
@@ -163,7 +163,7 @@ export function CreatePollModal() {
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="¿Cuál es tu motor de juegos favorito?"
             maxLength={280}
-            className="rounded-xl text-sm"
+            className="rounded-md text-sm"
             autoFocus
           />
           <p className="text-[10px] text-muted-foreground text-right">
@@ -184,7 +184,7 @@ export function CreatePollModal() {
             {options.map((opt, idx) => (
               <div
                 key={idx}
-                className="group flex items-center gap-1.5 rounded-xl bg-secondary/40 px-2 py-1.5 focus-within:bg-secondary/60 transition"
+                className="group flex items-center gap-1.5 rounded-md bg-secondary/40 px-2 py-1.5 focus-within:bg-secondary/60 transition"
               >
                 <div className="flex flex-col items-center text-muted-foreground/50">
                   <button
@@ -238,7 +238,7 @@ export function CreatePollModal() {
             <button
               type="button"
               onClick={addOption}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary/60 hover:text-foreground transition"
+              className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary/60 hover:text-foreground transition"
             >
               <Plus className="h-3.5 w-3.5" />
               Añadir opción
@@ -247,7 +247,7 @@ export function CreatePollModal() {
         </div>
 
         {/* Settings */}
-        <div className="space-y-3 rounded-xl bg-secondary/30 p-3">
+        <div className="space-y-3 rounded-md bg-secondary/30 p-3">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-semibold">Permitir múltiples votos</p>
@@ -297,7 +297,7 @@ export function CreatePollModal() {
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="btn-gradient-primary rounded-full gap-1.5"
+            className="btn-gradient-primary rounded-sm gap-1.5"
           >
             {submitting ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Publicando...</>

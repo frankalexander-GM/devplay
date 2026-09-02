@@ -3,8 +3,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// Solo un tema: Violeta Gaming — estilo Discord/Twitch
-export type ColorTheme = 'violeta'
+// Solo un tema: Prensa Vintage — marfil & tinta, serif editorial
+export type ColorTheme = 'vintage'
 
 export interface ThemeInfo {
   id: ColorTheme
@@ -19,14 +19,14 @@ export interface ThemeInfo {
 
 export const COLOR_THEMES: ThemeInfo[] = [
   {
-    id: 'violeta',
-    label: 'Violeta',
-    emoji: '🟣',
-    description: 'Violeta Gaming · Moderno y elegante',
-    primary: 'Violeta',
-    secondary: 'Fucsia',
-    background: 'Oscuro profundo / Lavanda claro',
-    preview: { primary: 'oklch(0.53 0.24 293)', accent: 'oklch(0.6 0.22 320)', bg: 'oklch(0.985 0.005 300)' },
+    id: 'vintage',
+    label: 'Vintage',
+    emoji: '🎩',
+    description: 'Prensa Vintage · Marfil y tinta, serif clásica',
+    primary: 'Tinta',
+    secondary: 'Vino',
+    background: 'Tinta de noche / Marfil',
+    preview: { primary: 'oklch(0.52 0.125 20)', accent: 'oklch(0.55 0.08 72)', bg: 'oklch(0.955 0.018 90)' },
   },
 ]
 
@@ -38,7 +38,7 @@ interface ThemeState {
 export const useColorThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      colorTheme: 'violeta',
+      colorTheme: 'vintage',
       setColorTheme: (theme) => set({ colorTheme: theme }),
     }),
     { name: 'devplay-color-theme' }
