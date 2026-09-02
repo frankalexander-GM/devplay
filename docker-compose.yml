@@ -1,0 +1,55 @@
+# ============================================
+# DevPlay - Docker Compose para Coolify
+# ============================================
+# Despliega: App principal + Servicio de chat en tiempo real
+# ============================================
+
+version: "3.8"
+
+services:
+  # ===== App Principal (Next.js) =====
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devplay-app
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=${DATABASE_URL:-file:/app/db/custom.db}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-devplay-secret-change-in-production}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+    volumes:
+      - devplay-db:/app/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===== Servicio de Chat en Tiempo Real (Socket.io) =====
+  realtime:
+    build:
+      context: ./mini-services/realtime-service
+      dockerfile: Dockerfile
+    container_name: devplay-realtime
+    ports:
+      - "${REALTIME_PORT:-3003}:3003"
+    environment:
+      - PORT=3003
+      - DATABASE_URL=${DATABASE_URL:-file:/app/db/custom.db}
+    volumes:
+      - devplay-db:/app/db:ro
+    restart: unless-stopped
+    depends_on:
+      - app
+
+volumes:
+  devplay-db:

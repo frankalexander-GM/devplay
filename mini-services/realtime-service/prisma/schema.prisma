@@ -1,0 +1,164 @@
+// DevPlay - Prisma Schema (SQLite)
+// Note: SQLite doesn't support enums, so we use String with app-level constants.
+// Note: No list primitive types - mediaUrls stored as JSON string.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  bio          String?
+  avatar       String?
+  banner       String?
+  // Role: "PLAYER" | "DEV"  (devs can go live and upload betas)
+  role         String   @default("PLAYER")
+  isGuest      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  posts              Post[]
+  comments           Comment[]
+  likes              Like[]
+  followers          Follow[]      @relation("Followee")
+  following          Follow[]      @relation("Follower")
+  streams            Stream[]
+  notificationsRecv  Notification[] @relation("NotifReceiver")
+  notificationsTrig  Notification[] @relation("NotifTrigger")
+  chatMessages       ChatMessage[]
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  // Type: "POST" | "BETA" | "STREAM"
+  type       String   @default("POST")
+  content    String?
+  // JSON string: array of { url, kind: "image"|"video" }
+  mediaUrls  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  beta     Beta?
+  stream   Stream?
+  comments Comment[]
+  likes    Like[]
+
+  @@index([authorId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Beta {
+  id          String   @id @default(cuid())
+  postId      String   @unique
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  // "DIRECT" (file < 50MB on server) | "LINK" (external URL)
+  downloadType String
+  fileUrl      String?
+  fileSize     Int?
+  fileName     String?
+  externalUrl  String?
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([postId])
+}
+
+model Stream {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId     String?  @unique
+  post       Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  // Platform: "TWITCH" | "YOUTUBE" | "KICK"
+  platform   String
+  streamUrl  String
+  embedUrl   String
+  title      String
+  isLive     Boolean  @default(false)
+  startedAt  DateTime?
+  endedAt    DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([isLive])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model Follow {
+  id         String   @id @default(cuid())
+  followerId String
+  follower   User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followeeId String
+  followee   User     @relation("Followee", fields: [followeeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([followerId, followeeId])
+  @@index([followerId])
+  @@index([followeeId])
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation("NotifReceiver", fields: [userId], references: [id], onDelete: Cascade)
+  fromUserId String
+  fromUser   User     @relation("NotifTrigger", fields: [fromUserId], references: [id], onDelete: Cascade)
+  // Type: "LIVE" | "FOLLOW" | "COMMENT" | "LIKE"
+  type       String
+  message    String
+  entityId   String?
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username  String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
