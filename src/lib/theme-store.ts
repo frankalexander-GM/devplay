@@ -3,8 +3,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// Solo un tema: Mono (blanco y negro) — limpio y profesional
-export type ColorTheme = 'mono'
+// Solo un tema: Violeta Gaming — estilo Discord/Twitch
+export type ColorTheme = 'violeta'
 
 export interface ThemeInfo {
   id: ColorTheme
@@ -19,14 +19,14 @@ export interface ThemeInfo {
 
 export const COLOR_THEMES: ThemeInfo[] = [
   {
-    id: 'mono',
-    label: 'Mono',
-    emoji: 'B/N',
-    description: 'Blanco y negro · Limpio y profesional',
-    primary: 'Negro',
-    secondary: 'Gris',
-    background: 'Blanco/Negro',
-    preview: { primary: 'oklch(0.2 0 0)', accent: 'oklch(0.5 0 0)', bg: 'oklch(0.98 0 0)' },
+    id: 'violeta',
+    label: 'Violeta',
+    emoji: '🟣',
+    description: 'Violeta Gaming · Moderno y elegante',
+    primary: 'Violeta',
+    secondary: 'Fucsia',
+    background: 'Oscuro profundo / Lavanda claro',
+    preview: { primary: 'oklch(0.53 0.24 293)', accent: 'oklch(0.6 0.22 320)', bg: 'oklch(0.985 0.005 300)' },
   },
 ]
 
@@ -38,7 +38,7 @@ interface ThemeState {
 export const useColorThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      colorTheme: 'mono',
+      colorTheme: 'violeta',
       setColorTheme: (theme) => set({ colorTheme: theme }),
     }),
     { name: 'devplay-color-theme' }

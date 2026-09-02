@@ -385,14 +385,14 @@ function ProfileStats({ userId }: { userId: string }) {
   const u = profileData?.user
 
   const cards = isMe && stats ? [
-    { icon: FileText, label: 'Posts', value: stats.posts, gradient: 'from-sky-400 to-blue-500' },
+    { icon: FileText, label: 'Posts', value: stats.posts, gradient: 'from-violet-400 to-violet-500' },
     { icon: Users, label: 'Seguidores', value: stats.followers, gradient: 'from-violet-400 to-purple-500' },
     { icon: Download, label: 'Descargas', value: stats.totalDownloads, gradient: 'from-amber-400 to-orange-500' },
     { icon: Heart, label: 'Likes', value: stats.totalLikesReceived, gradient: 'from-rose-400 to-pink-500' },
     { icon: Gamepad2, label: 'Betas', value: stats.betas, gradient: 'from-emerald-400 to-teal-500' },
     { icon: Star, label: 'Nivel', value: stats.level, gradient: 'from-fuchsia-400 to-purple-500' },
   ] : u ? [
-    { icon: FileText, label: 'Posts', value: u.postsCount, gradient: 'from-sky-400 to-blue-500' },
+    { icon: FileText, label: 'Posts', value: u.postsCount, gradient: 'from-violet-400 to-violet-500' },
     { icon: Users, label: 'Seguidores', value: u.followersCount, gradient: 'from-violet-400 to-purple-500' },
     { icon: Users, label: 'Siguiendo', value: u.followingCount, gradient: 'from-emerald-400 to-teal-500' },
     { icon: Gamepad2, label: 'Betas', value: 0, gradient: 'from-amber-400 to-orange-500' },
@@ -736,7 +736,7 @@ function ProfileLogros({ userId }: { userId: string }) {
     bronze: 'from-orange-300 to-amber-500',
     silver: 'from-gray-300 to-gray-500',
     gold: 'from-yellow-300 to-amber-500',
-    platinum: 'from-cyan-300 to-blue-500',
+    platinum: 'from-fuchsia-300 to-violet-500',
   }
 
   return (
@@ -820,7 +820,7 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
     insights.push({ icon: Gamepad2, text: `Has publicado ${stats.betas} beta(s) para la comunidad`, color: 'from-emerald-400 to-teal-500' })
   }
   if (weekTotal > 0) {
-    insights.push({ icon: TrendingUp, text: `Has publicado ${weekTotal} veces esta semana`, color: 'from-sky-400 to-blue-500' })
+    insights.push({ icon: TrendingUp, text: `Has publicado ${weekTotal} veces esta semana`, color: 'from-violet-400 to-violet-500' })
   }
 
   return (
@@ -910,13 +910,13 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
 
       {/* ===== Grid de stats detalladas ===== */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <StatBox icon={FileText} label="Publicaciones" value={stats.posts} color="from-sky-400 to-blue-500" />
+        <StatBox icon={FileText} label="Publicaciones" value={stats.posts} color="from-violet-400 to-violet-500" />
         <StatBox icon={Gamepad2} label="Betas" value={stats.betas} color="from-amber-400 to-orange-500" />
         <StatBox icon={Download} label="Descargas" value={stats.totalDownloads} color="from-emerald-400 to-teal-500" />
         <StatBox icon={Heart} label="Likes recibidos" value={stats.totalLikesReceived} color="from-rose-400 to-pink-500" />
         <StatBox icon={Users} label="Seguidores" value={stats.followers} color="from-violet-400 to-purple-500" />
         <StatBox icon={Users} label="Siguiendo" value={stats.following} color="from-emerald-400 to-teal-500" />
-        <StatBox icon={FileText} label="Comentarios" value={stats.comments} color="from-sky-400 to-blue-500" />
+        <StatBox icon={FileText} label="Comentarios" value={stats.comments} color="from-violet-400 to-violet-500" />
         <StatBox icon={Bookmark} label="Guardados" value={stats.bookmarks} color="from-amber-400 to-orange-500" />
       </div>
 

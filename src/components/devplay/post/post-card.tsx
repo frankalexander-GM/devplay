@@ -479,7 +479,7 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
                 </span>
               )}
               {beta.platforms && beta.platforms.length > 0 && (
-                <span className="rounded-full bg-sky-100 px-2 py-0.5 font-medium text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
+                <span className="rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
                   {beta.platforms.join(', ')}
                 </span>
               )}
@@ -594,7 +594,7 @@ function AuthorActionsMenu({ onDelete, onEdit }: { onDelete: () => void; onEdit:
               onClick={() => { onEdit(); setOpen(false) }}
               className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-secondary/60 transition"
             >
-              <Pencil className="h-4 w-4 text-sky-500" />
+              <Pencil className="h-4 w-4 text-violet-500" />
               Editar
             </button>
             <div className="border-t border-border/50" />

@@ -202,7 +202,7 @@ export function Header() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52 rounded-xl">
             <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
-              <FileText className="mr-2 h-4 w-4 text-sky-500" />
+              <FileText className="mr-2 h-4 w-4 text-violet-500" />
               Publicación
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreateBeta} className="rounded-lg">

@@ -19,7 +19,6 @@ import { CreatePollModal } from '@/components/devplay/create-poll-modal'
 import { PostDetailModal } from '@/components/devplay/post-detail-modal'
 import { ResetPasswordModal } from '@/components/devplay/forgot-password-modal'
 import { OnboardingTour } from '@/components/devplay/onboarding-tour'
-import { StarField } from '@/components/devplay/star-field'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ViewId } from '@/types/devplay'
@@ -72,7 +71,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <StarField />
       <Header />
 
       <div className="flex flex-1">

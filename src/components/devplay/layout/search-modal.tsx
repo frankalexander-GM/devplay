@@ -249,7 +249,7 @@ export function SearchModal({
                       >
                         <div className={cn(
                           'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white',
-                          p.type === 'BETA' ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-gradient-to-br from-sky-400 to-blue-500'
+                          p.type === 'BETA' ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-gradient-to-br from-violet-400 to-violet-500'
                         )}>
                           {p.type === 'BETA' ? <Gamepad2 className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                         </div>

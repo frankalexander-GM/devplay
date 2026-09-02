@@ -31,7 +31,7 @@ const AVATAR_GRADIENTS = [
   'from-violet-300 to-purple-400',
   'from-amber-300 to-orange-400',
   'from-emerald-300 to-teal-400',
-  'from-sky-300 to-blue-400',
+  'from-violet-300 to-violet-400',
   'from-fuchsia-300 to-pink-400',
 ]
 

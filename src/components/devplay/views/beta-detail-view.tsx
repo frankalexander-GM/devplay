@@ -239,7 +239,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
             </span>
           )}
           {beta.platforms && beta.platforms.length > 0 && (
-            <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-medium text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
+            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
               {beta.platforms.join(', ')}
             </span>
           )}

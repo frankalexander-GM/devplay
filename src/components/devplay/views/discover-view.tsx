@@ -194,7 +194,7 @@ export function DiscoverView() {
             <DiscoverSection
               icon={Hash}
               title="Tags populares"
-              gradient="from-sky-400 to-blue-500"
+              gradient="from-violet-400 to-violet-500"
             >
               <div className="flex flex-wrap gap-2">
                 {popularTags.map((tag, i) => {

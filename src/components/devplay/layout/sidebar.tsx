@@ -41,7 +41,7 @@ interface NavItem {
 
 const MAIN_NAV: NavItem[] = [
   { id: 'explore', label: 'Inicio', description: 'Feed principal', icon: Home, gradient: 'from-violet-400 to-purple-500' },
-  { id: 'discover', label: 'Descubrir', description: 'Novedades y trending', icon: Sparkles, gradient: 'from-sky-400 to-blue-500' },
+  { id: 'discover', label: 'Descubrir', description: 'Novedades y trending', icon: Sparkles, gradient: 'from-violet-400 to-violet-500' },
   { id: 'betas', label: 'Betas', description: 'Centro de betas', icon: Gamepad2, gradient: 'from-amber-400 to-orange-500' },
   { id: 'videos', label: 'Videos', description: 'Gameplays y trailers', icon: Video, gradient: 'from-rose-400 to-pink-500' },
   { id: 'chat', label: 'Chat Mundial', description: 'Chatea con la comunidad', icon: MessageCircle, gradient: 'from-amber-400 to-orange-500' },
@@ -52,7 +52,7 @@ const MAIN_NAV: NavItem[] = [
 const COMMUNITY_ITEMS = [
   { id: 'trending' as const, label: 'Trending', desc: 'Lo más popular', icon: Flame, gradient: 'from-rose-400 to-orange-400' },
   { id: 'betas' as const, label: 'Betas', desc: 'Solo betas', icon: Gamepad2, gradient: 'from-amber-400 to-orange-500' },
-  { id: 'devs' as const, label: 'Devs', desc: 'Desarrolladores top', icon: Users, gradient: 'from-violet-400 to-sky-400' },
+  { id: 'devs' as const, label: 'Devs', desc: 'Desarrolladores top', icon: Users, gradient: 'from-violet-400 to-violet-400' },
 ]
 
 export function Sidebar() {
@@ -144,7 +144,7 @@ export function Sidebar() {
           <div>
             <SectionTitle>Crear contenido</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={FileText} label="Nueva publicación" gradient="from-sky-400 to-blue-500" onClick={openCreatePost} />
+              <CreateButton icon={FileText} label="Nueva publicación" gradient="from-violet-400 to-violet-500" onClick={openCreatePost} />
               <CreateButton icon={Gamepad2} label="Subir beta" gradient="from-amber-400 to-orange-500" onClick={openCreateBeta} />
               <CreateButton icon={Video} label="Subir video" gradient="from-rose-400 to-pink-500" onClick={openCreatePost} />
               <CreateButton icon={BarChart3} label="Crear encuesta" gradient="from-emerald-400 to-teal-500" onClick={openCreatePoll} />
@@ -171,7 +171,7 @@ export function Sidebar() {
             <CreateButton
               icon={HelpCircle}
               label="Tour guiado"
-              gradient="from-sky-400 to-cyan-500"
+              gradient="from-violet-400 to-fuchsia-500"
               onClick={() => {
                 setOnboardingDone(false)
                 toast.success('Recargando para mostrar el tour...')
@@ -380,7 +380,7 @@ function MobileDrawer({
                 <div>
                   <SectionTitle>Crear</SectionTitle>
                   <div className="grid grid-cols-2 gap-2">
-                    <QuickAction icon={FileText} label="Publicar" gradient="from-sky-400 to-blue-500" onClick={() => { openCreatePost(); onClose() }} />
+                    <QuickAction icon={FileText} label="Publicar" gradient="from-violet-400 to-violet-500" onClick={() => { openCreatePost(); onClose() }} />
                     <QuickAction icon={Gamepad2} label="Beta" gradient="from-amber-400 to-orange-500" onClick={() => { openCreateBeta(); onClose() }} />
                     <QuickAction icon={Video} label="Video" gradient="from-rose-400 to-pink-500" onClick={() => { openCreatePost(); onClose() }} />
                     <QuickAction icon={BarChart3} label="Encuesta" gradient="from-emerald-400 to-teal-500" onClick={() => { openCreatePoll(); onClose() }} />
@@ -463,7 +463,7 @@ function MobileDrawer({
                     }}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-secondary/60 transition"
                   >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary from-sky-400 to-cyan-500">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary from-violet-400 to-fuchsia-500">
                       <HelpCircle className="h-4 w-4" />
                     </span>
                     <span className="font-semibold text-sm">Tour guiado</span>

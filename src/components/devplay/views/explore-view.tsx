@@ -66,13 +66,16 @@ export function ExploreView() {
     <div className="space-y-4">
       {/* ===== HERO BANNER ===== */}
       <div className="relative h-64 sm:h-80 rounded-2xl overflow-hidden">
-        {/* Background image */}
+        {/* Background image con tinte violeta para armonizar con el tema */}
         <img
           src="/uploads/hero-banner.jpg"
           alt="DevPlay"
           loading="eager"
           className="absolute inset-0 w-full h-full object-cover"
         />
+        {/* Overlay violeta duotono */}
+        <div className="absolute inset-0 bg-primary/45 mix-blend-color" />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/25 via-transparent to-primary/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
 
         {/* Content */}

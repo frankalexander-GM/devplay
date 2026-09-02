@@ -30,7 +30,7 @@ export function OnboardingTour() {
           popover: {
             title: 'Bienvenido a DevPlay',
             description:
-              'Aqui puedes buscar juegos, devs y betas. Tambien puedes cambiar entre modo claro y oscuro (prueba el modo oscuro para ver las estrellas).',
+              'Aqui puedes buscar juegos, devs y betas. Tambien puedes cambiar entre modo claro y oscuro con el boton de sol/luna.',
             side: 'bottom' as const,
             align: 'start' as const,
           },
@@ -60,7 +60,7 @@ export function OnboardingTour() {
           popover: {
             title: 'Consejo',
             description:
-              'Cambia al modo oscuro con el boton de sol/luna arriba a la derecha para ver un cielo estrellado animado.',
+              'Usa el boton de sol/luna arriba a la derecha para cambiar entre modo claro y oscuro. ¡Disfruta el nuevo diseno violeta!',
             side: 'top' as const,
             align: 'center' as const,
           },

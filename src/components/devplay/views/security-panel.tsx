@@ -124,7 +124,7 @@ export function SecurityPanel() {
       {/* Dispositivos / Sesiones */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-500 text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-violet-500 text-white">
             <Monitor className="h-4 w-4" />
           </div>
           <div>

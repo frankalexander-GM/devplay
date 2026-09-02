@@ -75,8 +75,8 @@ export function ShareModal({
   const socialLinks = [
     { label: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, color: 'from-green-500 to-emerald-600' },
     { label: 'X (Twitter)', icon: Twitter, url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, color: 'from-gray-700 to-gray-900' },
-    { label: 'Facebook', icon: Facebook, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, color: 'from-blue-500 to-blue-700' },
-    { label: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, color: 'from-sky-400 to-blue-500' },
+    { label: 'Facebook', icon: Facebook, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, color: 'from-violet-500 to-violet-700' },
+    { label: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, color: 'from-violet-400 to-violet-500' },
     { label: 'Instagram', icon: Instagram, url: shareUrl, color: 'from-fuchsia-500 to-pink-600' },
   ]
 

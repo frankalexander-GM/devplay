@@ -134,7 +134,7 @@ export function CreatePostModal() {
           <label className="cursor-pointer">
             <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFile} />
             <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium hover:bg-accent transition">
-              <ImagePlus className="h-3.5 w-3.5 text-sky-500" />
+              <ImagePlus className="h-3.5 w-3.5 text-violet-500" />
               Imagen
             </span>
           </label>
