@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { MessageSquare, Send, Users, X, Sparkles, Heart, MoreVertical, Copy, Check, Flag } from 'lucide-react'
+import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Users } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useWorldChat, type ChatMessage } from '@/hooks/use-socket'
@@ -13,16 +12,29 @@ import { UserAvatar, TimeAgo } from '@/components/devplay/shared/shared'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+const QUICK_EMOJIS = ['🎮', '🔥', '👀', '❤️', '🚀', '😎']
+
 interface ChatPanelProps {
   variant?: 'sidebar' | 'fullview'
 }
 
 export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   const { user, isGuest } = useCurrentUser()
-  const { chatOpen, toggleChat } = useUIStore()
+  const { chatOpen, toggleChat, openAuth } = useUIStore()
   const { messages, onlineCount, sendMessage, isConnected } = useWorldChat(user?.id, user?.username)
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Usuarios presentes en la sala (últimos participantes únicos)
+  const roomUsers = useMemo(() => {
+    const seen = new Map<string, { userId: string; username: string; avatar?: string | null }>()
+    for (let i = messages.length - 1; i >= 0 && seen.size < 14; i--) {
+      const m = messages[i]
+      if (m.type === 'system' || !m.username || seen.has(m.userId)) continue
+      seen.set(m.userId, { userId: m.userId, username: m.username, avatar: m.avatar })
+    }
+    return [...seen.values()]
+  }, [messages])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -44,34 +56,44 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
   const chatContent = (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="glass-strong flex items-center justify-between border-b border-border/50 p-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <MessageSquare className="h-4 w-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-sm">Chat Mundial</h3>
-            <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
-              <span className="text-[10px] text-muted-foreground">{onlineCount} conectados</span>
+      {/* Header — cabecera editorial */}
+      <div className="glass-strong border-b border-border/50 px-3 pt-3 pb-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-sm frame-double bg-primary text-primary-foreground">
+              <MessageSquare className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-base leading-tight">Chat Mundial</h3>
+              <div className="flex items-center gap-1.5">
+                <span className={cn('h-1.5 w-1.5 rounded-full', onlineCount > 0 ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
+                <span className="label-caps !text-[9px] !tracking-[0.12em]">
+                  En vivo · {onlineCount} conectados
+                </span>
+              </div>
             </div>
           </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={toggleChat}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={toggleChat}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="rule-ornate mt-2.5 opacity-60">
+          <span className="text-[8px] leading-none">◆</span>
+        </div>
       </div>
 
       {/* Messages */}
       <div ref={scrollRef} className="custom-scroll flex-1 overflow-y-auto p-3 space-y-2.5">
         {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary">
-              <MessageSquare className="h-8 w-8 text-muted-foreground" />
+          <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground px-6">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-sm frame-double bg-secondary">
+              <MessageSquare className="h-7 w-7 text-muted-foreground" />
             </div>
-            <p className="font-medium">Sé el primero en escribir</p>
-            <p className="text-xs">en el chat mundial</p>
+            <p className="font-display font-bold text-foreground">La plaza está tranquila…</p>
+            <p className="text-xs mt-1 italic">rompe el hielo con un ¡hola, devs!</p>
+            <div className="rule-ornate w-24 mt-4 opacity-60">
+              <span className="text-[8px]">◆</span>
+            </div>
           </div>
         ) : (
           messages.map((msg) => (
@@ -80,7 +102,48 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
         )}
       </div>
 
-      {/* Input */}
+      {/* Tira "En la sala" — solo sidebar */}
+      {!isFull && roomUsers.length > 0 && (
+        <div className="border-t border-border/40 px-3 py-2 bg-secondary/30">
+          <div className="flex items-center justify-between gap-2">
+            <span className="label-caps !text-[9px] shrink-0">En la sala</span>
+            <div className="flex -space-x-1.5">
+              {roomUsers.slice(0, 6).map((u) => (
+                <UserAvatar
+                  key={u.userId}
+                  username={u.username}
+                  avatar={u.avatar}
+                  size="xs"
+                  className="ring-2 ring-background shrink-0"
+                />
+              ))}
+              {roomUsers.length > 6 && (
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary border border-border text-[9px] font-bold text-muted-foreground ring-2 ring-background">
+                  +{roomUsers.length - 6}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Emojis rápidos — solo usuarios logueados */}
+      {canChat && (
+        <div className="flex items-center gap-1 border-t border-border/40 px-3 py-1.5 bg-secondary/30">
+          {QUICK_EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => sendMessage(emoji)}
+              className="flex h-6 w-6 items-center justify-center rounded-sm text-sm transition hover:bg-accent hover:scale-110 active:scale-95"
+              title={`Enviar ${emoji}`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input / CTA de invitado */}
       <div className="glass-strong border-t border-border/50 p-2.5">
         {canChat ? (
           <form onSubmit={handleSend} className="flex gap-2">
@@ -96,27 +159,104 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
             </Button>
           </form>
         ) : (
-          <div className="py-2 text-center">
-            <p className="text-xs text-muted-foreground">
-              {isGuest ? 'Los invitados no pueden chatear' : 'Inicia sesión para chatear'}
+          <div className="frame-double bg-secondary/40 p-3 text-center">
+            <p className="label-caps !text-[9px] mb-1.5">Únete a la charla</p>
+            <p className="text-xs text-muted-foreground mb-2.5 leading-relaxed">
+              {isGuest
+                ? 'Crea una cuenta gratis para escribir en el chat mundial'
+                : 'Entra con tu cuenta para escribir en el chat mundial'}
             </p>
+            <Button
+              size="sm"
+              className="btn-gradient-primary w-full rounded-sm gap-1.5"
+              onClick={() => openAuth(isGuest ? 'register' : 'login')}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              {isGuest ? 'Crear cuenta' : 'Iniciar sesión'}
+            </Button>
           </div>
         )}
       </div>
     </div>
   )
 
-  // Vista completa (página)
+  // Vista completa (página) — dos columnas en escritorio
   if (isFull) {
     return (
-      <div className="mx-auto max-w-3xl">
-        <div className="glass-card flex h-[75vh] flex-col overflow-hidden">
+      <>
+      <div className="mx-auto max-w-5xl grid lg:grid-cols-[1fr_16rem] gap-4 items-start">
+        <div className="glass-card flex h-[70vh] flex-col overflow-hidden">
           {chatContent}
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-3 italic">
-          Conecta con la comunidad DevPlay en tiempo real
-        </p>
+
+        {/* Columna lateral de la sala */}
+        <div className="hidden lg:flex flex-col gap-4">
+          {/* En la sala */}
+          <div className="glass-card p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              <p className="label-caps">En la sala · {roomUsers.length + onlineCount}</p>
+            </div>
+            {roomUsers.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                Todavía nadie ha escrito hoy. La sala te espera.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {roomUsers.slice(0, 8).map((u) => (
+                  <div key={u.userId} className="flex items-center gap-2">
+                    <UserAvatar username={u.username} avatar={u.avatar} size="xs" />
+                    <span className="text-xs font-medium truncate">{u.username}</span>
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-olive-400 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Reglas del club */}
+          <div className="glass-card frame-double p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <ScrollText className="h-3.5 w-3.5 text-primary" />
+              <p className="label-caps">Reglas del club</p>
+            </div>
+            <ol className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
+              <li className="flex gap-2">
+                <span className="font-display font-bold text-primary shrink-0">I.</span>
+                Sé amable — aquí todos somos devs aprendiendo.
+              </li>
+              <li className="flex gap-2">
+                <span className="font-display font-bold text-primary shrink-0">II.</span>
+                Sin spam ni autopromoción compulsiva.
+              </li>
+              <li className="flex gap-2">
+                <span className="font-display font-bold text-primary shrink-0">III.</span>
+                Comparte tu devlog y da feedback con cariño.
+              </li>
+            </ol>
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground italic">
+            Conecta con la comunidad DevPlay en tiempo real
+          </p>
+        </div>
       </div>
+
+      {/* Temas de conversación — llena el vacío bajo la sala */}
+      <div className="mx-auto max-w-5xl mt-4 text-center">
+        <p className="label-caps mb-2.5">Temas de hoy en la plaza</p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {['#Devlogs', '#Betas', '#PixelArt', '#GameJams', '#Playtesting', '#Speedruns', '#Audio'].map((topic) => (
+            <span
+              key={topic}
+              className="label-caps !text-[9px] border border-border bg-secondary/50 px-2.5 py-1 rounded-sm"
+            >
+              {topic}
+            </span>
+          ))}
+        </div>
+      </div>
+      </>
     )
   }
 
@@ -153,29 +293,20 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   )
 }
 
-function FeatureMini({ icon: Icon, title, value, color }: { icon: any; title: string; value: any; color: string }) {
-  return (
-    <div className="glass-card flex flex-col items-center gap-1 p-3 text-center">
-      <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br text-white', color)}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="text-lg font-bold">{value}</div>
-      <div className="text-[10px] text-muted-foreground">{title}</div>
-    </div>
-  )
-}
-
 function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
   if (msg.type === 'system') {
     return (
-      <div className="text-center text-[11px] text-muted-foreground italic py-1">
-        {msg.content}
+      <div className="flex items-center justify-center py-1">
+        <span className="label-caps !text-[9px] bg-secondary/60 px-2.5 py-1 rounded-sm">
+          {msg.content}
+        </span>
       </div>
     )
   }
+
   return (
     <div className={cn('group relative flex gap-2', isMine && 'flex-row-reverse')}>
       <UserAvatar username={msg.username} avatar={msg.avatar} size="sm" className="mt-0.5 shrink-0" />
@@ -186,9 +317,19 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
           </span>
           <TimeAgo date={msg.createdAt} className="text-[10px]" />
         </div>
-        <p className="text-sm break-words text-foreground/90 leading-relaxed">
-          {msg.content}
-        </p>
+        {/* Burbuja — cuadrada vintage, terracota para mí */}
+        <div
+          className={cn(
+            'inline-block w-fit max-w-full rounded-sm px-2.5 py-1.5 border',
+            isMine
+              ? 'bg-primary text-primary-foreground border-primary/40'
+              : 'bg-secondary/70 border-border/50'
+          )}
+        >
+          <p className="text-sm break-words leading-relaxed">
+            {msg.content}
+          </p>
+        </div>
       </div>
 
       {/* 3 puntos — solo visibles al hover */}
@@ -200,7 +341,7 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
           menuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         )}
       >
-        <MoreVertical className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+        <MoreVerticalIcon />
       </button>
 
       {/* Menu desplegable */}
@@ -258,5 +399,20 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+function MoreVerticalIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden
+    >
+      <circle cx="12" cy="5" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="12" cy="19" r="1.8" />
+    </svg>
   )
 }

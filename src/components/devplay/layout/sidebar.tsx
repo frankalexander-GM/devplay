@@ -222,10 +222,14 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Footer */}
-      <div className="border-t border-border/50 px-4 py-3 text-center">
+      {/* Footer — sello de la gaceta */}
+      <div className="border-t border-border/50 px-4 py-4 text-center">
+        <div className="rule-ornate opacity-50 mb-2.5">
+          <span className="text-[8px]">◆</span>
+        </div>
+        <p className="label-caps !text-[9px] mb-1">Gaceta DevPlay</p>
         <p className="text-[10px] text-muted-foreground">
-          DevPlay v1.0 · Hecho con 💗
+          Est. 2025 · Hecho con 💗
         </p>
       </div>
     </div>

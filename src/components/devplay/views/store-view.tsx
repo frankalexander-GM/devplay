@@ -208,6 +208,43 @@ export function StoreView() {
             Entrar
           </Button>
         </div>
+
+        {/* Cómo funciona DevCoins — llena el vacío con guía editorial */}
+        <div className="glass-card frame-double p-5 sm:p-6">
+          <div className="text-center mb-5">
+            <p className="label-caps mb-1">La economía de la casa</p>
+            <h3 className="font-display text-xl font-bold">Cómo funcionan los DevCoins</h3>
+            <div className="rule-ornate w-40 mx-auto mt-3 opacity-60">
+              <span className="text-[9px]">◆</span>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { n: 'I', icon: Rocket, title: 'Gana', text: 'Publica devlogs, ayuda en betas y recibe likes. Cada aporte suma monedas.' },
+              { n: 'II', icon: Coins, title: 'Ahorra', text: 'Tu balance se guarda en tu cuenta. Sigue contribuyendo para los artículos premium.' },
+              { n: 'III', icon: Gem, title: 'Gasta', text: 'Canjea power-ups, marcos para tu avatar y funciones premium exclusivas.' },
+            ].map((step) => (
+              <div key={step.n} className="text-center px-2">
+                <div className="relative inline-flex items-center justify-center mb-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-sm frame-double bg-primary/10 text-primary">
+                    <step.icon className="h-5 w-5" />
+                  </div>
+                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold font-display">
+                    {step.n}
+                  </span>
+                </div>
+                <p className="font-display font-bold text-sm mb-1">{step.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{step.text}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rule-ornate w-40 mx-auto mt-5 opacity-60">
+            <span className="text-[9px]">◆</span>
+          </div>
+          <p className="text-center text-xs text-muted-foreground italic mt-4">
+            Los DevCoins no se compran con dinero real — se ganan participando.
+          </p>
+        </div>
       </div>
     )
   }

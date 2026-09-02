@@ -131,14 +131,31 @@ export function VideosView() {
           </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass-card p-12 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+        <div className="glass-card frame-double p-10 sm:p-12 text-center">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-sm frame-double bg-secondary text-muted-foreground">
             <Video className="h-8 w-8" />
           </div>
-          <p className="font-semibold text-lg">Aún no hay videos</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Sé el primero en compartir un gameplay, trailer o devlog
+          <p className="font-display font-semibold text-xl">La sala de proyección está vacía</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-5">
+            Sé el primero en compartir un gameplay, tráiler o devlog
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto mb-5">
+            {['Gameplays', 'Devlogs', 'Tráilers', 'Speedruns', 'Retros'].map((chip) => (
+              <span
+                key={chip}
+                className="label-caps !text-[9px] border border-border bg-secondary/50 px-2.5 py-1 rounded-sm"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+          <div className="rule-ornate w-44 mx-auto opacity-60">
+            <span className="text-[9px]">◆</span>
+          </div>
+          <Button onClick={() => openCreatePost()} className="btn-gradient-primary rounded-sm mt-5 gap-1.5">
+            <Video className="h-4 w-4" />
+            Subir el primer video
+          </Button>
         </div>
       ) : (
         <div className="space-y-5">
