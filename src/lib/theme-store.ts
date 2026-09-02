@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// Solo un tema: Grafito & Carmesí — imprenta clásica, neutro con acento carmesí
+// Solo un tema: Terracota & Crema — retro 70s cálido, acento terracota
 export type ColorTheme = 'vintage'
 
 export interface ThemeInfo {
@@ -22,11 +22,11 @@ export const COLOR_THEMES: ThemeInfo[] = [
     id: 'vintage',
     label: 'Vintage',
     emoji: '🎩',
-    description: 'Grafito & Carmesí · Imprenta clásica serif',
-    primary: 'Grafito',
-    secondary: 'Carmesí',
-    background: 'Grafito noche / Porcelana',
-    preview: { primary: 'oklch(0.53 0.145 25)', accent: 'oklch(0.40 0.007 240)', bg: 'oklch(0.962 0.003 240)' },
+    description: 'Terracota & Crema · Retro 70s cálido',
+    primary: 'Terracota',
+    secondary: 'Espresso',
+    background: 'Cacao noche / Crema',
+    preview: { primary: 'oklch(0.54 0.15 45)', accent: 'oklch(0.40 0.04 56)', bg: 'oklch(0.955 0.024 85)' },
   },
 ]
 

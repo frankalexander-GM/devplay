@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
-import { Spectral, Old_Standard_TT, Geist_Mono } from "next/font/google";
+import { Fraunces, Bitter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "@/components/providers";
 
-const spectral = Spectral({
-  variable: "--font-spectral",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const oldStandard = Old_Standard_TT({
-  variable: "--font-oldstandard",
+const bitter = Bitter({
+  variable: "--font-bitter",
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body
-        className={`${spectral.variable} ${oldStandard.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${bitter.variable} ${fraunces.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <Providers>
