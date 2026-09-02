@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -64,8 +65,21 @@ export function ExploreView() {
 
   return (
     <div className="space-y-4">
-      {/* ===== HERO BANNER — placa de tinta sólida, 100% imprenta ===== */}
+      {/* ===== HERO BANNER — ilustración retro con velo espresso ===== */}
       <div className="relative h-72 sm:h-80 rounded-sm overflow-hidden frame-double bg-foreground text-background dark:bg-card dark:text-foreground">
+        {/* Foto retro de fondo */}
+        <Image
+          src="/hero-devplay.png"
+          alt=""
+          aria-hidden
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 896px"
+          className="object-cover sepia-[0.22] contrast-[0.95] brightness-[0.92]"
+        />
+        {/* Velo espresso/cacao para legibilidad del texto */}
+        <div className="absolute inset-0 bg-foreground/72 dark:bg-background/78" />
+
         {/* Filetes ornamentales decorativos de fondo */}
         <div className="absolute inset-3 border border-current/15 pointer-events-none" />
 
