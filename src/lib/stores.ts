@@ -48,6 +48,19 @@ interface UIState {
   // Onboarding
   onboardingDone: boolean
   setOnboardingDone: (v: boolean) => void
+
+  // Preferencias del sidebar izquierdo (persistidas)
+  sidebarCompact: boolean
+  hideCommunity: boolean
+  hideHelp: boolean
+  setSidebarCompact: (v: boolean) => void
+  setHideCommunity: (v: boolean) => void
+  setHideHelp: (v: boolean) => void
+  resetSidebarPrefs: () => void
+
+  // Preferencias del chat lateral (persistidas)
+  chatShowRoom: boolean
+  setChatShowRoom: (v: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -88,10 +101,30 @@ export const useUIStore = create<UIState>()(
 
       onboardingDone: false,
       setOnboardingDone: (v) => set({ onboardingDone: v }),
+
+      // Preferencias del sidebar izquierdo
+      sidebarCompact: false,
+      hideCommunity: false,
+      hideHelp: false,
+      setSidebarCompact: (v) => set({ sidebarCompact: v }),
+      setHideCommunity: (v) => set({ hideCommunity: v }),
+      setHideHelp: (v) => set({ hideHelp: v }),
+      resetSidebarPrefs: () =>
+        set({ sidebarCompact: false, hideCommunity: false, hideHelp: false }),
+
+      // Preferencias del chat lateral
+      chatShowRoom: true,
+      setChatShowRoom: (v) => set({ chatShowRoom: v }),
     }),
     {
       name: 'devplay-ui',
-      partialize: (s) => ({ onboardingDone: s.onboardingDone }),
+      partialize: (s) => ({
+        onboardingDone: s.onboardingDone,
+        sidebarCompact: s.sidebarCompact,
+        hideCommunity: s.hideCommunity,
+        hideHelp: s.hideHelp,
+        chatShowRoom: s.chatShowRoom,
+      }),
     }
   )
 )

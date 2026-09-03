@@ -4,7 +4,16 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Users, Globe } from 'lucide-react'
+import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Users, Globe, MoreVertical, Eraser, Trash2, Link2, Maximize2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useWorldChat, type ChatMessage } from '@/hooks/use-socket'
@@ -30,8 +39,8 @@ interface ChatPanelProps {
 
 export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   const { user, isGuest } = useCurrentUser()
-  const { chatOpen, toggleChat, openAuth } = useUIStore()
-  const { messages, onlineCount, sendMessage, isConnected } = useWorldChat(user?.id, user?.username)
+  const { chatOpen, toggleChat, openAuth, chatShowRoom, setChatShowRoom, setView } = useUIStore()
+  const { messages, onlineCount, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected } = useWorldChat(user?.id, user?.username)
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -64,6 +73,24 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
   const isFull = variant === 'fullview'
 
+  // ===== Acciones del menú de opciones =====
+  const handleDeleteMessage = async (id: string) => {
+    const ok = await deleteMessage(id)
+    if (ok) toast.success('Mensaje eliminado')
+    else toast.error('No se pudo eliminar el mensaje')
+  }
+
+  const handleClearLocal = () => {
+    clearMessages()
+    toast.success('Conversación limpiada en este dispositivo')
+  }
+
+  const handleDeleteAllMine = async () => {
+    const n = await deleteMyMessages()
+    if (n > 0) toast.success(n === 1 ? '1 mensaje eliminado' : `${n} mensajes eliminados`)
+    else toast.info('No tenías mensajes en la sala')
+  }
+
   /* ===== Zona de mensajes (compartida) ===== */
   const messagesArea = (
     <div
@@ -83,7 +110,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
         </div>
       ) : (
         messages.map((msg) => (
-          <ChatBubble key={msg.id} msg={msg} isMine={msg.userId === user?.id} />
+          <ChatBubble key={msg.id} msg={msg} isMine={msg.userId === user?.id} onDelete={handleDeleteMessage} />
         ))
       )}
     </div>
@@ -163,9 +190,17 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={toggleChat}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <ChatOptionsMenu
+              isFull={false}
+              canChat={!!canChat}
+              onClearLocal={handleClearLocal}
+              onDeleteAllMine={handleDeleteAllMine}
+            />
+            <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={toggleChat}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="rule-ornate mt-2.5 opacity-60">
           <span className="text-[8px] leading-none">◆</span>
@@ -174,8 +209,8 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
       {messagesArea}
 
-      {/* Tira "En la sala" — solo sidebar */}
-      {!isFull && roomUsers.length > 0 && (
+      {/* Tira "En la sala" — solo sidebar, ocultable desde opciones */}
+      {!isFull && chatShowRoom && roomUsers.length > 0 && (
         <div className="border-t border-border/40 px-3 py-2 bg-secondary/30">
           <div className="flex items-center justify-between gap-2">
             <span className="label-caps !text-[9px] shrink-0">En la sala</span>
@@ -239,9 +274,17 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
                   En vivo · {onlineCount} conectados
                 </span>
               </div>
-              <span className="label-caps !text-[9px] opacity-60 shrink-0 hidden sm:inline">
-                Sala pública · {roomUsers.length + onlineCount} presentes
-              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="label-caps !text-[9px] opacity-60 hidden sm:inline">
+                  Sala pública · {roomUsers.length + onlineCount} presentes
+                </span>
+                <ChatOptionsMenu
+                  isFull
+                  canChat={!!canChat}
+                  onClearLocal={handleClearLocal}
+                  onDeleteAllMine={handleDeleteAllMine}
+                />
+              </div>
             </div>
 
             {messagesArea}
@@ -251,7 +294,8 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
           {/* ===== Columna lateral de la sala ===== */}
           <div className="hidden lg:flex flex-col gap-4">
-            {/* En la sala */}
+            {/* En la sala — ocultable desde opciones */}
+            {chatShowRoom && (
             <div className="glass-card p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="h-3.5 w-3.5 text-primary" />
@@ -273,6 +317,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
                 </div>
               )}
             </div>
+            )}
 
             {/* Reglas del club */}
             <div className="glass-card frame-double p-4">
@@ -380,9 +425,10 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   )
 }
 
-function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
+function ChatBubble({ msg, isMine, onDelete }: { msg: ChatMessage; isMine: boolean; onDelete: (id: string) => void }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
 
   if (msg.type === 'system') {
     return (
@@ -435,7 +481,7 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
       <AnimatePresence>
         {menuOpen && (
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div className="fixed inset-0 z-40" onClick={() => { setMenuOpen(false); setConfirmDel(false) }} />
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -456,6 +502,29 @@ function ChatBubble({ msg, isMine }: { msg: ChatMessage; isMine: boolean }) {
                 {copied ? <Check className="h-3.5 w-3.5 text-olive-500" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? 'Copiado' : 'Copiar'}
               </button>
+              {isMine && (
+                <>
+                  <div className="border-t border-border/40" />
+                  <button
+                    onClick={() => {
+                      if (!confirmDel) {
+                        setConfirmDel(true)
+                        return
+                      }
+                      setMenuOpen(false)
+                      setConfirmDel(false)
+                      onDelete(msg.id)
+                    }}
+                    className={cn(
+                      'flex w-full items-center gap-2 px-3 py-2 text-xs transition',
+                      confirmDel ? 'bg-red-500/10 text-red-600 font-semibold' : 'text-red-500 hover:bg-secondary/60'
+                    )}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {confirmDel ? '¿Seguro? Toca de nuevo' : 'Eliminar'}
+                  </button>
+                </>
+              )}
               {!isMine && (
                 <div className="border-t border-border/40" />
               )}
@@ -501,5 +570,113 @@ function MoreVerticalIcon() {
       <circle cx="12" cy="12" r="1.8" />
       <circle cx="12" cy="19" r="1.8" />
     </svg>
+  )
+}
+
+// ===== Menú de opciones del Chat Mundial (⋯) =====
+function ChatOptionsMenu({
+  isFull,
+  canChat,
+  onClearLocal,
+  onDeleteAllMine,
+}: {
+  isFull: boolean
+  canChat: boolean
+  onClearLocal: () => void
+  onDeleteAllMine: () => void
+}) {
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
+  const { chatShowRoom, setChatShowRoom, setView } = useUIStore()
+
+  return (
+    <DropdownMenu onOpenChange={(open) => { if (!open) setConfirmDeleteAll(false) }}>
+      <DropdownMenuTrigger asChild>
+        <button
+          title="Opciones del chat"
+          aria-label="Opciones del chat"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60 rounded-md">
+        <DropdownMenuLabel className="text-xs">Opciones del chat</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={chatShowRoom}
+          onCheckedChange={(v) => setChatShowRoom(v === true)}
+          onSelect={(e) => e.preventDefault()}
+          className="gap-2 rounded-lg text-xs"
+        >
+          Mostrar “En la sala”
+        </DropdownMenuCheckboxItem>
+        {!isFull && (
+          <DropdownMenuItem
+            onClick={() => setView('chat')}
+            className="gap-2 rounded-lg text-xs"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+            Abrir pantalla completa
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem
+          onClick={() => {
+            navigator.clipboard?.writeText(window.location.href)
+            toast.success('Enlace de la sala copiado')
+          }}
+          className="gap-2 rounded-lg text-xs"
+        >
+          <Link2 className="h-3.5 w-3.5" />
+          Copiar enlace de la sala
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onClearLocal} className="gap-2 rounded-lg text-xs">
+          <Eraser className="h-3.5 w-3.5" />
+          Limpiar conversación (local)
+        </DropdownMenuItem>
+        {canChat && (
+          <DropdownMenuItem
+            onClick={() => {
+              if (!confirmDeleteAll) {
+                setConfirmDeleteAll(true)
+                return
+              }
+              setConfirmDeleteAll(false)
+              onDeleteAllMine()
+            }}
+            onSelect={(e) => e.preventDefault()}
+            className={cn(
+              'gap-2 rounded-lg text-xs transition-colors',
+              confirmDeleteAll && 'bg-red-500/10 text-red-600 font-semibold'
+            )}
+          >
+            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+            {confirmDeleteAll ? '¿Seguro? Toca para confirmar' : 'Eliminar todos mis mensajes'}
+          </DropdownMenuItem>
+        )}
+        {canChat && <DropdownMenuSeparator />}
+        {canChat && (
+          <DropdownMenuItem
+            onClick={() => {
+              import('@/services/security-service').then((s) => {
+                s.securityService
+                  .report({
+                    type: 'COMMENT',
+                    entityId: 'chat-mundial',
+                    reason: 'other',
+                    description: 'Problema en el Chat Mundial',
+                  })
+                  .then(() => toast.success('Reporte enviado. ¡Gracias!'))
+                  .catch(() => toast.error('No se pudo enviar el reporte'))
+              })
+            }}
+            className="gap-2 rounded-lg text-xs"
+          >
+            <Flag className="h-3.5 w-3.5" />
+            Reportar un problema
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

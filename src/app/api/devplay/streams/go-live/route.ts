@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
 
     // Broadcast in real-time via the realtime mini-service
     try {
-      await fetch('http://localhost:3003/internal/broadcast-live', {
+      await fetch('http://localhost:3004/internal/broadcast-live', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

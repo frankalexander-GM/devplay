@@ -23,6 +23,8 @@ import {
   Home,
   BarChart3,
   ShoppingBag,
+  Settings2,
+  RotateCcw,
 } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
@@ -30,6 +32,16 @@ import { cn } from '@/lib/utils'
 import { UserAvatar, UserTags } from '@/components/devplay/shared/shared'
 import type { ViewId } from '@/types/devplay'
 import { useState } from 'react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { toast } from 'sonner'
 
 interface NavItem {
   id: ViewId
@@ -72,6 +84,8 @@ export function Sidebar() {
 
   const canCreate = isAuthed && !isGuest
 
+  const { sidebarCompact, hideCommunity, hideHelp } = useUIStore()
+
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
 
   // Al hacer clic en un filtro de comunidad, vamos a explore y mostramos toast
@@ -93,23 +107,28 @@ export function Sidebar() {
         </Button>
       </div>
 
-      <nav className="flex-1 space-y-4 px-3 py-2 overflow-y-auto custom-scroll">
-        {/* ===== Sección 1: Menú Principal ===== */}
+      <nav className={cn('flex-1 px-3 py-2 overflow-y-auto custom-scroll', sidebarCompact ? 'space-y-3' : 'space-y-4')}>
+        {/* ===== Sección 1: Menú Principal (+ opciones del sidebar) ===== */}
         <div>
-          <SectionTitle>Menú principal</SectionTitle>
+          <div className="flex items-center justify-between pr-1.5">
+            <SectionTitle>Menú principal</SectionTitle>
+            <SidebarOptionsButton />
+          </div>
           <div className="space-y-1">
             {MAIN_NAV.map((item) => (
               <NavButton
                 key={item.id}
                 item={item}
                 active={currentView === item.id}
+                compact={sidebarCompact}
                 onClick={() => { setView(item.id); setActiveFilter(null) }}
               />
             ))}
           </div>
         </div>
 
-        {/* ===== Sección 2: Comunidad (filtros rápidos) ===== */}
+        {/* ===== Sección 2: Comunidad (filtros rápidos) — ocultable ===== */}
+        {!hideCommunity && (
         <div>
           <SectionTitle>Comunidad</SectionTitle>
           <div className="space-y-1">
@@ -118,36 +137,39 @@ export function Sidebar() {
                 key={c.id}
                 onClick={() => handleCommunityClick(c.id)}
                 className={cn(
-                  'group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
+                  'group flex w-full items-center gap-3 rounded-md px-3 text-sm font-medium transition-all',
+                  sidebarCompact ? 'py-1.5' : 'py-2',
                   activeFilter === c.id
                     ? 'nav-active shadow-sm'
                     : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
                 )}
               >
                 <span className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+                  'flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+                  sidebarCompact ? 'h-7 w-7' : 'h-8 w-8',
                   c.gradient
                 )}>
-                  <c.icon className="h-4 w-4" />
+                  <c.icon className={sidebarCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
                 </span>
                 <div className="min-w-0 flex-1 text-left">
                   <div className="truncate text-sm font-semibold">{c.label}</div>
-                  <div className="truncate text-[10px] text-muted-foreground">{c.desc}</div>
+                  {!sidebarCompact && <div className="truncate text-[10px] text-muted-foreground">{c.desc}</div>}
                 </div>
               </button>
             ))}
           </div>
         </div>
+        )}
 
         {/* ===== Sección 3: Crear (logueados) ===== */}
         {canCreate && (
           <div>
             <SectionTitle>Crear contenido</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={FileText} label="Nueva publicación" gradient="from-wine-400 to-wine-500" onClick={openCreatePost} />
-              <CreateButton icon={Gamepad2} label="Subir beta" gradient="from-amber-400 to-bronze-500" onClick={openCreateBeta} />
-              <CreateButton icon={Video} label="Subir video" gradient="from-wine-400 to-sepia-500" onClick={openCreatePost} />
-              <CreateButton icon={BarChart3} label="Crear encuesta" gradient="from-olive-400 to-sepia-500" onClick={openCreatePoll} />
+              <CreateButton icon={FileText} label="Nueva publicación" gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={openCreatePost} />
+              <CreateButton icon={Gamepad2} label="Subir beta" gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={openCreateBeta} />
+              <CreateButton icon={Video} label="Subir video" gradient="from-wine-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePost} />
+              <CreateButton icon={BarChart3} label="Crear encuesta" gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePoll} />
             </div>
           </div>
         )}
@@ -157,14 +179,15 @@ export function Sidebar() {
           <div>
             <SectionTitle>Mi biblioteca</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" onClick={() => user && openProfile(user.id, 'favoritos')} />
-              <CreateButton icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" onClick={() => user && openProfile(user.id, 'publicaciones')} />
-              <CreateButton icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" onClick={() => user && openProfile(user.id, 'logros')} />
+              <CreateButton icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'favoritos')} />
+              <CreateButton icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'publicaciones')} />
+              <CreateButton icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'logros')} />
             </div>
           </div>
         )}
 
-        {/* ===== Sección 5: Ayuda ===== */}
+        {/* ===== Sección 5: Ayuda — ocultable ===== */}
+        {!hideHelp && (
         <div>
           <SectionTitle>Ayuda</SectionTitle>
           <div className="space-y-1">
@@ -172,6 +195,7 @@ export function Sidebar() {
               icon={HelpCircle}
               label="Tour guiado"
               gradient="from-wine-400 to-bronze-500"
+              compact={sidebarCompact}
               onClick={() => {
                 setOnboardingDone(false)
                 toast.success('Recargando para mostrar el tour...')
@@ -182,10 +206,12 @@ export function Sidebar() {
               icon={Info}
               label="Acerca de DevPlay"
               gradient="from-slate-400 to-gray-500"
+              compact={sidebarCompact}
               onClick={() => setView('about')}
             />
           </div>
         </div>
+        )}
       </nav>
 
       {/* Card de bienvenida para invitados */}
@@ -300,6 +326,8 @@ function MobileDrawer({
     onClose()
   }
 
+  const { hideCommunity, hideHelp } = useUIStore()
+
   return (
     <AnimatePresence>
       {open && (
@@ -327,18 +355,21 @@ function MobileDrawer({
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent" />
 
               <div className="relative p-4 pb-3">
-                {/* Logo + cerrar */}
+                {/* Logo + opciones + cerrar */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <img src="/logo-devplay.png" alt="DevPlay" className="h-8 w-8 rounded-lg object-cover" />
                     <span className="font-display font-bold text-lg tracking-tight text-foreground">DevPlay</span>
                   </div>
-                  <button
-                    onClick={onClose}
-                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary/60 transition"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <SidebarOptionsButton />
+                    <button
+                      onClick={onClose}
+                      className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary/60 transition"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Perfil de usuario */}
@@ -413,7 +444,8 @@ function MobileDrawer({
                 </div>
               </div>
 
-              {/* Comunidad */}
+              {/* Comunidad — ocultable desde opciones */}
+              {!hideCommunity && (
               <div>
                 <SectionTitle>Comunidad</SectionTitle>
                 <div className="space-y-1">
@@ -442,6 +474,7 @@ function MobileDrawer({
                   ))}
                 </div>
               </div>
+              )}
 
               {/* Biblioteca */}
               {canCreate && (
@@ -455,7 +488,8 @@ function MobileDrawer({
                 </div>
               )}
 
-              {/* Ayuda */}
+              {/* Ayuda — ocultable desde opciones */}
+              {!hideHelp && (
               <div>
                 <SectionTitle>Ayuda</SectionTitle>
                 <div className="space-y-1">
@@ -483,6 +517,7 @@ function MobileDrawer({
                   </button>
                 </div>
               </div>
+              )}
             </div>
 
             {/* Footer — CTA para invitados */}
@@ -587,13 +622,14 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
-function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+function NavButton({ item, active, onClick, compact }: { item: NavItem; active: boolean; onClick: () => void; compact?: boolean }) {
   const Icon = item.icon
   return (
     <button
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all',
+        'group flex w-full items-center gap-3 rounded-md px-3 text-sm font-medium transition-all',
+        compact ? 'py-1.5' : 'py-2.5',
         active
           ? 'nav-active shadow-sm'
           : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
@@ -601,16 +637,17 @@ function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; 
     >
       <span
         className={cn(
-          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+          'flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+          compact ? 'h-7 w-7' : 'h-9 w-9',
           item.gradient,
           !active && 'opacity-80 group-hover:opacity-100'
         )}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
       </span>
       <div className="min-w-0 flex-1 text-left">
         <div className="truncate font-semibold">{item.label}</div>
-        <div className="truncate text-[10px] text-muted-foreground">{item.description}</div>
+        {!compact && <div className="truncate text-[10px] text-muted-foreground">{item.description}</div>}
       </div>
     </button>
   )
@@ -621,29 +658,98 @@ function CreateButton({
   label,
   gradient,
   onClick,
+  compact,
 }: {
   icon: typeof Plus
   label: string
   gradient: string
   onClick: () => void
+  compact?: boolean
 }) {
   return (
     <button
       onClick={onClick}
-      className="group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary/60 transition"
+      className={cn(
+        'group flex w-full items-center gap-3 rounded-md px-3 text-sm font-medium hover:bg-secondary/60 transition',
+        compact ? 'py-1' : 'py-2'
+      )}
     >
       <span
         className={cn(
-          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+          'flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+          compact ? 'h-7 w-7' : 'h-8 w-8',
           gradient
         )}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
       </span>
       <span className="font-semibold text-sm">{label}</span>
     </button>
   )
 }
 
-// Toast helper import at bottom
-import { toast } from 'sonner'
+// ===== Botón de opciones del sidebar (⋯) =====
+function SidebarOptionsButton() {
+  const {
+    sidebarCompact, setSidebarCompact,
+    hideCommunity, setHideCommunity,
+    hideHelp, setHideHelp,
+    resetSidebarPrefs,
+  } = useUIStore()
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          title="Opciones del sidebar"
+          aria-label="Opciones del sidebar"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60 rounded-md">
+        <DropdownMenuLabel className="flex items-center gap-1.5 text-xs">
+          <Settings2 className="h-3 w-3" />
+          Opciones del sidebar
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={sidebarCompact}
+          onCheckedChange={(v) => setSidebarCompact(v === true)}
+          onSelect={(e) => e.preventDefault()}
+          className="gap-2 rounded-lg text-xs"
+        >
+          Modo compacto
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={hideCommunity}
+          onCheckedChange={(v) => setHideCommunity(v === true)}
+          onSelect={(e) => e.preventDefault()}
+          className="gap-2 rounded-lg text-xs"
+        >
+          Ocultar sección Comunidad
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={hideHelp}
+          onCheckedChange={(v) => setHideHelp(v === true)}
+          onSelect={(e) => e.preventDefault()}
+          className="gap-2 rounded-lg text-xs"
+        >
+          Ocultar sección Ayuda
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            resetSidebarPrefs()
+            toast.success('Sidebar restablecido')
+          }}
+          className="gap-2 rounded-lg text-xs"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Restablecer todo
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

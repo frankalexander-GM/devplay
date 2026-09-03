@@ -52,7 +52,18 @@ if (isSQLite) {
     .catch((e) => console.error('[realtime] Error WAL:', e))
 }
 
-const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+  // NOTA: en este puerto, socket.io (path: '/') intercepta TODAS las peticiones HTTP,
+  // así que aquí no pueden vivir endpoints internos. Viven en el puerto 3004.
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({ service: 'devplay-realtime', ok: true }))
+})
+
+// Servidor HTTP interno (solo localhost) para endpoints que el backend Next
+// llama para disparar eventos en tiempo real. Socket.io no interfiere aquí.
+const INTERNAL_PORT = 3004
+
+const internalServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   // Internal endpoint: POST /internal/broadcast-live
   // Body: { userId, username, avatar, title, streamId, message }
   if (req.method === 'POST' && req.url === '/internal/broadcast-live') {
@@ -88,8 +99,30 @@ const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse
     return
   }
 
-  res.writeHead(200, { 'Content-Type': 'application/json' })
-  res.end(JSON.stringify({ service: 'devplay-realtime', ok: true }))
+  // Internal endpoint: POST /internal/chat-deleted
+  // Body: { ids: string[] } — mensajes eliminados del chat mundial
+  if (req.method === 'POST' && req.url === '/internal/chat-deleted') {
+    try {
+      const body = await readBody(req)
+      const data = JSON.parse(body)
+      const ids: string[] = Array.isArray(data?.ids)
+        ? data.ids.filter((x: unknown) => typeof x === 'string')
+        : []
+      if (ids.length > 0) {
+        io.emit('chat:message:deleted', { ids })
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true, emitted: ids.length }))
+    } catch (e) {
+      console.error('chat-deleted error', e)
+      res.writeHead(500)
+      res.end(JSON.stringify({ error: 'internal' }))
+    }
+    return
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({ error: 'not found' }))
 })
 
 const io = new Server(httpServer, {
@@ -170,6 +203,9 @@ io.on('connection', (socket: Socket) => {
 
 httpServer.listen(PORT, () => {
   console.log(`[devplay-realtime] listening on port ${PORT}`)
+  internalServer.listen(INTERNAL_PORT, '127.0.0.1', () => {
+    console.log(`[devplay-realtime] internal endpoints on 127.0.0.1:${INTERNAL_PORT}`)
+  })
 })
 
 // Graceful shutdown
@@ -177,9 +213,11 @@ process.on('SIGTERM', () => {
   console.log('[realtime] SIGTERM, shutting down...')
   io.close()
   httpServer.close(() => process.exit(0))
+  internalServer.close()
 })
 process.on('SIGINT', () => {
   console.log('[realtime] SIGINT, shutting down...')
   io.close()
   httpServer.close(() => process.exit(0))
+  internalServer.close()
 })

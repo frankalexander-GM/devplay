@@ -237,6 +237,18 @@ export const notificationService = {
  */
 export const chatService = {
   getMessages: () => fetchJson<{ messages: any[] }>(`${API_BASE}/chat`),
+  // Elimina un mensaje propio por id
+  deleteMessage: (id: string) =>
+    fetchJson<{ ok: boolean; deleted: number }>(`${API_BASE}/chat`, {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
+    }),
+  // Elimina todos los mensajes propios de la sala
+  deleteMyMessages: () =>
+    fetchJson<{ ok: boolean; deleted: number }>(`${API_BASE}/chat`, {
+      method: 'DELETE',
+      body: JSON.stringify({ all: true }),
+    }),
 }
 
 /**

@@ -51,3 +51,51 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ message })
 }
+
+// DELETE mensajes propios (uno por id, o todos con { all: true })
+export async function DELETE(req: NextRequest) {
+  const userId = await getAuthUserId(req)
+  if (!userId) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+
+  const body = await req.json().catch(() => ({}))
+  const ids: string[] = []
+
+  if (body?.all === true) {
+    // Borrar todos los mensajes del usuario en la sala
+    const mine = await db.chatMessage.findMany({
+      where: { userId },
+      select: { id: true },
+    })
+    if (mine.length > 0) {
+      await db.chatMessage.deleteMany({ where: { userId } })
+      ids.push(...mine.map((m) => m.id))
+    }
+  } else {
+    // Borrar un solo mensaje (verificando que sea propio)
+    const id = typeof body?.id === 'string' ? body.id : null
+    if (!id) return NextResponse.json({ error: 'Falta el id del mensaje' }, { status: 400 })
+
+    const msg = await db.chatMessage.findUnique({ where: { id } })
+    if (!msg || msg.userId !== userId) {
+      return NextResponse.json({ error: 'Mensaje no encontrado' }, { status: 404 })
+    }
+    await db.chatMessage.delete({ where: { id } })
+    ids.push(id)
+  }
+
+  // Avisar en tiempo real a todos los clientes conectados
+  if (ids.length > 0) {
+    try {
+      await fetch('http://localhost:3004/internal/chat-deleted', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+        signal: AbortSignal.timeout(3000),
+      })
+    } catch {
+      // El broadcast es best-effort: los clientes refrescan el historial al recargar
+    }
+  }
+
+  return NextResponse.json({ ok: true, deleted: ids.length })
+}

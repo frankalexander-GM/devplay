@@ -86,13 +86,19 @@ export function useWorldChat(currentUserId: string | null | undefined, currentUs
       setMessages((prev) => [...prev.slice(-100), msg])
     }
     const onOnlineCount = (count: number) => setOnlineCount(count)
+    const onMessagesDeleted = (payload: { ids?: string[] }) => {
+      const ids = new Set(payload?.ids ?? [])
+      setMessages((prev) => prev.filter((m) => !ids.has(m.id)))
+    }
 
     socket.on('chat:message', onChatMessage)
     socket.on('chat:online-count', onOnlineCount)
+    socket.on('chat:message:deleted', onMessagesDeleted)
 
     return () => {
       socket.off('chat:message', onChatMessage)
       socket.off('chat:online-count', onOnlineCount)
+      socket.off('chat:message:deleted', onMessagesDeleted)
     }
   }, [socket])
 
@@ -120,7 +126,34 @@ export function useWorldChat(currentUserId: string | null | undefined, currentUs
     })
   }, [socket, currentUserId, currentUsername])
 
-  return { messages, onlineCount, sendMessage, isConnected }
+  // Eliminar un mensaje propio (optimista + confirmación en el servidor)
+  const deleteMessage = useCallback(async (id: string): Promise<boolean> => {
+    setMessages((prev) => prev.filter((m) => m.id !== id))
+    try {
+      await chatService.deleteMessage(id)
+      return true
+    } catch {
+      return false
+    }
+  }, [])
+
+  // Limpiar el historial local (solo en este dispositivo)
+  const clearMessages = useCallback(() => setMessages([]), [])
+
+  // Eliminar del servidor todos mis mensajes de la sala
+  const deleteMyMessages = useCallback(async (): Promise<number> => {
+    try {
+      const res = await chatService.deleteMyMessages()
+      setMessages((prev) =>
+        currentUserId ? prev.filter((m) => m.userId !== currentUserId) : prev
+      )
+      return res?.deleted ?? 0
+    } catch {
+      return 0
+    }
+  }, [currentUserId])
+
+  return { messages, onlineCount, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected }
 }
 
 export function useLiveNotifications(onLive: (n: LiveNotification) => void) {
