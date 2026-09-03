@@ -350,6 +350,58 @@
     color: var(--primary-foreground);
     box-shadow: 0 1px 6px oklch(0.27 0.035 55 / 0.30);
   }
+
+  /* Textura de papel con trama de puntos (medios tonos suaves) */
+  .paper-dots {
+    background-image: radial-gradient(
+      color-mix(in oklch, var(--foreground) 4.5%, transparent) 1px,
+      transparent 1px
+    );
+    background-size: 12px 12px;
+  }
+
+  /* Sello de goma retro — terracota, girado */
+  .stamp-rubber {
+    border: 2px dashed color-mix(in oklch, oklch(0.54 0.15 45) 55%, transparent);
+    color: color-mix(in oklch, oklch(0.54 0.15 45) 85%, var(--foreground));
+    transform: rotate(-8deg);
+    border-radius: 9999px;
+  }
+  .dark .stamp-rubber {
+    border-color: color-mix(in oklch, oklch(0.68 0.14 48) 45%, transparent);
+    color: color-mix(in oklch, oklch(0.68 0.14 48) 80%, var(--foreground));
+  }
+
+  /* Cinta de teletipo — marquee infinito de la gaceta */
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-scroll 36s linear infinite;
+  }
+  .ticker-track:hover {
+    animation-play-state: paused;
+  }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* Tira de película — perforaciones arriba y abajo */
+  .film-strip {
+    position: relative;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklch, var(--foreground) 22%, transparent) 0 14px,
+        transparent 14px 26px
+      ) 0 0 / 100% 6px no-repeat,
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklch, var(--foreground) 22%, transparent) 0 14px,
+        transparent 14px 26px
+      ) 0 100% / 100% 6px no-repeat;
+    padding: 14px 0;
+  }
 }
 
 /* ===== Animaciones ===== */
@@ -598,4 +650,4 @@ body {
 /* Scroll suave */
 html { scroll-behavior: smooth; }
 
-/* recache 1788399120 */
+/* recache 1788399601 */

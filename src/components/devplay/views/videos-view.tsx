@@ -11,7 +11,7 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { UserAvatar, TimeAgo } from '@/components/devplay/shared/shared'
 import {
   Video, Play, Eye, Heart, MessageCircle, Share2, Bookmark,
-  Flame, Clock, TrendingUp, Film, X, Volume2, VolumeX, Maximize2, Pause,
+  Flame, Clock, TrendingUp, Film, X, Volume2, VolumeX, Maximize2, Pause, ArrowRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Post } from '@/types/devplay'
@@ -30,6 +30,16 @@ export function VideosView() {
     staleTime: 2 * 60 * 1000,
     refetchInterval: false,
   })
+
+  // Cartelera de reserva: betas de la comunidad que esperan su primer tráiler
+  const { data: carteleraData } = useQuery({
+    queryKey: ['videos-cartelera'],
+    queryFn: () => postService.list({ type: 'BETA' }),
+    staleTime: 5 * 60 * 1000,
+  })
+  const cartelera = (carteleraData?.posts ?? [])
+    .filter((p) => p.beta?.coverImage)
+    .slice(0, 6)
 
   const allVideos = data?.posts ?? []
 
@@ -186,7 +196,67 @@ export function VideosView() {
         </div>
       )}
 
-      <div className="h-8" />
+      {/* ===== Cartelera — tira de película con betas que esperan tráiler ===== */}
+      {cartelera.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h2 className="font-display font-bold text-base flex items-center gap-2">
+              <Film className="h-4 w-4 text-primary" />
+              Mientras encendemos el proyector…
+            </h2>
+            <button
+              onClick={() => useUIStore.getState().setView('betas')}
+              className="text-xs text-primary hover:underline flex items-center gap-0.5"
+            >
+              Ver betas <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground italic mb-3 px-1">
+            Estos juegos de la cartelera aún esperan su primer tráiler — échales un ojo
+          </p>
+          <div className="film-strip glass-card px-3">
+            <div className="flex gap-3 overflow-x-auto custom-scroll pb-1">
+              {cartelera.map((post, i) => {
+                const beta = post.beta
+                if (!beta) return null
+                return (
+                  <motion.button
+                    key={post.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => openPostDetail(post.id)}
+                    className="shrink-0 w-40 text-left group"
+                  >
+                    <div className="aspect-video overflow-hidden rounded-sm border border-border relative bg-secondary">
+                      <img
+                        src={beta.coverImage!}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover sepia-[0.15] transition group-hover:scale-105 group-hover:sepia-0"
+                      />
+                    </div>
+                    <p className="text-xs font-bold truncate mt-1.5">{beta.title}</p>
+                    <p className="text-[9px] text-muted-foreground truncate">@{post.author.username}</p>
+                  </motion.button>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===== Cierre ornamental ===== */}
+      <footer className="text-center">
+        <div className="rule-ornate w-48 mx-auto opacity-70">
+          <span className="text-[9px] leading-none">◆</span>
+        </div>
+        <p className="label-caps mt-3">Sala de proyección DevPlay</p>
+        <p className="text-xs text-muted-foreground italic mt-1">
+          Los estrenos de la comunidad aparecen aquí en cuanto se publican
+        </p>
+      </footer>
+
+      <div className="h-4" />
 
       {/* Video Player Modal */}
       <AnimatePresence>

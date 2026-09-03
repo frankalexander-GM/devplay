@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { discoverService, followService } from '@/services/devplay-service'
+import { discoverService, followService, postService } from '@/services/devplay-service'
 import { PostCard } from '@/components/devplay/post/post-card'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useUIStore } from '@/lib/stores'
@@ -15,9 +15,19 @@ import { getTagMeta } from '@/types/devplay'
 import {
   Sparkles, TrendingUp, Users, Flame, ArrowRight, Gamepad2,
   Hash, Clock, Heart, MessageCircle, Download, RefreshCw, UserPlus, UserCheck,
-  Star, Eye, Share2,
+  Star, Eye, Share2, Swords, Palette, Ghost, Puzzle, Cpu, Joystick, Compass,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// Categorías del kiosco — puerta de entrada cuando no hay recomendaciones
+const STARTER_CATEGORIES = [
+  { label: 'RPG y aventuras', icon: Swords, hint: 'Mundos por explorar' },
+  { label: 'Plataformas', icon: Joystick, hint: 'Saltos y precisión' },
+  { label: 'Pixel Art', icon: Palette, hint: 'Estética retro' },
+  { label: 'Terror', icon: Ghost, hint: 'Para jugar con luz' },
+  { label: 'Puzzle', icon: Puzzle, hint: 'Rompecabezas finos' },
+  { label: 'Simulación', icon: Cpu, hint: 'Construye tu mundo' },
+]
 
 type SortFilter = 'recent' | 'popular' | 'commented' | 'shared'
 
@@ -39,6 +49,16 @@ export function DiscoverView() {
   const popularBetas = data?.popularBetas ?? []
   const popularTags = data?.popularTags ?? []
   const recent = data?.recent ?? []
+
+  // Vitrina de respaldo: betas reales para llenar la página cuando
+  // aún no hay recomendaciones personalizadas (p. ej. cuentas nuevas)
+  const { data: vitrinaData } = useQuery({
+    queryKey: ['discover-vitrina'],
+    queryFn: () => postService.list({ type: 'BETA' }),
+    staleTime: 5 * 60 * 1000,
+  })
+  const vitrinaBetas = (vitrinaData?.posts ?? []).slice(0, 6)
+  const isBlankSlate = trending.length === 0 && recommendedUsers.length === 0 && popularBetas.length === 0
 
   // Apply filter to recent posts
   const sortedRecent = [...recent].sort((a, b) => {
@@ -88,6 +108,93 @@ export function DiscoverView() {
         <DiscoverSkeleton />
       ) : (
         <>
+          {/* 🧭 ¿Por dónde empezar? — llena la página cuando no hay recomendaciones */}
+          {isBlankSlate && (
+            <DiscoverSection
+              icon={Compass}
+              title="¿Por dónde empezar?"
+              gradient="from-wine-400 to-bronze-500"
+            >
+              <p className="text-xs text-muted-foreground italic mb-3 -mt-1">
+                Dinos qué te gusta: cada categoría te lleva al centro de betas
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {STARTER_CATEGORIES.map((cat, i) => {
+                  const Icon = cat.icon
+                  return (
+                    <motion.button
+                      key={cat.label}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      onClick={() => useUIStore.getState().setView('betas')}
+                      className="glass-card frame-double p-3.5 text-left group hover:bg-secondary/40 transition"
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-primary/10 text-primary mb-2 transition group-hover:bg-primary group-hover:text-primary-foreground">
+                        <Icon className="h-[18px] w-[18px]" />
+                      </div>
+                      <p className="text-xs font-bold leading-tight">{cat.label}</p>
+                      <p className="text-[10px] text-muted-foreground italic mt-0.5">{cat.hint}</p>
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </DiscoverSection>
+          )}
+
+          {/* 🕹️ Betas en vitrina — respaldo con betas reales */}
+          {popularBetas.length === 0 && vitrinaBetas.length > 0 && (
+            <DiscoverSection
+              icon={Gamepad2}
+              title="Betas en vitrina"
+              gradient="from-amber-400 to-bronze-500"
+            >
+              <p className="text-xs text-muted-foreground italic mb-3 -mt-1">
+                Lo último que la comunidad ha puesto en escaparate
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {vitrinaBetas.map((post, i) => {
+                  const beta = post.beta
+                  if (!beta) return null
+                  return (
+                    <motion.button
+                      key={post.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      onClick={() => openPostDetail(post.id)}
+                      className="glass-card overflow-hidden text-left transition"
+                    >
+                      <div className="aspect-video bg-gradient-to-br from-primary/15 to-accent/25 relative overflow-hidden">
+                        {beta.coverImage ? (
+                          <img src={beta.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-3xl font-black text-primary/40 select-none">
+                              {beta.title.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="text-sm font-bold truncate">{beta.title}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">@{post.author.username}</p>
+                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-0.5"><Download className="h-3 w-3" /> {beta.downloads}</span>
+                          {beta.genre && (
+                            <span className="rounded-sm bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
+                              {beta.genre}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </DiscoverSection>
+          )}
+
           {/* Tendencias */}
           {trending.length > 0 && (
             <DiscoverSection
@@ -260,6 +367,17 @@ export function DiscoverView() {
               </div>
             )}
           </DiscoverSection>
+
+          {/* ===== Cierre ornamental del kiosco ===== */}
+          <footer className="text-center pt-2 pb-1">
+            <div className="rule-ornate w-48 mx-auto opacity-70">
+              <span className="text-[9px] leading-none">◆</span>
+            </div>
+            <p className="label-caps mt-3">Kiosco DevPlay</p>
+            <p className="text-xs text-muted-foreground italic mt-1">
+              La gaceta se actualiza sola — vuelve pronto para más descubrimientos
+            </p>
+          </footer>
         </>
       )}
     </div>

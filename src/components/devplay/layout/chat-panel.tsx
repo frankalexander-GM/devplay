@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Users } from 'lucide-react'
+import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Users, Globe } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useWorldChat, type ChatMessage } from '@/hooks/use-socket'
@@ -13,6 +13,16 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 const QUICK_EMOJIS = ['🎮', '🔥', '👀', '❤️', '🚀', '😎']
+
+const TICKER_ITEMS = [
+  '✦ Bienvenido a la plaza pública de DevPlay',
+  '🎮 Comparte tu devlog de la semana',
+  '📢 Regla de oro: sé amable con los demás devs',
+  '🕹️ Las betas nuevas se anuncian primero aquí',
+  '☕ El café de la plaza siempre está servido',
+  '🏆 Celebra los logros de tus devs favoritos',
+  '◆ Chat en tiempo real · sé amable y diviértete',
+]
 
 interface ChatPanelProps {
   variant?: 'sidebar' | 'fullview'
@@ -54,6 +64,86 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
   const isFull = variant === 'fullview'
 
+  /* ===== Zona de mensajes (compartida) ===== */
+  const messagesArea = (
+    <div
+      ref={scrollRef}
+      className="custom-scroll paper-dots flex-1 overflow-y-auto p-3 space-y-2.5"
+    >
+      {messages.length === 0 ? (
+        <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground px-6">
+          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-sm frame-double bg-secondary">
+            <MessageSquare className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <p className="font-display font-bold text-foreground">La plaza está tranquila…</p>
+          <p className="text-xs mt-1 italic">rompe el hielo con un ¡hola, devs!</p>
+          <div className="rule-ornate w-24 mt-4 opacity-60">
+            <span className="text-[8px]">◆</span>
+          </div>
+        </div>
+      ) : (
+        messages.map((msg) => (
+          <ChatBubble key={msg.id} msg={msg} isMine={msg.userId === user?.id} />
+        ))
+      )}
+    </div>
+  )
+
+  /* ===== Fila de emojis rápidos ===== */
+  const emojiRow = canChat ? (
+    <div className="flex items-center gap-1 border-t border-border/40 px-3 py-1.5 bg-secondary/30">
+      <span className="label-caps !text-[8px] mr-1 opacity-70 shrink-0">Rápido</span>
+      {QUICK_EMOJIS.map((emoji) => (
+        <button
+          key={emoji}
+          onClick={() => sendMessage(emoji)}
+          className="flex h-6 w-6 items-center justify-center rounded-sm text-sm transition hover:bg-accent hover:scale-110 active:scale-95"
+          title={`Enviar ${emoji}`}
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
+  ) : null
+
+  /* ===== Input / CTA de invitado ===== */
+  const inputArea = (
+    <div className="glass-strong border-t border-border/50 p-2.5">
+      {canChat ? (
+        <form onSubmit={handleSend} className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Escribe un mensaje..."
+            maxLength={500}
+            className="rounded-sm glass h-9"
+          />
+          <Button type="submit" size="icon" disabled={!input.trim()} className="btn-gradient-primary shrink-0 rounded-sm h-9 w-9">
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      ) : (
+        <div className="frame-double bg-secondary/40 p-3 text-center">
+          <p className="label-caps !text-[9px] mb-1.5">Únete a la charla</p>
+          <p className="text-xs text-muted-foreground mb-2.5 leading-relaxed">
+            {isGuest
+              ? 'Crea una cuenta gratis para escribir en el chat mundial'
+              : 'Entra con tu cuenta para escribir en el chat mundial'}
+          </p>
+          <Button
+            size="sm"
+            className="btn-gradient-primary w-full rounded-sm gap-1.5"
+            onClick={() => openAuth(isGuest ? 'register' : 'login')}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            {isGuest ? 'Crear cuenta' : 'Iniciar sesión'}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+
+  /* ===== Contenido lateral (drawer + panel desktop) ===== */
   const chatContent = (
     <div className="flex h-full flex-col">
       {/* Header — cabecera editorial */}
@@ -82,25 +172,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
         </div>
       </div>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="custom-scroll flex-1 overflow-y-auto p-3 space-y-2.5">
-        {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground px-6">
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-sm frame-double bg-secondary">
-              <MessageSquare className="h-7 w-7 text-muted-foreground" />
-            </div>
-            <p className="font-display font-bold text-foreground">La plaza está tranquila…</p>
-            <p className="text-xs mt-1 italic">rompe el hielo con un ¡hola, devs!</p>
-            <div className="rule-ornate w-24 mt-4 opacity-60">
-              <span className="text-[8px]">◆</span>
-            </div>
-          </div>
-        ) : (
-          messages.map((msg) => (
-            <ChatBubble key={msg.id} msg={msg} isMine={msg.userId === user?.id} />
-          ))
-        )}
-      </div>
+      {messagesArea}
 
       {/* Tira "En la sala" — solo sidebar */}
       {!isFull && roomUsers.length > 0 && (
@@ -127,140 +199,155 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
         </div>
       )}
 
-      {/* Emojis rápidos — solo usuarios logueados */}
-      {canChat && (
-        <div className="flex items-center gap-1 border-t border-border/40 px-3 py-1.5 bg-secondary/30">
-          {QUICK_EMOJIS.map((emoji) => (
-            <button
-              key={emoji}
-              onClick={() => sendMessage(emoji)}
-              className="flex h-6 w-6 items-center justify-center rounded-sm text-sm transition hover:bg-accent hover:scale-110 active:scale-95"
-              title={`Enviar ${emoji}`}
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Input / CTA de invitado */}
-      <div className="glass-strong border-t border-border/50 p-2.5">
-        {canChat ? (
-          <form onSubmit={handleSend} className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Escribe un mensaje..."
-              maxLength={500}
-              className="rounded-sm glass h-9"
-            />
-            <Button type="submit" size="icon" disabled={!input.trim()} className="btn-gradient-primary shrink-0 rounded-sm h-9 w-9">
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
-        ) : (
-          <div className="frame-double bg-secondary/40 p-3 text-center">
-            <p className="label-caps !text-[9px] mb-1.5">Únete a la charla</p>
-            <p className="text-xs text-muted-foreground mb-2.5 leading-relaxed">
-              {isGuest
-                ? 'Crea una cuenta gratis para escribir en el chat mundial'
-                : 'Entra con tu cuenta para escribir en el chat mundial'}
-            </p>
-            <Button
-              size="sm"
-              className="btn-gradient-primary w-full rounded-sm gap-1.5"
-              onClick={() => openAuth(isGuest ? 'register' : 'login')}
-            >
-              <MessageSquare className="h-3.5 w-3.5" />
-              {isGuest ? 'Crear cuenta' : 'Iniciar sesión'}
-            </Button>
-          </div>
-        )}
-      </div>
+      {emojiRow}
+      {inputArea}
     </div>
   )
 
-  // Vista completa (página) — dos columnas en escritorio
+  /* ============================================================
+     VISTA COMPLETA (página Chat Mundial)
+     Cabecera de gaceta + sala enmarcada + columna lateral + teletipo
+     ============================================================ */
   if (isFull) {
     return (
-      <>
-      <div className="mx-auto max-w-5xl grid lg:grid-cols-[1fr_16rem] gap-4 items-start">
-        <div className="glass-card flex h-[70vh] flex-col overflow-hidden">
-          {chatContent}
-        </div>
-
-        {/* Columna lateral de la sala */}
-        <div className="hidden lg:flex flex-col gap-4">
-          {/* En la sala */}
-          <div className="glass-card p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="h-3.5 w-3.5 text-primary" />
-              <p className="label-caps">En la sala · {roomUsers.length + onlineCount}</p>
-            </div>
-            {roomUsers.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">
-                Todavía nadie ha escrito hoy. La sala te espera.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {roomUsers.slice(0, 8).map((u) => (
-                  <div key={u.userId} className="flex items-center gap-2">
-                    <UserAvatar username={u.username} avatar={u.avatar} size="xs" />
-                    <span className="text-xs font-medium truncate">{u.username}</span>
-                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-olive-400 shrink-0" />
-                  </div>
-                ))}
-              </div>
-            )}
+      <div className="space-y-5">
+        {/* ===== Masthead de la gaceta ===== */}
+        <header className="relative text-center pt-2 pb-1">
+          <p className="label-caps opacity-80">La plaza pública · Edición continua</p>
+          <h1 className="text-page mt-1.5 flex items-center justify-center gap-3">
+            <Globe className="h-7 w-7 text-primary hidden sm:block" />
+            Chat Mundial
+          </h1>
+          <div className="rule-ornate w-56 mx-auto mt-3 opacity-80">
+            <span className="text-[9px] leading-none">◆</span>
           </div>
-
-          {/* Reglas del club */}
-          <div className="glass-card frame-double p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ScrollText className="h-3.5 w-3.5 text-primary" />
-              <p className="label-caps">Reglas del club</p>
-            </div>
-            <ol className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
-              <li className="flex gap-2">
-                <span className="font-display font-bold text-primary shrink-0">I.</span>
-                Sé amable — aquí todos somos devs aprendiendo.
-              </li>
-              <li className="flex gap-2">
-                <span className="font-display font-bold text-primary shrink-0">II.</span>
-                Sin spam ni autopromoción compulsiva.
-              </li>
-              <li className="flex gap-2">
-                <span className="font-display font-bold text-primary shrink-0">III.</span>
-                Comparte tu devlog y da feedback con cariño.
-              </li>
-            </ol>
-          </div>
-
-          <p className="text-center text-xs text-muted-foreground italic">
-            Conecta con la comunidad DevPlay en tiempo real
+          <p className="text-meta italic mt-2.5">
+            {onlineCount > 0
+              ? `${onlineCount} ${onlineCount === 1 ? 'dev conectado' : 'devs conectados'} ahora mismo — la conversación es en tiempo real`
+              : 'La conversación es en tiempo real — pasa la voz a tus devs favoritos'}
           </p>
-        </div>
-      </div>
+        </header>
 
-      {/* Temas de conversación — llena el vacío bajo la sala */}
-      <div className="mx-auto max-w-5xl mt-4 text-center">
-        <p className="label-caps mb-2.5">Temas de hoy en la plaza</p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {['#Devlogs', '#Betas', '#PixelArt', '#GameJams', '#Playtesting', '#Speedruns', '#Audio'].map((topic) => (
-            <span
-              key={topic}
-              className="label-caps !text-[9px] border border-border bg-secondary/50 px-2.5 py-1 rounded-sm"
-            >
-              {topic}
-            </span>
-          ))}
+        <div className="grid lg:grid-cols-[1fr_17rem] gap-4 items-start">
+          {/* ===== Sala de chat enmarcada ===== */}
+          <div className="glass-card frame-double flex h-[calc(100vh-19rem)] min-h-[26rem] max-h-[46rem] flex-col overflow-hidden">
+            {/* Barra superior fina de la sala */}
+            <div className="glass-strong border-b border-border/50 px-4 py-2.5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className={cn('h-2 w-2 rounded-full shrink-0', onlineCount > 0 ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
+                <span className="label-caps !text-[10px] truncate">
+                  En vivo · {onlineCount} conectados
+                </span>
+              </div>
+              <span className="label-caps !text-[9px] opacity-60 shrink-0 hidden sm:inline">
+                Sala pública · {roomUsers.length + onlineCount} presentes
+              </span>
+            </div>
+
+            {messagesArea}
+            {emojiRow}
+            {inputArea}
+          </div>
+
+          {/* ===== Columna lateral de la sala ===== */}
+          <div className="hidden lg:flex flex-col gap-4">
+            {/* En la sala */}
+            <div className="glass-card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                <p className="label-caps">En la sala · {roomUsers.length + onlineCount}</p>
+              </div>
+              {roomUsers.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">
+                  Todavía nadie ha escrito hoy. La sala te espera.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {roomUsers.slice(0, 8).map((u) => (
+                    <div key={u.userId} className="flex items-center gap-2">
+                      <UserAvatar username={u.username} avatar={u.avatar} size="xs" />
+                      <span className="text-xs font-medium truncate">{u.username}</span>
+                      <span className="ml-auto h-1.5 w-1.5 rounded-full bg-olive-400 shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Reglas del club */}
+            <div className="glass-card frame-double p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <ScrollText className="h-3.5 w-3.5 text-primary" />
+                <p className="label-caps">Reglas del club</p>
+              </div>
+              <ol className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
+                <li className="flex gap-2">
+                  <span className="font-display font-bold text-primary shrink-0">I.</span>
+                  Sé amable — aquí todos somos devs aprendiendo.
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-display font-bold text-primary shrink-0">II.</span>
+                  Sin spam ni autopromoción compulsiva.
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-display font-bold text-primary shrink-0">III.</span>
+                  Comparte tu devlog y da feedback con cariño.
+                </li>
+              </ol>
+            </div>
+
+            {/* Sello de la plaza — decoración de goma */}
+            <div className="flex justify-center py-1">
+              <div className="stamp-rubber flex h-28 w-28 flex-col items-center justify-center text-center gap-0.5 select-none">
+                <span className="label-caps !text-[7px] !tracking-[0.2em]">Plaza</span>
+                <span className="font-display text-3xl leading-none font-bold">★</span>
+                <span className="label-caps !text-[7px] !tracking-[0.2em]">DevPlay</span>
+                <span className="text-[8px] text-muted-foreground italic mt-0.5">desde 2025</span>
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground italic leading-relaxed px-2">
+              “La plaza nunca duerme —<br />conecta con devs de todo el mundo.”
+            </p>
+          </div>
+        </div>
+
+        {/* ===== Temas de hoy ===== */}
+        <div className="text-center">
+          <p className="label-caps mb-2.5">Temas de hoy en la plaza</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {['#Devlogs', '#Betas', '#PixelArt', '#GameJams', '#Playtesting', '#Speedruns', '#Audio'].map((topic) => (
+              <span
+                key={topic}
+                className="label-caps !text-[9px] border border-border bg-secondary/50 px-2.5 py-1 rounded-sm hover:bg-accent hover:text-accent-foreground hover:border-primary/40 transition cursor-default"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* ===== Cinta de teletipo — llena el cierre de la página ===== */}
+        <div className="glass-card overflow-hidden py-2.5" aria-hidden>
+          <div className="ticker-track items-center gap-10 pr-10">
+            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+              <span
+                key={i}
+                className="label-caps !text-[9px] whitespace-nowrap flex items-center gap-10 shrink-0"
+              >
+                {item}
+                <span className="text-primary/60">◆</span>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
-      </>
     )
   }
 
-  // Sidebar lateral (desktop) + drawer (mobile)
+  /* ============================================================
+     Panel lateral (desktop) + drawer (móvil)
+     ============================================================ */
   return (
     <>
       <aside className="hidden lg:flex w-80 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-l border-border/50">
