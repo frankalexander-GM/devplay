@@ -8,6 +8,7 @@ import { Server, Socket } from 'socket.io'
 import { PrismaClient } from '@prisma/client'
 import { join } from 'path'
 import { readFileSync, existsSync } from 'fs'
+import { filterProfanity } from '../../src/lib/profanity'
 
 const PORT = 3003
 
@@ -158,11 +159,12 @@ io.on('connection', (socket: Socket) => {
     updateOnlineCount()
   })
 
-  // World chat message — persist + broadcast
+  // World chat message — persist + broadcast (con filtro anti-groserías 🧼)
   socket.on('chat:message', async (data: { userId: string; username: string; content: string }) => {
     try {
       if (!data?.content || !data?.userId) return
-      const content = String(data.content).trim().slice(0, 500)
+      const clean = filterProfanity(String(data.content).trim().slice(0, 500))
+      const content = clean.trim()
       if (!content) return
 
       const user = await db.user.findUnique({

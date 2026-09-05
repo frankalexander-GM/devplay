@@ -1,15 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Users, Globe, MoreVertical, Eraser, Trash2, Link2, Maximize2 } from 'lucide-react'
+import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Globe, MoreVertical, Eraser, Trash2, Link2, Maximize2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuCheckboxItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -18,6 +17,7 @@ import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useWorldChat, type ChatMessage } from '@/hooks/use-socket'
 import { UserAvatar, TimeAgo } from '@/components/devplay/shared/shared'
+import { filterProfanity } from '@/lib/profanity'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -39,7 +39,7 @@ interface ChatPanelProps {
 
 export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   const { user, isGuest } = useCurrentUser()
-  const { chatOpen, toggleChat, openAuth, chatShowRoom, setChatShowRoom, setView } = useUIStore()
+  const { chatOpen, toggleChat, openAuth, setView } = useUIStore()
   const { messages, onlineCount, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected } = useWorldChat(user?.id, user?.username)
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -54,16 +54,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
     return () => clearInterval(t)
   }, [cooldown])
 
-  // Usuarios presentes en la sala (últimos participantes únicos)
-  const roomUsers = useMemo(() => {
-    const seen = new Map<string, { userId: string; username: string; avatar?: string | null }>()
-    for (let i = messages.length - 1; i >= 0 && seen.size < 14; i--) {
-      const m = messages[i]
-      if (m.type === 'system' || !m.username || seen.has(m.userId)) continue
-      seen.set(m.userId, { userId: m.userId, username: m.username, avatar: m.avatar })
-    }
-    return [...seen.values()]
-  }, [messages])
+  // Privacidad de la sala 🤫: ya NO se muestra quién está en el chat mundial
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -246,31 +237,6 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
       {messagesArea}
 
-      {/* Tira "En la sala" — solo sidebar, ocultable desde opciones */}
-      {!isFull && chatShowRoom && roomUsers.length > 0 && (
-        <div className="border-t border-border/40 px-3 py-2 bg-secondary/30">
-          <div className="flex items-center justify-between gap-2">
-            <span className="label-caps !text-[9px] shrink-0">En la sala</span>
-            <div className="flex -space-x-1.5">
-              {roomUsers.slice(0, 6).map((u) => (
-                <UserAvatar
-                  key={u.userId}
-                  username={u.username}
-                  avatar={u.avatar}
-                  size="xs"
-                  className="ring-2 ring-background shrink-0"
-                />
-              ))}
-              {roomUsers.length > 6 && (
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary border border-border text-[9px] font-bold text-muted-foreground ring-2 ring-background">
-                  +{roomUsers.length - 6}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {emojiRow}
       {inputArea}
     </div>
@@ -312,9 +278,6 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="label-caps !text-[9px] opacity-60 hidden sm:inline">
-                  Sala pública · {roomUsers.length + onlineCount} presentes
-                </span>
                 <ChatOptionsMenu
                   isFull
                   canChat={!!canChat}
@@ -331,31 +294,6 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
           {/* ===== Columna lateral de la sala ===== */}
           <div className="hidden lg:flex flex-col gap-4">
-            {/* En la sala — ocultable desde opciones */}
-            {chatShowRoom && (
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Users className="h-3.5 w-3.5 text-primary" />
-                <p className="label-caps">En la sala · {roomUsers.length + onlineCount}</p>
-              </div>
-              {roomUsers.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">
-                  Todavía nadie ha escrito hoy. La sala te espera.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {roomUsers.slice(0, 8).map((u) => (
-                    <div key={u.userId} className="flex items-center gap-2">
-                      <UserAvatar username={u.username} avatar={u.avatar} size="xs" />
-                      <span className="text-xs font-medium truncate">{u.username}</span>
-                      <span className="ml-auto h-1.5 w-1.5 rounded-full bg-olive-400 shrink-0" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            )}
-
             {/* Reglas del club */}
             <div className="glass-card frame-double p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -500,7 +438,7 @@ function ChatBubble({ msg, isMine, onDelete }: { msg: ChatMessage; isMine: boole
           )}
         >
           <p className="text-sm break-words leading-relaxed">
-            {msg.content}
+            {filterProfanity(msg.content)}
           </p>
         </div>
       </div>
@@ -533,7 +471,7 @@ function ChatBubble({ msg, isMine, onDelete }: { msg: ChatMessage; isMine: boole
             >
               <button
                 onClick={() => {
-                  navigator.clipboard?.writeText(msg.content)
+                  navigator.clipboard?.writeText(filterProfanity(msg.content))
                   setCopied(true)
                   setTimeout(() => { setCopied(false); setMenuOpen(false) }, 1000)
                 }}
@@ -626,7 +564,7 @@ function ChatOptionsMenu({
   onDeleteAllMine: () => void
 }) {
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
-  const { chatShowRoom, setChatShowRoom, setView } = useUIStore()
+  const { setView } = useUIStore()
 
   return (
     <DropdownMenu onOpenChange={(open) => { if (!open) setConfirmDeleteAll(false) }}>
@@ -642,14 +580,6 @@ function ChatOptionsMenu({
       <DropdownMenuContent align="end" className="w-60 rounded-md">
         <DropdownMenuLabel className="text-xs">Opciones del chat</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuCheckboxItem
-          checked={chatShowRoom}
-          onCheckedChange={(v) => setChatShowRoom(v === true)}
-          onSelect={(e) => e.preventDefault()}
-          className="gap-2 rounded-lg text-xs"
-        >
-          Mostrar “En la sala”
-        </DropdownMenuCheckboxItem>
         {!isFull && (
           <DropdownMenuItem
             onClick={() => setView('chat')}

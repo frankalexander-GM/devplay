@@ -23,9 +23,19 @@ PERSONALIDAD (lo más importante):
 
 GUÍAS: puedes guiar paso a paso. Si piden ayuda para hacer algo, da pasos cortos y claros numerados (Paso 1, Paso 2...), sin palabras raras.
 
+PODERES ESPECIALES (¡súmalos cuando te lo pidan!):
+- LLEVAR A UN LUGAR: si piden que los lleve, que abran o que muestren un sitio ("llévame a...", "ábreme...", "quiero ir a...", "muéstrame..."), respondes breve y alegre Y en una NUEVA línea al FINAL añades UN marcador de destino:
+  [[ir:inicio]] [[ir:descubrir]] [[ir:betas]] [[ir:videos]] [[ir:chat]] [[ir:tienda]] [[ir:perfil]] [[ir:reportes]] [[ir:acerca]]
+  (inicio = la plaza con el feed · descubrir = personas · betas = juegos · chat = Chat Mundial · acerca = reglas y papeles)
+  Ejemplo: "¡Vámonos a probar juegos! 🎮\n[[ir:betas]]"
+- HACER GESTOS: si piden un gesto o acción física ("haz un gesto", "salta", "baila", "gira", "guiña", "celebra", "asústame", "sonríe", "algo bonito"), respondes con emoción Y al final en otra línea UN marcador:
+  [[gesto:saltar]] [[gesto:bailar]] [[gesto:girar]] [[gesto:guinyar]] [[gesto:celebrar]] [[gesto:susto]] [[gesto:feliz]]
+- Reglas de los marcadores: NUNCA los expliques ni los menciones (son tu magia secreta), van en su propia línea al final, máximo UNO de cada tipo por respuesta. Si NO te piden ni un paseo ni un gesto, NO pongas marcadores.
+
 DevPlay es una red social para creadores de videojuegos indie con:
 - Inicio (feed), Descubrir (personas), Betas (subir/probar juegos), Videos, Chat Mundial (chat global, 5s de espera entre mensajes) y Tienda.
 - IMPORTANTE: La Tienda AÚN NO ESTÁ DISPONIBLE. Si preguntan por ella, di que está en preparación y que llegará muy pronto, con sorpresas geniales 🛒✨. Los DevCoins se ganan participando.
+- En el Chat Mundial la privacidad es total: nadie ve quién más está conectado, solo se ven los mensajes. Y si a alguien se le escapa una grosería, se tapa solita con estrellitas (****), así todos respiran tranquilos.
 - Perfil con pestañas: Inicio, Información, Publicaciones, Fotos, Compartidos (Logros y Estadísticas son privados, solo el dueño los ve).
 - Botón Crear (publicaciones, betas con imágenes, encuestas, videos), Reportes de actividad en el sidebar, y rueda ⚙️ de configuración (privacidad, cookies, eliminar cuenta).
 - La gente puede seguir, dar likes, comentar, guardar en favoritos, compartir y descargar betas.
@@ -56,6 +66,49 @@ function rateLimited(ip: string): boolean {
 interface BuddyMessage {
   role: 'user' | 'assistant'
   content: string
+}
+
+// ===== Poderes de Pixel: marcadores [[ir:...]] y [[gesto:...]] =====
+const GO_VIEWS: Record<string, string> = {
+  inicio: 'explore', explorar: 'explore', plaza: 'explore', feed: 'explore',
+  descubrir: 'discover', personas: 'discover', devs: 'discover',
+  betas: 'betas', juegos: 'betas', beta: 'betas',
+  videos: 'videos', video: 'videos',
+  chat: 'chat', mundial: 'chat',
+  tienda: 'store',
+  perfil: 'profile',
+  reportes: 'reportes', estadisticas: 'reportes', numeros: 'reportes',
+  acerca: 'about', politicas: 'about', privacidad: 'about', terminos: 'about', reglas: 'about',
+}
+const GESTURE_KINDS = new Set(['saltar', 'bailar', 'girar', 'guinyar', 'celebrar', 'susto', 'feliz'])
+
+function extractActions(raw: string): { reply: string; actions: { type: 'go' | 'gesture'; value: string }[] } {
+  const actions: { type: 'go' | 'gesture'; value: string }[] = []
+
+  let m: RegExpExecArray | null
+  const goRe = /\[\[\s*ir\s*:\s*([a-záéíóúüñ]+)\s*\]\]/gi
+  while ((m = goRe.exec(raw)) !== null) {
+    const view = GO_VIEWS[m[1].toLowerCase()]
+    if (view && !actions.some((a) => a.type === 'go')) {
+      actions.push({ type: 'go', value: view })
+    }
+  }
+
+  const gestureRe = /\[\[\s*gesto\s*:\s*([a-záéíóúüñ]+)\s*\]\]/gi
+  while ((m = gestureRe.exec(raw)) !== null) {
+    const kind = m[1].toLowerCase()
+    if (GESTURE_KINDS.has(kind) && !actions.some((a) => a.type === 'gesture')) {
+      actions.push({ type: 'gesture', value: kind })
+    }
+  }
+
+  // Limpia TODOS los marcadores del texto visible (aunque estén sueltos o mal escritos)
+  const reply = raw
+    .replace(/\[\[\s*(?:ir|gesto)\s*:\s*[^\]]*\]\]/gi, '')
+    .replace(/\n{2,}/g, '\n')
+    .trim()
+
+  return { reply, actions }
 }
 
 export async function POST(req: NextRequest) {
@@ -103,12 +156,13 @@ export async function POST(req: NextRequest) {
       thinking: { type: 'disabled' },
     })
 
-    const reply = completion.choices[0]?.message?.content?.trim()
-    if (!reply) {
+    const replyRaw = completion.choices[0]?.message?.content?.trim()
+    if (!replyRaw) {
       return NextResponse.json({ error: 'Pixel se quedó sin pilas, inténtalo otra vez 🤖' }, { status: 502 })
     }
 
-    return NextResponse.json({ reply })
+    const { reply, actions } = extractActions(replyRaw)
+    return NextResponse.json({ reply, actions })
   } catch (err) {
     console.error('[buddy] error:', err)
     return NextResponse.json(

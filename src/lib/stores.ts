@@ -69,10 +69,6 @@ interface UIState {
   setHideCommunity: (v: boolean) => void
   setHideHelp: (v: boolean) => void
   resetSidebarPrefs: () => void
-
-  // Preferencias del chat lateral (persistidas)
-  chatShowRoom: boolean
-  setChatShowRoom: (v: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -134,10 +130,6 @@ export const useUIStore = create<UIState>()(
       setHideHelp: (v) => set({ hideHelp: v }),
       resetSidebarPrefs: () =>
         set({ sidebarCompact: false, hideCommunity: false, hideHelp: false }),
-
-      // Preferencias del chat lateral
-      chatShowRoom: true,
-      setChatShowRoom: (v) => set({ chatShowRoom: v }),
     }),
     {
       name: 'devplay-ui',
@@ -146,7 +138,6 @@ export const useUIStore = create<UIState>()(
         sidebarCompact: s.sidebarCompact,
         hideCommunity: s.hideCommunity,
         hideHelp: s.hideHelp,
-        chatShowRoom: s.chatShowRoom,
       }),
     }
   )

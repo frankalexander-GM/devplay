@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { filterProfanity } from '@/lib/profanity'
 
 // GET recent chat messages (world chat history)
 export async function GET(req: NextRequest) {
@@ -40,11 +41,14 @@ export async function POST(req: NextRequest) {
   const user = await db.user.findUnique({ where: { id: userId }, select: { username: true } })
   if (!user) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
 
+  // Filtro anti-groserías 🧼: se guarda y difunde ya limpiecito
+  const clean = filterProfanity(content.trim()).slice(0, 500)
+
   const message = await db.chatMessage.create({
     data: {
       userId,
       username: user.username,
-      content: content.trim().slice(0, 500),
+      content: clean,
     },
     include: { user: { select: { id: true, username: true, avatar: true } } },
   })

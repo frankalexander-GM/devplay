@@ -11,6 +11,7 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { userService } from '@/services/devplay-service'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
+import type { ViewId } from '@/types/devplay'
 
 /**
  * Pixel 🤖 — mascota de IA de DevPlay.
@@ -28,8 +29,12 @@ interface ChatMsg {
   content: string
 }
 
+type BuddyAction = { type: 'go' | 'gesture'; value: string }
+
+const VALID_VIEWS = new Set<string>(['explore', 'discover', 'chat', 'videos', 'profile', 'betas', 'store', 'about', 'reportes'])
+
 type Mood = 'idle' | 'happy' | 'excited' | 'wink' | 'sleepy' | 'dizzy' | 'shocked'
-type Emote = 'none' | 'jump' | 'dance' | 'land'
+type Emote = 'none' | 'jump' | 'dance' | 'land' | 'spin'
 
 const PARTICLE_EMOJIS = ['✨', '🎮', '☕', '🚀', '👾', '💡', '❤️', '💫']
 const WALK_SPEED = 70 // px por segundo
@@ -148,6 +153,8 @@ export function PixelBuddy() {
   const currentView = useUIStore((s) => s.currentView)
   const profileUserId = useUIStore((s) => s.profileUserId)
   const openAuth = useUIStore((s) => s.openAuth)
+  const setView = useUIStore((s) => s.setView)
+  const openProfile = useUIStore((s) => s.openProfile)
 
   const [collapsed, setCollapsed] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
@@ -182,7 +189,6 @@ export function PixelBuddy() {
   const wasDraggedRef = useRef(false)
   const btnRef = useRef<HTMLButtonElement>(null)
 
-  const rootRef = btnRef
   const menuRef = useRef<HTMLDivElement>(null)
   const isMobile = vp.w < 1024
   const mascotSize = isMobile ? 46 : 54
@@ -260,7 +266,7 @@ export function PixelBuddy() {
     return () => clearInterval(interval)
   }, [mounted, chatOpen, registerOpen, dragging, falling, limits])
 
-  // ===== Personalidad: emotes (saltar, bailar, guiñar, chispas) =====
+  // ===== Personalidad: emotes (saltar, bailar, girar, guiñar, chispas) =====
   const doEmote = useCallback((kind: Emote, m: Mood = 'idle') => {
     setEmote((e) => ({ kind, key: e.key + 1 }))
     if (m !== 'idle') {
@@ -279,15 +285,19 @@ export function PixelBuddy() {
     setTimeout(() => setParticles((p) => p.filter((x) => !batch.some((b) => b.id === x.id))), 1600)
   }, [])
 
+  // Pixel es AUTÓNOMO 🤖: se entretiene solo (saltitos, bailecitos, giros, guiños)
   useEffect(() => {
     if (!mounted || collapsed || chatOpen || registerOpen || walking || dragging || falling || mood === 'dizzy') return
     const t = setInterval(() => {
       const r = Math.random()
-      if (r < 0.3) doEmote('jump', 'happy')
-      else if (r < 0.55) doEmote('dance')
-      else if (r < 0.8) { doEmote('jump', 'excited'); spawnParticles(2) }
-      else doEmote('none', 'wink')
-    }, 15000)
+      if (r < 0.2) doEmote('jump', 'happy')
+      else if (r < 0.36) doEmote('dance')
+      else if (r < 0.5) doEmote('spin', 'excited')
+      else if (r < 0.62) { doEmote('jump', 'excited'); spawnParticles(2) }
+      else if (r < 0.76) doEmote('none', 'wink')
+      else if (r < 0.88) doEmote('none', 'happy')
+      else { doEmote('none', 'excited'); spawnParticles(1) }
+    }, 8500 + Math.random() * 3500)
     return () => clearInterval(t)
   }, [mounted, collapsed, chatOpen, registerOpen, walking, dragging, falling, mood, doEmote, spawnParticles])
 
@@ -342,27 +352,36 @@ export function PixelBuddy() {
     return () => clearInterval(rotate)
   }, [currentView, isOwnProfile, profileData, isAuthed, collapsed, muted, mood, canChat])
 
-  // ===== Ojos que siguen el cursor =====
+  // ===== Ojos autónomos 👀: Pixel mira para donde ÉL quiere, no donde está el cursor =====
   const pupilX = useSpring(useMotionValue(0), { stiffness: 300, damping: 22 })
   const pupilY = useSpring(useMotionValue(0), { stiffness: 300, damping: 22 })
 
   useEffect(() => {
-    function onMouseMove(e: MouseEvent) {
-      const el = rootRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const cx = rect.left + rect.width / 2
-      const cy = rect.top + rect.height / 2
-      const dx = e.clientX - cx
-      const dy = e.clientY - cy
-      const dist = Math.hypot(dx, dy) || 1
-      const strength = Math.min(dist / 220, 1)
-      pupilX.set((dx / dist) * 2.4 * strength)
-      pupilY.set((dy / dist) * 2 * strength)
+    if (!mounted) return
+    const look = () => {
+      if (dragging || falling) {
+        pupilX.set(0)
+        pupilY.set(0)
+        return
+      }
+      if (walking) {
+        // Mira hacia donde camina
+        pupilX.set(facing * 2.2)
+        pupilY.set(-0.4)
+        return
+      }
+      const r = Math.random()
+      const side = Math.random() < 0.5 ? 1 : -1
+      if (r < 0.34) { pupilX.set(0); pupilY.set(0) }
+      else if (r < 0.56) { pupilX.set(2.3 * side); pupilY.set(0) }
+      else if (r < 0.72) { pupilX.set(1.7 * side); pupilY.set(-1.9) }
+      else if (r < 0.86) { pupilX.set(1.9 * side); pupilY.set(1.7) }
+      else { pupilX.set(0); pupilY.set(0) }
     }
-    window.addEventListener('mousemove', onMouseMove, { passive: true })
-    return () => window.removeEventListener('mousemove', onMouseMove)
-  }, [pupilX, pupilY])
+    look()
+    const t = setInterval(look, 2700)
+    return () => clearInterval(t)
+  }, [mounted, walking, facing, dragging, falling, pupilX, pupilY])
 
   // ===== Click y arrastre 🤏 =====
   function actualPos(): { x: number; y: number } {
@@ -512,6 +531,37 @@ export function PixelBuddy() {
   const storageKey = user && !user.isGuest ? `pixel-chat-${user.id}` : null
   const loadedRef = useRef(false)
 
+  // ===== Poderes por chat ✨: Pixel te lleva a los sitios y hace gestos si se lo pides =====
+  const playGesture = useCallback((kind: string) => {
+    switch (kind) {
+      case 'saltar': doEmote('jump', 'happy'); break
+      case 'bailar': doEmote('dance'); break
+      case 'girar': doEmote('spin', 'excited'); break
+      case 'guinyar': doEmote('none', 'wink'); break
+      case 'celebrar': doEmote('jump', 'excited'); spawnParticles(4); break
+      case 'susto':
+        setMood('shocked')
+        setTimeout(() => setMood('idle'), 1600)
+        break
+      case 'feliz': doEmote('none', 'happy'); spawnParticles(1); break
+    }
+  }, [doEmote, spawnParticles])
+
+  const goTo = useCallback((view: string): boolean => {
+    if (view === 'profile') {
+      if (user && !user.isGuest) {
+        openProfile(user.id)
+        return true
+      }
+      return false
+    }
+    if (VALID_VIEWS.has(view)) {
+      setView(view as ViewId)
+      return true
+    }
+    return false
+  }, [user, openProfile, setView])
+
   // Bienvenida nueva cada vez que se abre el chat vacío
   useEffect(() => {
     if (chatOpen && messages.length === 0) {
@@ -566,6 +616,20 @@ export function PixelBuddy() {
       const data = await res.json()
       setMessages((m) => [...m, { role: 'assistant', content: data.reply || data.error || 'Ay, se me nublaban los circuitos 🤖' }])
       nudgeTalk(2600)
+      // Ejecuta los poderes que pidió el usuario (gesto, paseo a otra vista)
+      const actions: BuddyAction[] = Array.isArray(data.actions) ? data.actions : []
+      if (actions.length > 0) {
+        setTimeout(() => {
+          for (const a of actions) {
+            if (a.type === 'gesture') {
+              playGesture(a.value)
+            } else if (a.type === 'go' && goTo(a.value)) {
+              doEmote('jump', 'excited')
+              spawnParticles(3)
+            }
+          }
+        }, 1100)
+      }
     } catch {
       setMessages((m) => [...m, { role: 'assistant', content: 'No conecté con mi cabecita 🤖 revisa tu conexión e inténtalo otra vez' }])
       nudgeTalk(1500)
@@ -837,7 +901,7 @@ export function PixelBuddy() {
                 <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
                   <div
                     className={cn(
-                      'max-w-[85%] rounded-lg px-2.5 py-1.5 text-[11px] leading-snug',
+                      'max-w-[85%] rounded-lg px-2.5 py-1.5 text-[11px] leading-snug whitespace-pre-line',
                       m.role === 'user'
                         ? 'btn-gradient-primary text-white rounded-br-sm'
                         : 'glass border border-border/50 rounded-bl-sm'
@@ -909,7 +973,11 @@ export function PixelBuddy() {
             return
           }
           setWalking((w) => {
-            if (w) savePos({ x: pos.x, y: FLOOR_Y })
+            if (w) {
+              savePos({ x: pos.x, y: FLOOR_Y })
+              // Llegó de su caminata: a veces celebra con un saltito 🤖
+              if (Math.random() < 0.35) setTimeout(() => doEmote('jump', 'excited'), 200)
+            }
             return false
           })
         }}
@@ -939,12 +1007,14 @@ export function PixelBuddy() {
                       ? { y: [0, -20, 0, -8, 0], rotate: 0 }
                       : emote.kind === 'dance'
                         ? { rotate: [0, -8, 8, -6, 6, 0], y: [0, -3, 0, -3, 0, 0] }
-                        : { y: 0, rotate: 0 }
+                        : emote.kind === 'spin'
+                          ? { rotate: [0, 360], y: [0, -6, 0] }
+                          : { y: 0, rotate: 0 }
             }
             transition={
               dragging ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' }
                 : falling ? { duration: 0.35, repeat: Infinity, ease: 'easeInOut' }
-                  : { duration: emote.kind === 'land' ? 0.55 : emote.kind === 'jump' ? 0.9 : 1.4, ease: 'easeOut' }
+                  : { duration: emote.kind === 'land' ? 0.55 : emote.kind === 'jump' ? 0.9 : emote.kind === 'spin' ? 1.1 : 1.4, ease: 'easeOut' }
             }
           >
             <motion.div animate={{ scaleX: facing }} transition={{ duration: 0.25 }}>
