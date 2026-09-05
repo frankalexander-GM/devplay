@@ -66,6 +66,39 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Trophy,
 }
 
+// La Tienda está en preparación: se muestra como catálogo, sin compras (cambiar a false cuando abra)
+const STORE_CLOSED = true
+
+// ===== Aviso: tienda próximamente =====
+function StoreClosedBanner() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-card frame-double relative overflow-hidden p-4 sm:p-5 text-center"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10" />
+      <div className="relative flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-bronze-500 text-white shadow">
+          <ShoppingBag className="h-5 w-5" />
+        </span>
+        <div>
+          <p className="font-display font-bold text-sm sm:text-base">
+            La Tienda está en preparación 🛒✨
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
+            Aún no está disponible, pero llega muy pronto con sorpresas geniales.
+            Sigue ganando DevCoins para estrenarla el día del estreno 💛
+          </p>
+        </div>
+        <Badge className="rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
+          Próximamente
+        </Badge>
+      </div>
+    </motion.div>
+  )
+}
+
 /**
  * Componente que renderiza un icono por nombre (evita "create components during render").
  */
@@ -171,7 +204,7 @@ export function StoreView() {
     () => new Set((myItemsData?.items ?? []).map((p) => p.itemId)),
     [myItemsData]
   )
-  const balance: number = balanceData?.balance ?? user?.devCoins ?? 0
+  const balance: number = balanceData?.balance ?? 0
   const myItems: StorePurchase[] = myItemsData?.items ?? []
   const transactions: DevCoinTransaction[] = balanceData?.transactions ?? []
 
@@ -196,6 +229,7 @@ export function StoreView() {
     return (
       <div className="space-y-6">
         <StoreHeader balance={0} loading={false} />
+        <StoreClosedBanner />
         <div className="glass-card p-12 text-center">
           <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
             <Lock className="h-8 w-8" />
@@ -253,6 +287,9 @@ export function StoreView() {
     <div className="space-y-6">
       {/* Header con balance */}
       <StoreHeader balance={balance} loading={balanceLoading && !balanceData} />
+
+      {/* Aviso: tienda próximamente */}
+      <StoreClosedBanner />
 
       {/* Aviso invitado */}
       {isGuest && (
@@ -333,6 +370,7 @@ export function StoreView() {
                       owned={ownedItemIds.has(item.id)}
                       canAfford={balance >= item.price}
                       disabled={isGuest}
+                      comingSoon={STORE_CLOSED}
                       buying={buyMutation.isPending && buyMutation.variables === item.id}
                       onBuy={() => buyMutation.mutate(item.id)}
                       index={i}
@@ -353,6 +391,7 @@ export function StoreView() {
               owned={ownedItemIds.has(item.id)}
               canAfford={balance >= item.price}
               disabled={isGuest}
+              comingSoon={STORE_CLOSED}
               buying={buyMutation.isPending && buyMutation.variables === item.id}
               onBuy={() => buyMutation.mutate(item.id)}
               index={i}
@@ -537,6 +576,7 @@ function StoreCard({
   owned,
   canAfford,
   disabled,
+  comingSoon,
   buying,
   onBuy,
   index,
@@ -545,6 +585,7 @@ function StoreCard({
   owned: boolean
   canAfford: boolean
   disabled: boolean
+  comingSoon?: boolean
   buying: boolean
   onBuy: () => void
   index: number
@@ -615,6 +656,11 @@ function StoreCard({
             <Button disabled variant="outline" size="sm" className="rounded-full gap-1">
               <Check className="h-3.5 w-3.5" />
               Adquirido
+            </Button>
+          ) : comingSoon ? (
+            <Button disabled variant="outline" size="sm" className="rounded-full gap-1 border-primary/40 text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              Pronto
             </Button>
           ) : disabled ? (
             <Button disabled variant="outline" size="sm" className="rounded-full gap-1">

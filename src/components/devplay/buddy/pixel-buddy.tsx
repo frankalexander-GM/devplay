@@ -14,14 +14,13 @@ import { cn } from '@/lib/utils'
 
 /**
  * Pixel 🤖 — mascota de IA de DevPlay.
- * - Pequeño, visible en todas las secciones, camina por la pantalla
- * - MUCHA personalidad: humores (feliz, guiño, emocionado, dormilón),
- *   baila, salta, suelta partículas emoji, saluda según la hora y
- *   se queda dormido si nadie lo pela 💤
- * - Habla con burbujas contextuales ("no has publicado nada", tips...)
- * - SOLO los devs registrados pueden hablarle (invitados → panel de registro)
- * - Menú ⋮ en el chat: nuevo chat, eliminar conversación, copiar,
- *   silenciar burbujas, minimizar
+ * - Pequeño, visible en todas las secciones
+ * - CAMINA de lado a lado por la pantalla con animación de caminata 🚶
+ * - Se puede ARRASTRAR Y SOLTAR a cualquier parte 🤏
+ * - MUCHA personalidad: humores, saltos, baile, guiños, se duerme 💤
+ * - Guías paso a paso (publicar, subir beta, crear cuenta)
+ * - SOLO devs registrados pueden hablarle (invitados → panel de registro)
+ * - Menú ⋮: nuevo chat, eliminar, copiar, silenciar burbujas, minimizar
  */
 
 interface ChatMsg {
@@ -32,20 +31,85 @@ interface ChatMsg {
 type Mood = 'idle' | 'happy' | 'excited' | 'wink' | 'sleepy'
 type Emote = 'none' | 'jump' | 'dance'
 
-const SUGGESTIONS = [
+const PARTICLE_EMOJIS = ['✨', '🎮', '☕', '🚀', '👾', '💡', '❤️']
+const WALK_SPEED = 60 // px por segundo
+
+const WELCOMES = [
+  '¡Holi! Soy Pixel 🤖 Pregúntame lo que quieras sobre DevPlay o toca una guía paso a paso 👇',
+  '¡Aquí Pixel! 🤖 ¿Dudas? Pregunta sin miedo, o toca una guía y te llevo de la manito 👇',
+  '¡Hola! ¿Sabías que puedes pedirme guías para publicar, subir tu beta o crear tu cuenta? 👇',
+  '¡Qué alegría verte! 🤖 Escríbeme lo que necesites o elige una guía rapidita 👇',
+  'Soy Pixel, tu compa de DevPlay 🤖 Pide ayuda cuando quieras o mira las guías de abajo 👇',
+]
+
+const SUGGESTION_POOL = [
   '¿Cómo subo una beta?',
   '¿Qué es el Chat Mundial?',
   '¿Cómo gano DevCoins?',
   'Dame ideas para mi juego',
+  '¿La Tienda ya está disponible?',
+  '¿Cómo sigo a otros devs?',
+  '¿Cómo edito mi perfil?',
+  '¿Qué son los Reportes?',
 ]
 
-const PARTICLE_EMOJIS = ['✨', '🎮', '☕', '🚀', '👾', '💡', '❤️']
+const GUIDES = [
+  {
+    id: 'publicar',
+    label: 'Publicar 📝',
+    msg: 'Guíame: quiero publicar algo',
+    steps: [
+      '¡Claro que sí! Te enseño a publicar tu primera historia 📝',
+      'Paso 1: Toca el botón ➕ de la barra de arriba.',
+      'Paso 2: Elige "Publicación", escribe lo que quieras compartir y agrégale una foto si te apetece 📸',
+      'Paso 3: Toca "Publicar" ¡y listo! Tu historia la verá toda la comunidad 🎉',
+      'Dato extra: las historias con foto gustan el triple 😉 ¿Te guío con algo más?',
+    ],
+  },
+  {
+    id: 'beta',
+    label: 'Subir beta 🎮',
+    msg: 'Guíame: quiero subir mi beta',
+    steps: [
+      '¡Sí! Vamos a subir tu juego para que todos lo prueben 🎮',
+      'Paso 1: Toca el botón ➕ de arriba y elige "Beta".',
+      'Paso 2: Ponle nombre a tu juego, cuéntalo bonito y agrega imágenes o el archivo para descargar.',
+      'Paso 3: Toca "Publicar beta" y la comunidad podrá probarla y dejarte sus opiniones ⭐',
+      'Consejo: responde rapidito a los comentarios, ¡la gente lo agradece un montón! 💛',
+    ],
+  },
+  {
+    id: 'cuenta',
+    label: 'Crear cuenta ✨',
+    msg: 'Guíame: quiero crear mi cuenta',
+    steps: [
+      '¡Genial! Tener tu cuenta es rapidísimo ✨',
+      'Paso 1: Toca "Entrar" arriba a la derecha.',
+      'Paso 2: Ve a la pestaña "Crear cuenta", pon tu correo, tu nombre y una clave secreta.',
+      'Paso 3: Acepta los términos, toca "Crear cuenta" ¡y bienvenido a la familia! 🎉',
+      'Con cuenta puedes publicar, seguir a tus favoritos y hablar conmigo cuando quieras 🤖💕',
+    ],
+  },
+]
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
 
 function timeGreeting(): string {
   const h = new Date().getHours()
-  if (h >= 6 && h < 12) return '¡Buenos días, dev! ☕ ¿Qué bichito cazamos hoy?'
-  if (h >= 12 && h < 19) return '¡Buenas tardes! 🎮 Estira las manos, tus muñecas lo valen'
-  return '¿Programando de noche? Yo también brillo más en la oscuridad 🌙'
+  if (h >= 6 && h < 12) return '¡Buenos días! ☕ ¿Lista la inspiración para crear hoy?'
+  if (h >= 12 && h < 19) return '¡Buenas tardes! 🎮 Tómate un respiro, la creatividad también descansa'
+  return '¿De noche? Yo también brillo más en la oscuridad 🌙'
 }
 
 function tipsForView(
@@ -55,68 +119,68 @@ function tipsForView(
   const { isOwnProfile, noPostsYet, canChat } = ctx
   const tips: string[] = []
   if (noPostsYet) {
-    tips.push('¡Aún no has publicado nada! 🚀 Anímate: un devlog, un meme de tu juego, lo que sea')
+    tips.push('¡Aún no has publicado nada! 🚀 Anímate: cuéntale a la comunidad qué estás creando')
   }
   switch (currentView) {
     case 'explore':
       tips.push(
         '¡Bienvenido a la plaza! 👀 Aquí la comunidad luce sus creaciones',
-        'Tip pro: guarda lo que te guste con ⭐ para leerlo luego',
-        'Yo me leo TODO el feed... por eso sé tanto chisme jaja 🤖'
+        'Tip: guarda lo que te guste con ⭐ para verlo luego',
+        'Yo me leo TODO lo que publican... por eso sé tanto chisme jaja 🤖'
       )
       break
     case 'discover':
       tips.push(
-        'Dale Seguir a los devs con estilo 🤝',
-        'Aquí puede estar tu futuro co-dev 💡',
+        'Dale Seguir a los perfiles con estilo 🤝',
+        'Aquí puede estar tu futuro mejor amigo 💡',
         'Un seguimiento al día... alegra el DevPlay'
       )
       break
     case 'betas':
       tips.push(
-        '¿Buscas testers? Sube tu beta y que llueva feedback 🎮',
-        'Prueba betas ajenas y deja feedback con cariño ☕',
+        '¿Buscas que prueben tu juego? Sube tu beta y que llueva feedback 🎮',
+        'Prueba las betas de otros y deja tus opiniones con cariño ☕',
         'Las betas con imágenes dan 3x más descargas (fuente: yo) 🤖'
       )
       break
     case 'chat':
       tips.push(
-        'En el Chat Mundial hay 5s entre mensajes: ¡antispam oficial! ⏱️',
+        'En el Chat Mundial hay 5 segundos entre mensajes: ¡así nadie se pasa de listo! ⏱️',
         'Saluda sin miedo, nadie muerde... yo sí, pero soy de goma 😬',
-        '¿Viste algo raro? Reporta. Los mods estamos al tanto 👀'
+        '¿Viste algo raro? Reporta. Los que cuidan la plaza estamos al tanto 👀'
       )
       break
     case 'videos':
       tips.push(
-        'Streams y gameplays de la comunidad 📺 con palomitas mejor',
-        '¿Tu gameplay aquí? Publica un video y hazte famoso 🎬'
+        'Videos de la comunidad 📺 con palomitas saben mejor',
+        '¿Tu juego en video? Publica uno y hazte famoso 🎬'
       )
       break
     case 'store':
       tips.push(
-        'DevCoins 🪙 se ganan creando cosas increíbles (y alguna sorpresa)',
-        'Los power-ups de la Tienda esconden ventajas secretas 🪙'
+        'La Tienda está en preparación 🛒 ¡Muy pronto podrás usar tus DevCoins!',
+        'Vi lo que se viene para la Tienda... no puedo contar nada, pero está buenísimo ✨'
       )
       break
     case 'about':
       tips.push(
         'Esta es la historia de DevPlay ☕ yo salgo en el capítulo 7',
-        'Spoiler: el fundador también olvida cerrar brackets a veces'
+        'Cada rincón de DevPlay se hizo con mucho cariño 💛'
       )
       break
     case 'reportes':
-      tips.push('Tus números en privado 📊 como un diario íntimo, pero con gráficas')
+      tips.push('Tus números en privado 📊 como un diario secreto, pero con gráficas bonitas')
       break
     case 'profile':
       if (isOwnProfile) {
         tips.push(
-          '¡Tu perfil! 👋 Publica algo, el feed te espera',
+          '¡Tu perfil! 👋 Publica algo, que la comunidad quiere conocerte',
           noPostsYet ? '' : 'Las pestañas Logros y Estadísticas son solo tuyas 🤫',
           'La rueda ⚙️ del menú configura todo: privacidad, cookies...'
         )
       } else {
         tips.push(
-          '¿Le das a Seguir? Sus betas no se siguen solas 🚀',
+          '¿Le das a Seguir? Sus novedades no llegan solas 🚀',
           'Comparte su perfil con el botón Compartir 📤'
         )
       }
@@ -125,13 +189,13 @@ function tipsForView(
   if (!canChat) {
     tips.unshift('Psst: solo los devs registrados pueden hablar conmigo 🤖 ¡Crea tu cuenta!')
   }
-  const generic = tips.length === 0
-  if (generic) {
+  if (tips.filter(Boolean).length === 0) {
     tips.push(
       '¿Dudas? Tócame y pregúntame lo que quieras 🤖',
-      'Doble clic en mí y me minimizo... es mi modo ahorro de energía 👾',
+      'Doble clic en mí y me minimizo... es mi modo de guardar energía 👾',
       'Funciono con café y electricidad ⚡☕',
-      'Estuve 3 microsegundos pensando en tu próximo juego... una eternidad 🤯'
+      'Arrástrame a donde quieras, me encanta el paseo 🤏',
+      '¿Viste las guías del chat? Te llevan paso a paso 📚'
     )
   }
   return tips.filter(Boolean)
@@ -158,7 +222,15 @@ export function PixelBuddy() {
   const [emote, setEmote] = useState<{ kind: Emote; key: number }>({ kind: 'none', key: 0 })
   const [particles, setParticles] = useState<{ id: number; emoji: string; dx: number }[]>([])
 
-  const rootRef = useRef<HTMLButtonElement>(null)
+  // Caminata 🚶 y arrastre 🤏
+  const [walking, setWalking] = useState(false)
+  const [walkDur, setWalkDur] = useState(2)
+  const [dragging, setDragging] = useState(false)
+  const dragRef = useRef<{ startX: number; startY: number; offX: number; offY: number; moved: boolean } | null>(null)
+  const wasDraggedRef = useRef(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  const rootRef = btnRef
   const menuRef = useRef<HTMLDivElement>(null)
   const isMobile = vp.w < 1024
   const mascotSize = isMobile ? 46 : 54
@@ -166,19 +238,27 @@ export function PixelBuddy() {
 
   const clamp = useCallback((v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max)), [])
 
-  // ===== Posición inicial + deambular =====
-  const pickSpot = useCallback(
-    (wOverride?: number) => {
-      const w = wOverride ?? vp.w
-      const desktop = w >= 1024
+  // ===== Posición inicial + límites =====
+  const limits = useCallback(
+    (w?: number) => {
+      const vw = w ?? vp.w
+      const desktop = vw >= 1024
       const chatVisible = desktop && currentView !== 'chat'
       const minX = desktop ? 250 : 14
-      const maxX = chatVisible ? w - 400 : w - (mascotSize + 30)
+      const maxX = chatVisible ? vw - 400 : vw - (mascotSize + 30)
+      return { minX: Math.max(14, minX), maxX: Math.max(minX + 40, maxX) }
+    },
+    [currentView, vp.w, mascotSize]
+  )
+
+  const pickSpot = useCallback(
+    (wOverride?: number) => {
+      const { minX, maxX } = limits(wOverride)
       const x = minX + Math.random() * Math.max(maxX - minX, 40)
       const y = 18 + Math.random() * 66 // px desde abajo
       return { x, y }
     },
-    [currentView, vp.w, mascotSize]
+    [limits]
   )
 
   // ===== Viewport (resize) =====
@@ -187,7 +267,19 @@ export function PixelBuddy() {
     const w = window.innerWidth
     const h = window.innerHeight
     setVp({ w, h })
-    setPos(pickSpot(w))
+    // Posición guardada del último arrastre
+    let initial = pickSpot(w)
+    try {
+      const raw = localStorage.getItem('pixel-pos')
+      if (raw) {
+        const saved = JSON.parse(raw)
+        const { minX, maxX } = limits(w)
+        if (saved && typeof saved.x === 'number' && saved.x >= minX - 10 && saved.x <= maxX + 10 && saved.y >= 14 && saved.y <= 130) {
+          initial = { x: saved.x, y: saved.y }
+        }
+      }
+    } catch {}
+    setPos(initial)
     try { setMuted(localStorage.getItem('pixel-tips-muted') === '1') } catch {}
     const onR = () => setVp({ w: window.innerWidth, h: window.innerHeight })
     window.addEventListener('resize', onR)
@@ -198,26 +290,54 @@ export function PixelBuddy() {
   useEffect(() => {
     if (!mounted) return
     setPos((p) => {
-      const maxX = vp.w - mascotSize - 14
-      if (p.x > maxX) return { ...p, x: Math.max(14, maxX) }
+      const { maxX } = limits()
+      if (p.x > maxX) return { ...p, x: maxX }
       return p
     })
-  }, [vp.w, mascotSize, mounted])
+  }, [vp.w, mascotSize, mounted, limits])
+
+  const savePos = useCallback((p: { x: number; y: number }) => {
+    try { localStorage.setItem('pixel-pos', JSON.stringify(p)) } catch {}
+  }, [])
+
+  // ===== Caminar de lado a lado 🚶 =====
+  const walkTo = useCallback(
+    (target: { x: number; y: number }) => {
+      setPos((prev) => {
+        const dist = Math.abs(target.x - prev.x)
+        if (dist < 4) return prev
+        setFacing(target.x > prev.x ? 1 : -1)
+        setWalkDur(Math.min(Math.max(dist / WALK_SPEED, 1.2), 9))
+        setWalking(true)
+        return target
+      })
+    },
+    []
+  )
 
   useEffect(() => {
     if (!mounted) return
     const interval = setInterval(() => {
-      if (chatOpen || registerOpen) return
-      setPos((prev) => {
-        const next = pickSpot()
-        setFacing(next.x > prev.x ? 1 : -1)
-        return next
-      })
-    }, isMobile ? 34000 : 26000)
+      if (chatOpen || registerOpen || dragging) return
+      const { minX, maxX } = limits()
+      // 80% caminata horizontal (misma altura), 20% también cambia de altura
+      if (Math.random() < 0.8) {
+        setPos((prev) => {
+          const x = minX + Math.random() * Math.max(maxX - minX, 40)
+          if (Math.abs(x - prev.x) < 60) return prev
+          setFacing(x > prev.x ? 1 : -1)
+          setWalkDur(Math.min(Math.max(Math.abs(x - prev.x) / WALK_SPEED, 1.2), 9))
+          setWalking(true)
+          return { x, y: prev.y }
+        })
+      } else {
+        walkTo(pickSpot())
+      }
+    }, 18000)
     return () => clearInterval(interval)
-  }, [mounted, chatOpen, registerOpen, pickSpot, isMobile])
+  }, [mounted, chatOpen, registerOpen, dragging, limits, pickSpot, walkTo])
 
-  // ===== Personalidad: emotes aleatorios (saltar, bailar, guiñar, chispas) =====
+  // ===== Personalidad: emotes (saltar, bailar, guiñar, chispas) =====
   const doEmote = useCallback((kind: Emote, m: Mood = 'idle') => {
     setEmote((e) => ({ kind, key: e.key + 1 }))
     if (m !== 'idle') {
@@ -237,16 +357,16 @@ export function PixelBuddy() {
   }, [])
 
   useEffect(() => {
-    if (!mounted || collapsed || chatOpen || registerOpen) return
+    if (!mounted || collapsed || chatOpen || registerOpen || walking || dragging) return
     const t = setInterval(() => {
       const r = Math.random()
       if (r < 0.3) doEmote('jump', 'happy')
       else if (r < 0.55) doEmote('dance')
       else if (r < 0.8) { doEmote('jump', 'excited'); spawnParticles(2) }
       else doEmote('none', 'wink')
-    }, 16000)
+    }, 15000)
     return () => clearInterval(t)
-  }, [mounted, collapsed, chatOpen, registerOpen, doEmote, spawnParticles])
+  }, [mounted, collapsed, chatOpen, registerOpen, walking, dragging, doEmote, spawnParticles])
 
   // ===== Dormilón: si nadie lo pela en 100s, se duerme 💤 =====
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -321,7 +441,14 @@ export function PixelBuddy() {
     return () => window.removeEventListener('mousemove', onMouseMove)
   }, [pupilX, pupilY])
 
-  // ===== Click en Pixel =====
+  // ===== Click y arrastre 🤏 =====
+  function actualPos(): { x: number; y: number } {
+    const el = btnRef.current
+    if (!el) return pos
+    const r = el.getBoundingClientRect()
+    return { x: r.left, y: window.innerHeight - r.bottom }
+  }
+
   function handleBuddyClick() {
     resetIdle()
     setBubbleVisible(false)
@@ -345,28 +472,105 @@ export function PixelBuddy() {
     }
   }
 
-  // ===== Menú ⋮ : cerrar al hacer click fuera =====
+  function onPointerDown(e: React.PointerEvent) {
+    if (collapsed) return
+    try { (e.currentTarget as Element).setPointerCapture?.(e.pointerId) } catch {}
+    const p = actualPos()
+    // Detener caminata donde esté y fijar posición real
+    setWalking(false)
+    setPos(p)
+    dragRef.current = { startX: e.clientX, startY: e.clientY, offX: e.clientX - p.x, offY: (window.innerHeight - e.clientY) - p.y, moved: false }
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    const d = dragRef.current
+    if (!d) return
+    const dx = e.clientX - d.startX
+    const dy = (window.innerHeight - e.clientY) - (window.innerHeight - d.startY)
+    if (!d.moved && Math.hypot(dx, dy) > 7) {
+      d.moved = true
+      wasDraggedRef.current = true
+      setDragging(true)
+      setBubbleVisible(false)
+      setChatOpen(false)
+      setRegisterOpen(false)
+      setMood('excited')
+    }
+    if (!d.moved) return
+    const { minX, maxX } = limits()
+    setFacing(dx >= 0 ? 1 : -1)
+    setPos({
+      x: clamp(e.clientX - d.offX, minX - 6, maxX + 10),
+      y: clamp((window.innerHeight - e.clientY) - d.offY, 10, Math.max(10, vp.h - mascotSize - 50)),
+    })
+  }
+
+  function onPointerUp() {
+    const d = dragRef.current
+    dragRef.current = null
+    if (!d) return
+    if (d.moved) {
+      wasDraggedRef.current = false
+      setDragging(false)
+      setMood('happy')
+      setTimeout(() => setMood('idle'), 1500)
+      spawnParticles(1)
+      setPos((p) => { savePos(p); return p })
+      doEmote('jump', 'idle')
+    } else {
+      handleBuddyClick()
+    }
+  }
+
+  function onPointerCancel() {
+    const d = dragRef.current
+    dragRef.current = null
+    if (d?.moved) {
+      wasDraggedRef.current = false
+      setDragging(false)
+      setMood('idle')
+      setPos((p) => { savePos(p); return p })
+    }
+  }
+
+  // Red de seguridad: si el pointerup ocurre fuera (caputra perdida), terminar el arrastre
   useEffect(() => {
-    if (!menuOpen) return
-    const onDown = (e: MouseEvent | TouchEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    if (!dragging) return
+    const end = () => {
+      if (dragRef.current?.moved) {
+        wasDraggedRef.current = false
+        setDragging(false)
+        setPos((p) => { savePos(p); return p })
+      }
+      dragRef.current = null
     }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('touchstart', onDown)
+    window.addEventListener('pointerup', end)
+    window.addEventListener('blur', end)
     return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('touchstart', onDown)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('blur', end)
     }
-  }, [menuOpen])
+  }, [dragging, savePos])
 
   // ===== Chat con IA (solo registrados) =====
   const [messages, setMessages] = useState<ChatMsg[]>([])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [welcome, setWelcome] = useState(WELCOMES[0])
+  const [suggestions, setSuggestions] = useState<string[]>(SUGGESTION_POOL.slice(0, 4))
+  const [guideRunning, setGuideRunning] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const storageKey = user && !user.isGuest ? `pixel-chat-${user.id}` : null
   const loadedRef = useRef(false)
+
+  // Bienvenida y sugerencias nuevas cada vez que se abre el chat vacío
+  useEffect(() => {
+    if (chatOpen && messages.length === 0 && !guideRunning) {
+      setWelcome(pickRandom(WELCOMES))
+      setSuggestions(shuffle(SUGGESTION_POOL).slice(0, 4))
+    }
+  }, [chatOpen])
 
   // Cargar historial guardado (por usuario) y guardarlo en cada cambio
   useEffect(() => {
@@ -395,7 +599,7 @@ export function PixelBuddy() {
 
   async function ask(text: string) {
     const content = text.trim()
-    if (!content || thinking) return
+    if (!content || thinking || guideRunning) return
     const next: ChatMsg[] = [...messages, { role: 'user', content }]
     setMessages(next)
     setInput('')
@@ -407,7 +611,6 @@ export function PixelBuddy() {
         body: JSON.stringify({ messages: next }),
       })
       if (res.status === 401) {
-        // Sesión expiró o cuenta invitada → panel de registro
         setChatOpen(false)
         setRegisterOpen(true)
         return
@@ -415,24 +618,56 @@ export function PixelBuddy() {
       const data = await res.json()
       setMessages((m) => [...m, { role: 'assistant', content: data.reply || data.error || 'Ay, se me nublaban los circuitos 🤖' }])
     } catch {
-      setMessages((m) => [...m, { role: 'assistant', content: 'No conecté con mi cerebro 🤖 revisa tu conexión e inténtalo otra vez' }])
+      setMessages((m) => [...m, { role: 'assistant', content: 'No conecté con mi cabecita 🤖 revisa tu conexión e inténtalo otra vez' }])
     } finally {
       setThinking(false)
     }
   }
 
-  // ===== Acciones del menú ⋮ =====
+  // ===== Guías paso a paso 📚 =====
+  function runGuide(guide: typeof GUIDES[number]) {
+    if (guideRunning || thinking) return
+    setGuideRunning(true)
+    setInput('')
+    const withUser: ChatMsg[] = [...messages, { role: 'user', content: guide.msg }]
+    setMessages(withUser)
+    guide.steps.forEach((step, i) => {
+      setTimeout(() => {
+        setMessages((m) => [...m, { role: 'assistant', content: step }])
+        if (i === guide.steps.length - 1) setGuideRunning(false)
+      }, 1400 * (i + 1))
+    })
+  }
+
+  // ===== Menú ⋮ =====
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('touchstart', onDown)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('touchstart', onDown)
+    }
+  }, [menuOpen])
+
   function newChat() {
     setMessages([])
     setInput('')
+    setGuideRunning(false)
+    setWelcome(pickRandom(WELCOMES))
+    setSuggestions(shuffle(SUGGESTION_POOL).slice(0, 4))
     setMenuOpen(false)
   }
   function deleteChat() {
     setMessages([])
+    setGuideRunning(false)
     if (storageKey) { try { localStorage.removeItem(storageKey) } catch {} }
     setMenuOpen(false)
     setChatOpen(false)
-    setTip('¡Conversación eliminada! 🧹 Fresquita como bug recién resuelto')
+    setTip('¡Listo! Conversación eliminada correctamente 🧹')
     setBubbleVisible(true)
     setTimeout(() => setBubbleVisible(false), 4000)
   }
@@ -504,7 +739,7 @@ export function PixelBuddy() {
 
       {/* ===== Burbuja de mensaje ===== */}
       <AnimatePresence>
-        {bubbleVisible && !chatOpen && !registerOpen && (
+        {bubbleVisible && !chatOpen && !registerOpen && !walking && !dragging && (
           <motion.div
             key={tip}
             initial={{ opacity: 0, y: 8, scale: 0.9 }}
@@ -535,6 +770,7 @@ export function PixelBuddy() {
       <AnimatePresence>
         {registerOpen && (
           <motion.div
+            key="register"
             initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -585,6 +821,7 @@ export function PixelBuddy() {
       <AnimatePresence>
         {chatOpen && (
           <motion.div
+            key="chat"
             initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -604,10 +841,9 @@ export function PixelBuddy() {
                 <p className="text-xs font-bold leading-none">Pixel</p>
                 <p className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
-                  Asistente con IA · pregúntame
+                  {guideRunning ? 'Guiándote paso a paso...' : 'Asistente con IA · pregúntame'}
                 </p>
               </div>
-              {/* Menú de 3 puntos */}
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen((v) => !v)}
@@ -620,6 +856,7 @@ export function PixelBuddy() {
                 <AnimatePresence>
                   {menuOpen && (
                     <motion.div
+                      key="menu"
                       initial={{ opacity: 0, y: -4, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -4, scale: 0.96 }}
@@ -661,10 +898,7 @@ export function PixelBuddy() {
               {messages.length === 0 && (
                 <div className="text-center py-3">
                   <PixelIcon size={40} mood="happy" className="mx-auto mb-1.5" />
-                  <p className="text-[11px] text-muted-foreground leading-snug px-2">
-                    ¡Holi! Soy Pixel 🤖 Pregúntame cómo usar DevPlay, ideas para tu juego o lo que necesites.
-                    ¡Y si publicas algo, celébralo conmigo! ☕
-                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-snug px-2">{welcome}</p>
                 </div>
               )}
               {messages.map((m, i) => (
@@ -696,10 +930,27 @@ export function PixelBuddy() {
               )}
             </div>
 
+            {/* Guías paso a paso 📚 */}
+            <div className="px-2.5 pt-1.5 pb-1 border-t border-border/40">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Guías:</span>
+                {GUIDES.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => runGuide(g)}
+                    disabled={guideRunning || thinking}
+                    className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary hover:bg-primary/20 transition disabled:opacity-40"
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Sugerencias */}
             {messages.length === 0 && (
-              <div className="px-2.5 pb-1.5 flex flex-wrap gap-1">
-                {SUGGESTIONS.map((s) => (
+              <div className="px-2.5 pb-1 pt-1 flex flex-wrap gap-1">
+                {suggestions.map((s) => (
                   <button
                     key={s}
                     onClick={() => ask(s)}
@@ -719,13 +970,14 @@ export function PixelBuddy() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Pregúntale a Pixel..."
+                placeholder={guideRunning ? 'Pixel está guiándote...' : 'Pregúntale a Pixel...'}
                 maxLength={300}
-                className="flex-1 min-w-0 rounded-full border border-input bg-transparent px-3 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring"
+                disabled={guideRunning}
+                className="flex-1 min-w-0 rounded-full border border-input bg-transparent px-3 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={thinking || !input.trim()}
+                disabled={thinking || !input.trim() || guideRunning}
                 className="btn-gradient-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white disabled:opacity-50 transition"
                 aria-label="Enviar"
               >
@@ -736,39 +988,51 @@ export function PixelBuddy() {
         )}
       </AnimatePresence>
 
-      {/* ===== El muñequito ===== */}
+      {/* ===== El muñequito (caminante y arrastrable) ===== */}
       <motion.button
-        ref={rootRef}
-        onClick={handleBuddyClick}
+        ref={btnRef}
+        onClick={() => { if (wasDraggedRef.current) { wasDraggedRef.current = false; return } }}
         onDoubleClick={() => minimizePixel()}
-        animate={{ x: pos.x, y: 0 }}
-        transition={{ type: 'spring', stiffness: 55, damping: 14 }}
-        className="pointer-events-auto absolute cursor-pointer select-none"
-        style={{ left: 0, bottom: pos.y }}
-        title="Pixel · tu asistente de IA (doble clic para minimizar)"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        animate={{ x: pos.x, y: -pos.y }}
+        transition={dragging ? { duration: 0 } : walking ? { duration: walkDur, ease: 'linear' } : { type: 'spring', stiffness: 60, damping: 15 }}
+        onAnimationComplete={() => {
+          setWalking((w) => {
+            if (w) savePos(pos)
+            return false
+          })
+        }}
+        className={cn(
+          'pointer-events-auto absolute left-0 bottom-0 cursor-grab select-none touch-none',
+          dragging && 'cursor-grabbing z-30'
+        )}
+        title="Pixel · arrástrame donde quieras, tócame para hablar (doble clic minimiza)"
         aria-label="Pixel, asistente de IA"
       >
-        {/* Flotación suave (siempre) */}
+        {/* Flotación suave (solo cuando está quieto) */}
         <motion.div
-          animate={mood === 'sleepy' ? { y: [0, -2, 0] } : { y: [0, -5, 0] }}
-          transition={{ duration: mood === 'sleepy' ? 4 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          whileHover={{ scale: 1.12 }}
-          whileTap={{ scale: 0.92 }}
+          animate={walking || dragging ? { y: 0 } : mood === 'sleepy' ? { y: [0, -2, 0] } : { y: [0, -5, 0] }}
+          transition={{ duration: mood === 'sleepy' ? 4 : 2.4, repeat: walking || dragging ? 0 : Infinity, ease: 'easeInOut' }}
+          whileHover={{ scale: walking || dragging ? 1 : 1.1 }}
         >
           {/* Emotes de un disparo (salto / baile) */}
           <motion.div
             key={emote.key}
             animate={
-              emote.kind === 'jump'
-                ? { y: [0, -20, 0, -8, 0] }
-                : emote.kind === 'dance'
-                  ? { rotate: [0, -8, 8, -6, 6, 0], y: [0, -3, 0, -3, 0, 0] }
-                  : { y: 0 }
+              dragging ? { rotate: [-4, 4, -4] }
+                : emote.kind === 'jump'
+                  ? { y: [0, -20, 0, -8, 0], rotate: 0 }
+                  : emote.kind === 'dance'
+                    ? { rotate: [0, -8, 8, -6, 6, 0], y: [0, -3, 0, -3, 0, 0] }
+                    : { y: 0, rotate: 0 }
             }
-            transition={{ duration: emote.kind === 'jump' ? 0.9 : 1.4, ease: 'easeInOut' }}
+            transition={dragging ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : { duration: emote.kind === 'jump' ? 0.9 : 1.4, ease: 'easeInOut' }}
           >
             <motion.div animate={{ scaleX: facing }} transition={{ duration: 0.25 }}>
-              <PixelIcon size={mascotSize} pupilX={pupilX} pupilY={pupilY} mood={mood} />
+              <PixelIcon size={mascotSize} pupilX={pupilX} pupilY={pupilY} mood={mood} walking={walking || dragging} />
             </motion.div>
             {/* Badge IA */}
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-bronze-500 shadow">
@@ -814,18 +1078,20 @@ function MenuItem({
   )
 }
 
-// ===== Robot SVG con humores =====
+// ===== Robot SVG con humores y caminata =====
 export function PixelIcon({
   size = 48,
   pupilX,
   pupilY,
   mood = 'idle',
+  walking = false,
   className,
 }: {
   size?: number
   pupilX?: any
   pupilY?: any
   mood?: Mood
+  walking?: boolean
   className?: string
 }) {
   const hasTracking = !!pupilX && !!pupilY
@@ -856,12 +1122,11 @@ export function PixelIcon({
         </g>
       )
     }
-    // idle | excited — ojos redondos (con parpadeo solo en idle)
     return (
       <motion.g
         style={hasTracking ? { x: pupilX, y: pupilY } : undefined}
-        animate={mood === 'idle' ? { scaleY: [1, 1, 0.12, 1] } : { scaleY: 1 }}
-        transition={mood === 'idle' ? { duration: 0.5, times: [0, 0.72, 0.86, 1], repeat: Infinity, repeatDelay: 3.4 } : undefined}
+        animate={mood === 'idle' && !walking ? { scaleY: [1, 1, 0.12, 1] } : { scaleY: 1 }}
+        transition={mood === 'idle' && !walking ? { duration: 0.5, times: [0, 0.72, 0.86, 1], repeat: Infinity, repeatDelay: 3.4 } : undefined}
       >
         <circle cx="25.5" cy="29" r={mood === 'excited' ? 3.9 : 3.4} fill="#4A2E21" />
         <circle cx="38.5" cy="29" r={mood === 'excited' ? 3.9 : 3.4} fill="#4A2E21" />
@@ -884,41 +1149,80 @@ export function PixelIcon({
     return <path d="M27 35.5 Q32 39.5 37 35.5" stroke="#4A2E21" strokeWidth="1.7" fill="none" strokeLinecap="round" />
   }
 
+  // Pasitos 🚶 — pies alternando
+  const stepDur = 0.42
+  const foot = (side: 1 | -1) => {
+    if (!walking) {
+      return <rect x={side === 1 ? 20 : 34} y="50" width="10" height="6" rx="3" fill="#8A4526" />
+    }
+    return (
+      <motion.rect
+        y="50"
+        width="10"
+        height="6"
+        rx="3"
+        fill="#8A4526"
+        animate={{ x: side === 1 ? [20, 25, 20, 15, 20] : [34, 29, 34, 39, 34], y: [50, 47, 50, 47, 50] }}
+        transition={{ duration: stepDur, repeat: Infinity, ease: 'linear' }}
+      />
+    )
+  }
+
+  // Bracitos que se mecen al caminar
+  const arm = (side: 1 | -1) => {
+    const cx = side === 1 ? 9 : 55
+    if (!walking) return <circle cx={cx} cy="34" r="4" fill="#A9552F" />
+    return (
+      <motion.circle
+        cy="34"
+        r="4"
+        fill="#A9552F"
+        animate={{ cy: side === 1 ? [34, 30, 34, 38, 34] : [34, 38, 34, 30, 34] }}
+        transition={{ duration: stepDur * 2, repeat: Infinity, ease: 'linear' }}
+      />
+    )
+  }
+
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" className={className}>
       {/* Sombra */}
-      <ellipse cx="32" cy="60" rx="14" ry="2.6" fill="rgba(74,46,33,0.25)" />
+      <ellipse cx="32" cy="60" rx={walking ? 10 : 14} ry="2.6" fill="rgba(74,46,33,0.25)" />
       {/* Antena */}
       <line x1="32" y1="8" x2="32" y2="14" stroke="#A9552F" strokeWidth="2.4" strokeLinecap="round" />
       <circle cx="32" cy="6.5" r="3.2" fill="#E8A04C">
         <animate attributeName="r" values="3.2;3.8;3.2" dur="1.6s" repeatCount="indefinite" />
       </circle>
-      {/* Cuerpo */}
-      <rect x="12" y="14" width="40" height="36" rx="13" fill="#C66E41" />
-      <rect x="12" y="14" width="40" height="36" rx="13" fill="url(#pixelBody)" />
-      <defs>
-        <linearGradient id="pixelBody" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="rgba(255,235,210,0.28)" />
-          <stop offset="1" stopColor="rgba(74,46,33,0.18)" />
-        </linearGradient>
-      </defs>
-      {/* Brazos */}
-      <circle cx="9" cy="34" r="4" fill="#A9552F" />
-      <circle cx="55" cy="34" r="4" fill="#A9552F" />
-      {/* Pantalla de cara */}
-      <rect x="17" y="19.5" width="30" height="21" rx="9" fill="#F6E8D4" />
-      {/* Ojos según humor */}
-      {eyes()}
-      {/* Boca según humor */}
-      {mouth()}
-      {/* Mejillas */}
-      <circle cx="21.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
-      <circle cx="42.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
-      {/* Panza */}
-      <rect x="24" y="43" width="16" height="4" rx="2" fill="#8A4526" opacity="0.55" />
+      {/* Cuerpo (con rebote al caminar) */}
+      <motion.g
+        animate={walking ? { y: [0, -1.6, 0] } : { y: 0 }}
+        transition={walking ? { duration: stepDur, repeat: Infinity, ease: 'linear' } : undefined}
+      >
+        <rect x="12" y="14" width="40" height="36" rx="13" fill="#C66E41" />
+        <rect x="12" y="14" width="40" height="36" rx="13" fill="url(#pixelBody)" />
+        <defs>
+          <linearGradient id="pixelBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="rgba(255,235,210,0.28)" />
+            <stop offset="1" stopColor="rgba(74,46,33,0.18)" />
+          </linearGradient>
+        </defs>
+        {/* Brazos */}
+        {arm(1)}
+        {arm(-1)}
+        {/* Pantalla de cara */}
+        <rect x="17" y="19.5" width="30" height="21" rx="9" fill="#F6E8D4" />
+        {/* Ojos según humor */}
+        {eyes()}
+        {/* Boca según humor */}
+        {mouth()}
+        {/* Mejillas */}
+        <circle cx="21.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
+        <circle cx="42.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
+        {/* Panza */}
+        <rect x="24" y="43" width="16" height="4" rx="2" fill="#8A4526" opacity="0.55" />
+      </motion.g>
       {/* Pies */}
-      <rect x="20" y="50" width="10" height="6" rx="3" fill="#8A4526" />
-      <rect x="34" y="50" width="10" height="6" rx="3" fill="#8A4526" />
+      {foot(1)}
+      {foot(-1)}
       {/* Zzz cuando duerme */}
       {mood === 'sleepy' && (
         <g fill="#4A2E21" fontWeight="bold" fontFamily="monospace">
@@ -947,3 +1251,10 @@ function MiniPixelFace() {
     </svg>
   )
 }
+
+
+
+
+
+
+

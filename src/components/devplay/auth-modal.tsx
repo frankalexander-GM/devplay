@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import { authService } from '@/services/devplay-service'
+import { authService, userService } from '@/services/devplay-service'
 import { toast } from 'sonner'
 import {
   Eye, EyeOff, Loader2, Mail, Lock, AtSign, Shield,
@@ -49,12 +49,45 @@ export function AuthModal() {
   const [regPassword, setRegPassword] = useState('')
   const [showRegPass, setShowRegPass] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
+  const [usernameTaken, setUsernameTaken] = useState(false)
+  const [checkingUsername, setCheckingUsername] = useState(false)
 
   // ===== Validaciones en tiempo real =====
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail || regEmail)
   const usernameValid = /^[a-zA-Z0-9_]{3,20}$/.test(regUsername)
-  const usernameAvailable = regUsername.length >= 3 && usernameValid // placeholder (idealmente check API)
+  const usernameFree = usernameValid && !checkingUsername && !usernameTaken // disponible de verdad
   const passwordStrength = getPasswordStrength(regPassword)
+
+  // ===== Disponibilidad real del nombre de usuario (con espera) =====
+  useEffect(() => {
+    setUsernameTaken(false)
+    if (!usernameValid) {
+      setCheckingUsername(false)
+      return
+    }
+    setCheckingUsername(true)
+    const t = setTimeout(async () => {
+      try {
+        const res = await userService.getByUsername(regUsername)
+        setUsernameTaken(!!res?.user)
+      } catch {
+        setUsernameTaken(false)
+      } finally {
+        setCheckingUsername(false)
+      }
+    }, 500)
+    return () => clearTimeout(t)
+  }, [regUsername, usernameValid])
+
+  // Sugerencia amable: proponer usuario a partir del correo
+  function suggestUsername() {
+    if (!regUsername && regEmail.includes('@')) {
+      const base = regEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 16)
+      if (base.length >= 3) setRegUsername(base)
+    }
+  }
+
+  // (validaciones definidas arriba)
 
   function getPasswordStrength(pwd: string): { score: number; label: string; color: string } {
     let score = 0
@@ -116,6 +149,7 @@ export function AuthModal() {
     const newErrors: FieldError[] = []
     if (!emailValid) newErrors.push({ field: 'regEmail', message: 'Email inválido' })
     if (!usernameValid) newErrors.push({ field: 'regUsername', message: '3-20 caracteres: letras, números y _' })
+    else if (usernameTaken) newErrors.push({ field: 'regUsername', message: 'Ese nombre ya está en uso, prueba otro' })
     if (regPassword.length < 6) newErrors.push({ field: 'regPassword', message: 'Mínimo 6 caracteres' })
     if (!agreeTerms) newErrors.push({ field: 'terms', message: 'Debes aceptar los términos' })
     if (newErrors.length) { setErrors(newErrors); return }
@@ -302,6 +336,13 @@ export function AuthModal() {
                 onSubmit={handleRegister}
                 className="space-y-4"
               >
+                {/* Beneficios */}
+                <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-muted-foreground bg-secondary/40 rounded-md py-2 px-3">
+                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Gratis</span>
+                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Publica y comparte</span>
+                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Habla con Pixel 🤖</span>
+                </div>
+
                 {/* Email */}
                 <FormField
                   label="Email"
@@ -331,25 +372,28 @@ export function AuthModal() {
                 <FormField
                   label="Nombre de usuario"
                   icon={AtSign}
-                  error={getFieldError('regUsername')}
-                  success={usernameAvailable ? 'Disponible' : undefined}
+                  error={getFieldError('regUsername') || (usernameTaken ? 'Ya en uso, prueba otro' : undefined)}
+                  success={usernameFree ? 'Disponible' : undefined}
                 >
                   <Input
                     value={regUsername}
                     onChange={(e) => { setRegUsername(e.target.value); clearFieldError('regUsername') }}
-                    placeholder="DevMaster99"
+                    onBlur={suggestUsername}
+                    placeholder="SuperCreador99"
                     pattern="[a-zA-Z0-9_]{3,20}"
                     required
                     autoComplete="username"
                     className={cn(
                       'rounded-md pl-10 pr-10 h-11',
-                      getFieldError('regUsername') && 'border-red-500/50 focus-visible:ring-red-500/30',
-                      usernameAvailable && 'border-olive-500/50 focus-visible:ring-olive-500/30'
+                      (getFieldError('regUsername') || usernameTaken) && 'border-red-500/50 focus-visible:ring-red-500/30',
+                      usernameFree && 'border-olive-500/50 focus-visible:ring-olive-500/30'
                     )}
                   />
-                  {usernameAvailable && (
+                  {checkingUsername ? (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+                  ) : usernameFree ? (
                     <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
-                  )}
+                  ) : null}
                 </FormField>
 
                 {/* Password */}
