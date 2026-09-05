@@ -1,0 +1,683 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useMemo, useRef, useState } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import { Input } from '@/components/ui/input'
+     6→import { Button } from '@/components/ui/button'
+     7→import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Users, Globe, MoreVertical, Eraser, Trash2, Link2, Maximize2 } from 'lucide-react'
+     8→import {
+     9→  DropdownMenu,
+    10→  DropdownMenuContent,
+    11→  DropdownMenuItem,
+    12→  DropdownMenuCheckboxItem,
+    13→  DropdownMenuLabel,
+    14→  DropdownMenuSeparator,
+    15→  DropdownMenuTrigger,
+    16→} from '@/components/ui/dropdown-menu'
+    17→import { useUIStore } from '@/lib/stores'
+    18→import { useCurrentUser } from '@/hooks/use-current-user'
+    19→import { useWorldChat, type ChatMessage } from '@/hooks/use-socket'
+    20→import { UserAvatar, TimeAgo } from '@/components/devplay/shared/shared'
+    21→import { toast } from 'sonner'
+    22→import { cn } from '@/lib/utils'
+    23→
+    24→const QUICK_EMOJIS = ['🎮', '🔥', '👀', '❤️', '🚀', '😎']
+    25→
+    26→const TICKER_ITEMS = [
+    27→  '✦ Bienvenido a la plaza pública de DevPlay',
+    28→  '🎮 Comparte tu devlog de la semana',
+    29→  '📢 Regla de oro: sé amable con los demás devs',
+    30→  '🕹️ Las betas nuevas se anuncian primero aquí',
+    31→  '☕ El café de la plaza siempre está servido',
+    32→  '🏆 Celebra los logros de tus devs favoritos',
+    33→  '◆ Chat en tiempo real · sé amable y diviértete',
+    34→]
+    35→
+    36→interface ChatPanelProps {
+    37→  variant?: 'sidebar' | 'fullview'
+    38→}
+    39→
+    40→export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
+    41→  const { user, isGuest } = useCurrentUser()
+    42→  const { chatOpen, toggleChat, openAuth, chatShowRoom, setChatShowRoom, setView } = useUIStore()
+    43→  const { messages, onlineCount, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected } = useWorldChat(user?.id, user?.username)
+    44→  const [input, setInput] = useState('')
+    45→  const scrollRef = useRef<HTMLDivElement>(null)
+    46→
+    47→  // Usuarios presentes en la sala (últimos participantes únicos)
+    48→  const roomUsers = useMemo(() => {
+    49→    const seen = new Map<string, { userId: string; username: string; avatar?: string | null }>()
+    50→    for (let i = messages.length - 1; i >= 0 && seen.size < 14; i--) {
+    51→      const m = messages[i]
+    52→      if (m.type === 'system' || !m.username || seen.has(m.userId)) continue
+    53→      seen.set(m.userId, { userId: m.userId, username: m.username, avatar: m.avatar })
+    54→    }
+    55→    return [...seen.values()]
+    56→  }, [messages])
+    57→
+    58→  useEffect(() => {
+    59→    if (scrollRef.current) {
+    60→      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    61→    }
+    62→  }, [messages])
+    63→
+    64→  const handleSend = (e: React.FormEvent) => {
+    65→    e.preventDefault()
+    66→    if (!input.trim()) return
+    67→    if (!user || isGuest) return
+    68→    sendMessage(input)
+    69→    setInput('')
+    70→  }
+    71→
+    72→  const canChat = user && !isGuest
+    73→
+    74→  const isFull = variant === 'fullview'
+    75→
+    76→  // ===== Acciones del menú de opciones =====
+    77→  const handleDeleteMessage = async (id: string) => {
+    78→    const ok = await deleteMessage(id)
+    79→    if (ok) toast.success('Mensaje eliminado')
+    80→    else toast.error('No se pudo eliminar el mensaje')
+    81→  }
+    82→
+    83→  const handleClearLocal = () => {
+    84→    clearMessages()
+    85→    toast.success('Conversación limpiada en este dispositivo')
+    86→  }
+    87→
+    88→  const handleDeleteAllMine = async () => {
+    89→    const n = await deleteMyMessages()
+    90→    if (n > 0) toast.success(n === 1 ? '1 mensaje eliminado' : `${n} mensajes eliminados`)
+    91→    else toast.info('No tenías mensajes en la sala')
+    92→  }
+    93→
+    94→  /* ===== Zona de mensajes (compartida) ===== */
+    95→  const messagesArea = (
+    96→    <div
+    97→      ref={scrollRef}
+    98→      className="custom-scroll paper-dots flex-1 overflow-y-auto p-3 space-y-2.5"
+    99→    >
+   100→      {messages.length === 0 ? (
+   101→        <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground px-6">
+   102→          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-sm frame-double bg-secondary">
+   103→            <MessageSquare className="h-7 w-7 text-muted-foreground" />
+   104→          </div>
+   105→          <p className="font-display font-bold text-foreground">La plaza está tranquila…</p>
+   106→          <p className="text-xs mt-1 italic">rompe el hielo con un ¡hola, devs!</p>
+   107→          <div className="rule-ornate w-24 mt-4 opacity-60">
+   108→            <span className="text-[8px]">◆</span>
+   109→          </div>
+   110→        </div>
+   111→      ) : (
+   112→        messages.map((msg) => (
+   113→          <ChatBubble key={msg.id} msg={msg} isMine={msg.userId === user?.id} onDelete={handleDeleteMessage} />
+   114→        ))
+   115→      )}
+   116→    </div>
+   117→  )
+   118→
+   119→  /* ===== Fila de emojis rápidos ===== */
+   120→  const emojiRow = canChat ? (
+   121→    <div className="flex items-center gap-1 border-t border-border/40 px-3 py-1.5 bg-secondary/30">
+   122→      <span className="label-caps !text-[8px] mr-1 opacity-70 shrink-0">Rápido</span>
+   123→      {QUICK_EMOJIS.map((emoji) => (
+   124→        <button
+   125→          key={emoji}
+   126→          onClick={() => sendMessage(emoji)}
+   127→          className="flex h-6 w-6 items-center justify-center rounded-sm text-sm transition hover:bg-accent hover:scale-110 active:scale-95"
+   128→          title={`Enviar ${emoji}`}
+   129→        >
+   130→          {emoji}
+   131→        </button>
+   132→      ))}
+   133→    </div>
+   134→  ) : null
+   135→
+   136→  /* ===== Input / CTA de invitado ===== */
+   137→  const inputArea = (
+   138→    <div className="glass-strong border-t border-border/50 p-2.5">
+   139→      {canChat ? (
+   140→        <form onSubmit={handleSend} className="flex gap-2">
+   141→          <Input
+   142→            value={input}
+   143→            onChange={(e) => setInput(e.target.value)}
+   144→            placeholder="Escribe un mensaje..."
+   145→            maxLength={500}
+   146→            className="rounded-sm glass h-9"
+   147→          />
+   148→          <Button type="submit" size="icon" disabled={!input.trim()} className="btn-gradient-primary shrink-0 rounded-sm h-9 w-9">
+   149→            <Send className="h-4 w-4" />
+   150→          </Button>
+   151→        </form>
+   152→      ) : (
+   153→        <div className="frame-double bg-secondary/40 p-3 text-center">
+   154→          <p className="label-caps !text-[9px] mb-1.5">Únete a la charla</p>
+   155→          <p className="text-xs text-muted-foreground mb-2.5 leading-relaxed">
+   156→            {isGuest
+   157→              ? 'Crea una cuenta gratis para escribir en el chat mundial'
+   158→              : 'Entra con tu cuenta para escribir en el chat mundial'}
+   159→          </p>
+   160→          <Button
+   161→            size="sm"
+   162→            className="btn-gradient-primary w-full rounded-sm gap-1.5"
+   163→            onClick={() => openAuth(isGuest ? 'register' : 'login')}
+   164→          >
+   165→            <MessageSquare className="h-3.5 w-3.5" />
+   166→            {isGuest ? 'Crear cuenta' : 'Iniciar sesión'}
+   167→          </Button>
+   168→        </div>
+   169→      )}
+   170→    </div>
+   171→  )
+   172→
+   173→  /* ===== Contenido lateral (drawer + panel desktop) ===== */
+   174→  const chatContent = (
+   175→    <div className="flex h-full flex-col">
+   176→      {/* Header — cabecera editorial */}
+   177→      <div className="glass-strong border-b border-border/50 px-3 pt-3 pb-2.5">
+   178→        <div className="flex items-center justify-between">
+   179→          <div className="flex items-center gap-2.5">
+   180→            <div className="flex h-10 w-10 items-center justify-center rounded-sm frame-double bg-primary text-primary-foreground">
+   181→              <MessageSquare className="h-4 w-4" />
+   182→            </div>
+   183→            <div>
+   184→              <h3 className="font-display font-bold text-base leading-tight">Chat Mundial</h3>
+   185→              <div className="flex items-center gap-1.5">
+   186→                <span className={cn('h-1.5 w-1.5 rounded-full', onlineCount > 0 ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
+   187→                <span className="label-caps !text-[9px] !tracking-[0.12em]">
+   188→                  En vivo · {onlineCount} conectados
+   189→                </span>
+   190→              </div>
+   191→            </div>
+   192→          </div>
+   193→          <div className="flex items-center gap-0.5">
+   194→            <ChatOptionsMenu
+   195→              isFull={false}
+   196→              canChat={!!canChat}
+   197→              onClearLocal={handleClearLocal}
+   198→              onDeleteAllMine={handleDeleteAllMine}
+   199→            />
+   200→            <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={toggleChat}>
+   201→              <X className="h-4 w-4" />
+   202→            </Button>
+   203→          </div>
+   204→        </div>
+   205→        <div className="rule-ornate mt-2.5 opacity-60">
+   206→          <span className="text-[8px] leading-none">◆</span>
+   207→        </div>
+   208→      </div>
+   209→
+   210→      {messagesArea}
+   211→
+   212→      {/* Tira "En la sala" — solo sidebar, ocultable desde opciones */}
+   213→      {!isFull && chatShowRoom && roomUsers.length > 0 && (
+   214→        <div className="border-t border-border/40 px-3 py-2 bg-secondary/30">
+   215→          <div className="flex items-center justify-between gap-2">
+   216→            <span className="label-caps !text-[9px] shrink-0">En la sala</span>
+   217→            <div className="flex -space-x-1.5">
+   218→              {roomUsers.slice(0, 6).map((u) => (
+   219→                <UserAvatar
+   220→                  key={u.userId}
+   221→                  username={u.username}
+   222→                  avatar={u.avatar}
+   223→                  size="xs"
+   224→                  className="ring-2 ring-background shrink-0"
+   225→                />
+   226→              ))}
+   227→              {roomUsers.length > 6 && (
+   228→                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary border border-border text-[9px] font-bold text-muted-foreground ring-2 ring-background">
+   229→                  +{roomUsers.length - 6}
+   230→                </span>
+   231→              )}
+   232→            </div>
+   233→          </div>
+   234→        </div>
+   235→      )}
+   236→
+   237→      {emojiRow}
+   238→      {inputArea}
+   239→    </div>
+   240→  )
+   241→
+   242→  /* ============================================================
+   243→     VISTA COMPLETA (página Chat Mundial)
+   244→     Cabecera de gaceta + sala enmarcada + columna lateral + teletipo
+   245→     ============================================================ */
+   246→  if (isFull) {
+   247→    return (
+   248→      <div className="space-y-5">
+   249→        {/* ===== Masthead de la gaceta ===== */}
+   250→        <header className="relative text-center pt-2 pb-1">
+   251→          <p className="label-caps opacity-80">La plaza pública · Edición continua</p>
+   252→          <h1 className="text-page mt-1.5 flex items-center justify-center gap-3">
+   253→            <Globe className="h-7 w-7 text-primary hidden sm:block" />
+   254→            Chat Mundial
+   255→          </h1>
+   256→          <div className="rule-ornate w-56 mx-auto mt-3 opacity-80">
+   257→            <span className="text-[9px] leading-none">◆</span>
+   258→          </div>
+   259→          <p className="text-meta italic mt-2.5">
+   260→            {onlineCount > 0
+   261→              ? `${onlineCount} ${onlineCount === 1 ? 'dev conectado' : 'devs conectados'} ahora mismo — la conversación es en tiempo real`
+   262→              : 'La conversación es en tiempo real — pasa la voz a tus devs favoritos'}
+   263→          </p>
+   264→        </header>
+   265→
+   266→        <div className="grid lg:grid-cols-[1fr_17rem] gap-4 items-start">
+   267→          {/* ===== Sala de chat enmarcada ===== */}
+   268→          <div className="glass-card frame-double flex h-[calc(100vh-19rem)] min-h-[26rem] max-h-[46rem] flex-col overflow-hidden">
+   269→            {/* Barra superior fina de la sala */}
+   270→            <div className="glass-strong border-b border-border/50 px-4 py-2.5 flex items-center justify-between gap-2">
+   271→              <div className="flex items-center gap-2 min-w-0">
+   272→                <span className={cn('h-2 w-2 rounded-full shrink-0', onlineCount > 0 ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
+   273→                <span className="label-caps !text-[10px] truncate">
+   274→                  En vivo · {onlineCount} conectados
+   275→                </span>
+   276→              </div>
+   277→              <div className="flex items-center gap-1.5 shrink-0">
+   278→                <span className="label-caps !text-[9px] opacity-60 hidden sm:inline">
+   279→                  Sala pública · {roomUsers.length + onlineCount} presentes
+   280→                </span>
+   281→                <ChatOptionsMenu
+   282→                  isFull
+   283→                  canChat={!!canChat}
+   284→                  onClearLocal={handleClearLocal}
+   285→                  onDeleteAllMine={handleDeleteAllMine}
+   286→                />
+   287→              </div>
+   288→            </div>
+   289→
+   290→            {messagesArea}
+   291→            {emojiRow}
+   292→            {inputArea}
+   293→          </div>
+   294→
+   295→          {/* ===== Columna lateral de la sala ===== */}
+   296→          <div className="hidden lg:flex flex-col gap-4">
+   297→            {/* En la sala — ocultable desde opciones */}
+   298→            {chatShowRoom && (
+   299→            <div className="glass-card p-4">
+   300→              <div className="flex items-center gap-2 mb-3">
+   301→                <Users className="h-3.5 w-3.5 text-primary" />
+   302→                <p className="label-caps">En la sala · {roomUsers.length + onlineCount}</p>
+   303→              </div>
+   304→              {roomUsers.length === 0 ? (
+   305→                <p className="text-xs text-muted-foreground italic">
+   306→                  Todavía nadie ha escrito hoy. La sala te espera.
+   307→                </p>
+   308→              ) : (
+   309→                <div className="space-y-2">
+   310→                  {roomUsers.slice(0, 8).map((u) => (
+   311→                    <div key={u.userId} className="flex items-center gap-2">
+   312→                      <UserAvatar username={u.username} avatar={u.avatar} size="xs" />
+   313→                      <span className="text-xs font-medium truncate">{u.username}</span>
+   314→                      <span className="ml-auto h-1.5 w-1.5 rounded-full bg-olive-400 shrink-0" />
+   315→                    </div>
+   316→                  ))}
+   317→                </div>
+   318→              )}
+   319→            </div>
+   320→            )}
+   321→
+   322→            {/* Reglas del club */}
+   323→            <div className="glass-card frame-double p-4">
+   324→              <div className="flex items-center gap-2 mb-3">
+   325→                <ScrollText className="h-3.5 w-3.5 text-primary" />
+   326→                <p className="label-caps">Reglas del club</p>
+   327→              </div>
+   328→              <ol className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
+   329→                <li className="flex gap-2">
+   330→                  <span className="font-display font-bold text-primary shrink-0">I.</span>
+   331→                  Sé amable — aquí todos somos devs aprendiendo.
+   332→                </li>
+   333→                <li className="flex gap-2">
+   334→                  <span className="font-display font-bold text-primary shrink-0">II.</span>
+   335→                  Sin spam ni autopromoción compulsiva.
+   336→                </li>
+   337→                <li className="flex gap-2">
+   338→                  <span className="font-display font-bold text-primary shrink-0">III.</span>
+   339→                  Comparte tu devlog y da feedback con cariño.
+   340→                </li>
+   341→              </ol>
+   342→            </div>
+   343→
+   344→            {/* Sello de la plaza — decoración de goma */}
+   345→            <div className="flex justify-center py-1">
+   346→              <div className="stamp-rubber flex h-28 w-28 flex-col items-center justify-center text-center gap-0.5 select-none">
+   347→                <span className="label-caps !text-[7px] !tracking-[0.2em]">Plaza</span>
+   348→                <span className="font-display text-3xl leading-none font-bold">★</span>
+   349→                <span className="label-caps !text-[7px] !tracking-[0.2em]">DevPlay</span>
+   350→                <span className="text-[8px] text-muted-foreground italic mt-0.5">desde 2025</span>
+   351→              </div>
+   352→            </div>
+   353→
+   354→            <p className="text-center text-xs text-muted-foreground italic leading-relaxed px-2">
+   355→              “La plaza nunca duerme —<br />conecta con devs de todo el mundo.”
+   356→            </p>
+   357→          </div>
+   358→        </div>
+   359→
+   360→        {/* ===== Temas de hoy ===== */}
+   361→        <div className="text-center">
+   362→          <p className="label-caps mb-2.5">Temas de hoy en la plaza</p>
+   363→          <div className="flex flex-wrap items-center justify-center gap-2">
+   364→            {['#Devlogs', '#Betas', '#PixelArt', '#GameJams', '#Playtesting', '#Speedruns', '#Audio'].map((topic) => (
+   365→              <span
+   366→                key={topic}
+   367→                className="label-caps !text-[9px] border border-border bg-secondary/50 px-2.5 py-1 rounded-sm hover:bg-accent hover:text-accent-foreground hover:border-primary/40 transition cursor-default"
+   368→              >
+   369→                {topic}
+   370→              </span>
+   371→            ))}
+   372→          </div>
+   373→        </div>
+   374→
+   375→        {/* ===== Cinta de teletipo — llena el cierre de la página ===== */}
+   376→        <div className="glass-card overflow-hidden py-2.5" aria-hidden>
+   377→          <div className="ticker-track items-center gap-10 pr-10">
+   378→            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+   379→              <span
+   380→                key={i}
+   381→                className="label-caps !text-[9px] whitespace-nowrap flex items-center gap-10 shrink-0"
+   382→              >
+   383→                {item}
+   384→                <span className="text-primary/60">◆</span>
+   385→              </span>
+   386→            ))}
+   387→          </div>
+   388→        </div>
+   389→      </div>
+   390→    )
+   391→  }
+   392→
+   393→  /* ============================================================
+   394→     Panel lateral (desktop) + drawer (móvil)
+   395→     ============================================================ */
+   396→  return (
+   397→    <>
+   398→      <aside className="hidden lg:flex w-80 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-l border-border/50">
+   399→        {chatContent}
+   400→      </aside>
+   401→
+   402→      <AnimatePresence>
+   403→        {chatOpen && (
+   404→          <>
+   405→            <motion.div
+   406→              initial={{ opacity: 0 }}
+   407→              animate={{ opacity: 1 }}
+   408→              exit={{ opacity: 0 }}
+   409→              onClick={toggleChat}
+   410→              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+   411→            />
+   412→            <motion.aside
+   413→              initial={{ x: '100%' }}
+   414→              animate={{ x: 0 }}
+   415→              exit={{ x: '100%' }}
+   416→              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+   417→              className="fixed right-0 top-0 z-50 flex h-full w-80 max-w-[85vw] flex-col glass-strong lg:hidden"
+   418→            >
+   419→              {chatContent}
+   420→            </motion.aside>
+   421→          </>
+   422→        )}
+   423→      </AnimatePresence>
+   424→    </>
+   425→  )
+   426→}
+   427→
+   428→function ChatBubble({ msg, isMine, onDelete }: { msg: ChatMessage; isMine: boolean; onDelete: (id: string) => void }) {
+   429→  const [menuOpen, setMenuOpen] = useState(false)
+   430→  const [copied, setCopied] = useState(false)
+   431→  const [confirmDel, setConfirmDel] = useState(false)
+   432→
+   433→  if (msg.type === 'system') {
+   434→    return (
+   435→      <div className="flex items-center justify-center py-1">
+   436→        <span className="label-caps !text-[9px] bg-secondary/60 px-2.5 py-1 rounded-sm">
+   437→          {msg.content}
+   438→        </span>
+   439→      </div>
+   440→    )
+   441→  }
+   442→
+   443→  return (
+   444→    <div className={cn('group relative flex gap-2', isMine && 'flex-row-reverse')}>
+   445→      <UserAvatar username={msg.username} avatar={msg.avatar} size="sm" className="mt-0.5 shrink-0" />
+   446→      <div className={cn('min-w-0 max-w-[80%]', isMine && 'items-end flex flex-col')}>
+   447→        <div className="flex items-center gap-1.5 mb-0.5">
+   448→          <span className={cn('text-xs font-semibold', isMine ? 'text-primary' : '')}>
+   449→            {msg.username}
+   450→          </span>
+   451→          <TimeAgo date={msg.createdAt} className="text-[10px]" />
+   452→        </div>
+   453→        {/* Burbuja — cuadrada vintage, terracota para mí */}
+   454→        <div
+   455→          className={cn(
+   456→            'inline-block w-fit max-w-full rounded-sm px-2.5 py-1.5 border',
+   457→            isMine
+   458→              ? 'bg-primary text-primary-foreground border-primary/40'
+   459→              : 'bg-secondary/70 border-border/50'
+   460→          )}
+   461→        >
+   462→          <p className="text-sm break-words leading-relaxed">
+   463→            {msg.content}
+   464→          </p>
+   465→        </div>
+   466→      </div>
+   467→
+   468→      {/* 3 puntos — solo visibles al hover */}
+   469→      <button
+   470→        onClick={() => setMenuOpen(!menuOpen)}
+   471→        className={cn(
+   472→          'absolute top-0 transition-opacity z-10',
+   473→          isMine ? 'left-0' : 'right-0',
+   474→          menuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+   475→        )}
+   476→      >
+   477→        <MoreVerticalIcon />
+   478→      </button>
+   479→
+   480→      {/* Menu desplegable */}
+   481→      <AnimatePresence>
+   482→        {menuOpen && (
+   483→          <>
+   484→            <div className="fixed inset-0 z-40" onClick={() => { setMenuOpen(false); setConfirmDel(false) }} />
+   485→            <motion.div
+   486→              initial={{ opacity: 0, scale: 0.9 }}
+   487→              animate={{ opacity: 1, scale: 1 }}
+   488→              exit={{ opacity: 0, scale: 0.9 }}
+   489→              className={cn(
+   490→                'absolute top-5 z-50 w-36 glass-strong rounded-md border border-border/50 shadow-lg overflow-hidden',
+   491→                isMine ? 'left-0' : 'right-0'
+   492→              )}
+   493→            >
+   494→              <button
+   495→                onClick={() => {
+   496→                  navigator.clipboard?.writeText(msg.content)
+   497→                  setCopied(true)
+   498→                  setTimeout(() => { setCopied(false); setMenuOpen(false) }, 1000)
+   499→                }}
+   500→                className="flex w-full items-center gap-2 px-3 py-2 text-xs hover:bg-secondary/60 transition"
+   501→              >
+   502→                {copied ? <Check className="h-3.5 w-3.5 text-olive-500" /> : <Copy className="h-3.5 w-3.5" />}
+   503→                {copied ? 'Copiado' : 'Copiar'}
+   504→              </button>
+   505→              {isMine && (
+   506→                <>
+   507→                  <div className="border-t border-border/40" />
+   508→                  <button
+   509→                    onClick={() => {
+   510→                      if (!confirmDel) {
+   511→                        setConfirmDel(true)
+   512→                        return
+   513→                      }
+   514→                      setMenuOpen(false)
+   515→                      setConfirmDel(false)
+   516→                      onDelete(msg.id)
+   517→                    }}
+   518→                    className={cn(
+   519→                      'flex w-full items-center gap-2 px-3 py-2 text-xs transition',
+   520→                      confirmDel ? 'bg-red-500/10 text-red-600 font-semibold' : 'text-red-500 hover:bg-secondary/60'
+   521→                    )}
+   522→                  >
+   523→                    <Trash2 className="h-3.5 w-3.5" />
+   524→                    {confirmDel ? '¿Seguro? Toca de nuevo' : 'Eliminar'}
+   525→                  </button>
+   526→                </>
+   527→              )}
+   528→              {!isMine && (
+   529→                <div className="border-t border-border/40" />
+   530→              )}
+   531→              {!isMine && (
+   532→                <button
+   533→                  onClick={() => {
+   534→                    import('@/services/security-service').then(s => {
+   535→                      s.securityService.report({
+   536→                        type: 'COMMENT',
+   537→                        entityId: msg.id,
+   538→                        reason: 'spam',
+   539→                      }).then(() => {
+   540→                        toast.success('Mensaje reportado')
+   541→                      }).catch(() => {
+   542→                        toast.error('Error al reportar')
+   543→                      })
+   544→                    })
+   545→                    setMenuOpen(false)
+   546→                  }}
+   547→                  className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-secondary/60 transition"
+   548→                >
+   549→                  <Flag className="h-3.5 w-3.5" />
+   550→                  Reportar
+   551→                </button>
+   552→              )}
+   553→            </motion.div>
+   554→          </>
+   555→        )}
+   556→      </AnimatePresence>
+   557→    </div>
+   558→  )
+   559→}
+   560→
+   561→function MoreVerticalIcon() {
+   562→  return (
+   563→    <svg
+   564→      className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground"
+   565→      fill="currentColor"
+   566→      viewBox="0 0 24 24"
+   567→      aria-hidden
+   568→    >
+   569→      <circle cx="12" cy="5" r="1.8" />
+   570→      <circle cx="12" cy="12" r="1.8" />
+   571→      <circle cx="12" cy="19" r="1.8" />
+   572→    </svg>
+   573→  )
+   574→}
+   575→
+   576→// ===== Menú de opciones del Chat Mundial (⋯) =====
+   577→function ChatOptionsMenu({
+   578→  isFull,
+   579→  canChat,
+   580→  onClearLocal,
+   581→  onDeleteAllMine,
+   582→}: {
+   583→  isFull: boolean
+   584→  canChat: boolean
+   585→  onClearLocal: () => void
+   586→  onDeleteAllMine: () => void
+   587→}) {
+   588→  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
+   589→  const { chatShowRoom, setChatShowRoom, setView } = useUIStore()
+   590→
+   591→  return (
+   592→    <DropdownMenu onOpenChange={(open) => { if (!open) setConfirmDeleteAll(false) }}>
+   593→      <DropdownMenuTrigger asChild>
+   594→        <button
+   595→          title="Opciones del chat"
+   596→          aria-label="Opciones del chat"
+   597→          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+   598→        >
+   599→          <MoreVertical className="h-4 w-4" />
+   600→        </button>
+   601→      </DropdownMenuTrigger>
+   602→      <DropdownMenuContent align="end" className="w-60 rounded-md">
+   603→        <DropdownMenuLabel className="text-xs">Opciones del chat</DropdownMenuLabel>
+   604→        <DropdownMenuSeparator />
+   605→        <DropdownMenuCheckboxItem
+   606→          checked={chatShowRoom}
+   607→          onCheckedChange={(v) => setChatShowRoom(v === true)}
+   608→          onSelect={(e) => e.preventDefault()}
+   609→          className="gap-2 rounded-lg text-xs"
+   610→        >
+   611→          Mostrar “En la sala”
+   612→        </DropdownMenuCheckboxItem>
+   613→        {!isFull && (
+   614→          <DropdownMenuItem
+   615→            onClick={() => setView('chat')}
+   616→            className="gap-2 rounded-lg text-xs"
+   617→          >
+   618→            <Maximize2 className="h-3.5 w-3.5" />
+   619→            Abrir pantalla completa
+   620→          </DropdownMenuItem>
+   621→        )}
+   622→        <DropdownMenuItem
+   623→          onClick={() => {
+   624→            navigator.clipboard?.writeText(window.location.href)
+   625→            toast.success('Enlace de la sala copiado')
+   626→          }}
+   627→          className="gap-2 rounded-lg text-xs"
+   628→        >
+   629→          <Link2 className="h-3.5 w-3.5" />
+   630→          Copiar enlace de la sala
+   631→        </DropdownMenuItem>
+   632→        <DropdownMenuSeparator />
+   633→        <DropdownMenuItem onClick={onClearLocal} className="gap-2 rounded-lg text-xs">
+   634→          <Eraser className="h-3.5 w-3.5" />
+   635→          Limpiar conversación (local)
+   636→        </DropdownMenuItem>
+   637→        {canChat && (
+   638→          <DropdownMenuItem
+   639→            onClick={() => {
+   640→              if (!confirmDeleteAll) {
+   641→                setConfirmDeleteAll(true)
+   642→                return
+   643→              }
+   644→              setConfirmDeleteAll(false)
+   645→              onDeleteAllMine()
+   646→            }}
+   647→            onSelect={(e) => e.preventDefault()}
+   648→            className={cn(
+   649→              'gap-2 rounded-lg text-xs transition-colors',
+   650→              confirmDeleteAll && 'bg-red-500/10 text-red-600 font-semibold'
+   651→            )}
+   652→          >
+   653→            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+   654→            {confirmDeleteAll ? '¿Seguro? Toca para confirmar' : 'Eliminar todos mis mensajes'}
+   655→          </DropdownMenuItem>
+   656→        )}
+   657→        {canChat && <DropdownMenuSeparator />}
+   658→        {canChat && (
+   659→          <DropdownMenuItem
+   660→            onClick={() => {
+   661→              import('@/services/security-service').then((s) => {
+   662→                s.securityService
+   663→                  .report({
+   664→                    type: 'COMMENT',
+   665→                    entityId: 'chat-mundial',
+   666→                    reason: 'other',
+   667→                    description: 'Problema en el Chat Mundial',
+   668→                  })
+   669→                  .then(() => toast.success('Reporte enviado. ¡Gracias!'))
+   670→                  .catch(() => toast.error('No se pudo enviar el reporte'))
+   671→              })
+   672→            }}
+   673→            className="gap-2 rounded-lg text-xs"
+   674→          >
+   675→            <Flag className="h-3.5 w-3.5" />
+   676→            Reportar un problema
+   677→          </DropdownMenuItem>
+   678→        )}
+   679→      </DropdownMenuContent>
+   680→    </DropdownMenu>
+   681→  )
+   682→}
+   683→
