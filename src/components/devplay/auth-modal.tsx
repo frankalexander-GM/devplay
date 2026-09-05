@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,7 +22,7 @@ import { ForgotPasswordModal } from '@/components/devplay/forgot-password-modal'
 type FieldError = { field: string; message: string }
 
 export function AuthModal() {
-  const { authModalOpen, authMode, closeAuth } = useUIStore()
+  const { authModalOpen, authMode, closeAuth, setView } = useUIStore()
   const { refreshAfterLogin, loginAsGuest } = useCurrentUser()
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(authMode)
 
@@ -186,6 +186,8 @@ export function AuthModal() {
   return (
     <Dialog open={authModalOpen} onOpenChange={(o) => !o && closeAuth()}>
       <DialogContent className="glass-strong max-w-md rounded-lg p-0 overflow-hidden border-border/60">
+        {/* Título oculto: solo para lectores de pantalla */}
+        <DialogTitle className="sr-only">{activeTab === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</DialogTitle>
         {/* ===== Header con branding ===== */}
         <div className="relative px-6 pt-6 pb-4 text-center border-b border-border/40">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent" />
@@ -460,8 +462,8 @@ export function AuthModal() {
                       className="mt-0.5"
                     />
                     <span className="text-xs text-muted-foreground leading-relaxed">
-                      Acepto los <button type="button" className="text-primary hover:underline">Términos de servicio</button> y la{' '}
-                      <button type="button" className="text-primary hover:underline">Política de privacidad</button>
+                      Acepto los <button type="button" onClick={() => { closeAuth(); setView('about') }} className="text-primary hover:underline">Términos de servicio</button> y la{' '}
+                      <button type="button" onClick={() => { closeAuth(); setView('about') }} className="text-primary hover:underline">Política de privacidad</button>
                     </span>
                   </label>
                   {getFieldError('terms') && (

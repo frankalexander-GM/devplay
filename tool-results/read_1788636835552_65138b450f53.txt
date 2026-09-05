@@ -1,0 +1,1261 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useCallback, useEffect, useRef, useState } from 'react'
+     4→     4→import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion'
+     5→     5→import {
+     6→     6→  X, Send, Sparkles, MoreVertical, MessageSquarePlus, Trash2,
+     7→     7→  Copy, Check, VolumeX, Volume2, Minimize2,
+     8→     8→} from 'lucide-react'
+     9→     9→import { useUIStore } from '@/lib/stores'
+    10→    10→import { useCurrentUser } from '@/hooks/use-current-user'
+    11→    11→import { userService } from '@/services/devplay-service'
+    12→    12→import { useQuery } from '@tanstack/react-query'
+    13→    13→import { cn } from '@/lib/utils'
+    14→    14→
+    15→    15→/**
+    16→    16→ * Pixel 🤖 — mascota de IA de DevPlay.
+    17→    17→ * - Pequeño, visible en todas las secciones
+    18→    18→ * - CAMINA de lado a lado por la pantalla con animación de caminata 🚶
+    19→    19→ * - Se puede ARRASTRAR Y SOLTAR a cualquier parte 🤏
+    20→    20→ * - MUCHA personalidad: humores, saltos, baile, guiños, se duerme 💤
+    21→    21→ * - Guías paso a paso (publicar, subir beta, crear cuenta)
+    22→    22→ * - SOLO devs registrados pueden hablarle (invitados → panel de registro)
+    23→    23→ * - Menú ⋮: nuevo chat, eliminar, copiar, silenciar burbujas, minimizar
+    24→    24→ */
+    25→    25→
+    26→    26→interface ChatMsg {
+    27→    27→  role: 'user' | 'assistant'
+    28→    28→  content: string
+    29→    29→}
+    30→    30→
+    31→    31→type Mood = 'idle' | 'happy' | 'excited' | 'wink' | 'sleepy'
+    32→    32→type Emote = 'none' | 'jump' | 'dance'
+    33→    33→
+    34→    34→const PARTICLE_EMOJIS = ['✨', '🎮', '☕', '🚀', '👾', '💡', '❤️']
+    35→    35→const WALK_SPEED = 60 // px por segundo
+    36→    36→
+    37→    37→const WELCOMES = [
+    38→    38→  '¡Holi! Soy Pixel 🤖 Pregúntame lo que quieras sobre DevPlay o toca una guía paso a paso 👇',
+    39→    39→  '¡Aquí Pixel! 🤖 ¿Dudas? Pregunta sin miedo, o toca una guía y te llevo de la manito 👇',
+    40→    40→  '¡Hola! ¿Sabías que puedes pedirme guías para publicar, subir tu beta o crear tu cuenta? 👇',
+    41→    41→  '¡Qué alegría verte! 🤖 Escríbeme lo que necesites o elige una guía rapidita 👇',
+    42→    42→  'Soy Pixel, tu compa de DevPlay 🤖 Pide ayuda cuando quieras o mira las guías de abajo 👇',
+    43→    43→]
+    44→    44→
+    45→    45→const SUGGESTION_POOL = [
+    46→    46→  '¿Cómo subo una beta?',
+    47→    47→  '¿Qué es el Chat Mundial?',
+    48→    48→  '¿Cómo gano DevCoins?',
+    49→    49→  'Dame ideas para mi juego',
+    50→    50→  '¿La Tienda ya está disponible?',
+    51→    51→  '¿Cómo sigo a otros devs?',
+    52→    52→  '¿Cómo edito mi perfil?',
+    53→    53→  '¿Qué son los Reportes?',
+    54→    54→]
+    55→    55→
+    56→    56→const GUIDES = [
+    57→    57→  {
+    58→    58→    id: 'publicar',
+    59→    59→    label: 'Publicar 📝',
+    60→    60→    msg: 'Guíame: quiero publicar algo',
+    61→    61→    steps: [
+    62→    62→      '¡Claro que sí! Te enseño a publicar tu primera historia 📝',
+    63→    63→      'Paso 1: Toca el botón ➕ de la barra de arriba.',
+    64→    64→      'Paso 2: Elige "Publicación", escribe lo que quieras compartir y agrégale una foto si te apetece 📸',
+    65→    65→      'Paso 3: Toca "Publicar" ¡y listo! Tu historia la verá toda la comunidad 🎉',
+    66→    66→      'Dato extra: las historias con foto gustan el triple 😉 ¿Te guío con algo más?',
+    67→    67→    ],
+    68→    68→  },
+    69→    69→  {
+    70→    70→    id: 'beta',
+    71→    71→    label: 'Subir beta 🎮',
+    72→    72→    msg: 'Guíame: quiero subir mi beta',
+    73→    73→    steps: [
+    74→    74→      '¡Sí! Vamos a subir tu juego para que todos lo prueben 🎮',
+    75→    75→      'Paso 1: Toca el botón ➕ de arriba y elige "Beta".',
+    76→    76→      'Paso 2: Ponle nombre a tu juego, cuéntalo bonito y agrega imágenes o el archivo para descargar.',
+    77→    77→      'Paso 3: Toca "Publicar beta" y la comunidad podrá probarla y dejarte sus opiniones ⭐',
+    78→    78→      'Consejo: responde rapidito a los comentarios, ¡la gente lo agradece un montón! 💛',
+    79→    79→    ],
+    80→    80→  },
+    81→    81→  {
+    82→    82→    id: 'cuenta',
+    83→    83→    label: 'Crear cuenta ✨',
+    84→    84→    msg: 'Guíame: quiero crear mi cuenta',
+    85→    85→    steps: [
+    86→    86→      '¡Genial! Tener tu cuenta es rapidísimo ✨',
+    87→    87→      'Paso 1: Toca "Entrar" arriba a la derecha.',
+    88→    88→      'Paso 2: Ve a la pestaña "Crear cuenta", pon tu correo, tu nombre y una clave secreta.',
+    89→    89→      'Paso 3: Acepta los términos, toca "Crear cuenta" ¡y bienvenido a la familia! 🎉',
+    90→    90→      'Con cuenta puedes publicar, seguir a tus favoritos y hablar conmigo cuando quieras 🤖💕',
+    91→    91→    ],
+    92→    92→  },
+    93→    93→]
+    94→    94→
+    95→    95→function pickRandom<T>(arr: T[]): T {
+    96→    96→  return arr[Math.floor(Math.random() * arr.length)]
+    97→    97→}
+    98→    98→
+    99→    99→function shuffle<T>(arr: T[]): T[] {
+   100→   100→  const a = [...arr]
+   101→   101→  for (let i = a.length - 1; i > 0; i--) {
+   102→   102→    const j = Math.floor(Math.random() * (i + 1))
+   103→   103→    ;[a[i], a[j]] = [a[j], a[i]]
+   104→   104→  }
+   105→   105→  return a
+   106→   106→}
+   107→   107→
+   108→   108→function timeGreeting(): string {
+   109→   109→  const h = new Date().getHours()
+   110→   110→  if (h >= 6 && h < 12) return '¡Buenos días! ☕ ¿Lista la inspiración para crear hoy?'
+   111→   111→  if (h >= 12 && h < 19) return '¡Buenas tardes! 🎮 Tómate un respiro, la creatividad también descansa'
+   112→   112→  return '¿De noche? Yo también brillo más en la oscuridad 🌙'
+   113→   113→}
+   114→   114→
+   115→   115→function tipsForView(
+   116→   116→  currentView: string,
+   117→   117→  ctx: { isOwnProfile: boolean; noPostsYet: boolean; canChat: boolean }
+   118→   118→): string[] {
+   119→   119→  const { isOwnProfile, noPostsYet, canChat } = ctx
+   120→   120→  const tips: string[] = []
+   121→   121→  if (noPostsYet) {
+   122→   122→    tips.push('¡Aún no has publicado nada! 🚀 Anímate: cuéntale a la comunidad qué estás creando')
+   123→   123→  }
+   124→   124→  switch (currentView) {
+   125→   125→    case 'explore':
+   126→   126→      tips.push(
+   127→   127→        '¡Bienvenido a la plaza! 👀 Aquí la comunidad luce sus creaciones',
+   128→   128→        'Tip: guarda lo que te guste con ⭐ para verlo luego',
+   129→   129→        'Yo me leo TODO lo que publican... por eso sé tanto chisme jaja 🤖'
+   130→   130→      )
+   131→   131→      break
+   132→   132→    case 'discover':
+   133→   133→      tips.push(
+   134→   134→        'Dale Seguir a los perfiles con estilo 🤝',
+   135→   135→        'Aquí puede estar tu futuro mejor amigo 💡',
+   136→   136→        'Un seguimiento al día... alegra el DevPlay'
+   137→   137→      )
+   138→   138→      break
+   139→   139→    case 'betas':
+   140→   140→      tips.push(
+   141→   141→        '¿Buscas que prueben tu juego? Sube tu beta y que llueva feedback 🎮',
+   142→   142→        'Prueba las betas de otros y deja tus opiniones con cariño ☕',
+   143→   143→        'Las betas con imágenes dan 3x más descargas (fuente: yo) 🤖'
+   144→   144→      )
+   145→   145→      break
+   146→   146→    case 'chat':
+   147→   147→      tips.push(
+   148→   148→        'En el Chat Mundial hay 5 segundos entre mensajes: ¡así nadie se pasa de listo! ⏱️',
+   149→   149→        'Saluda sin miedo, nadie muerde... yo sí, pero soy de goma 😬',
+   150→   150→        '¿Viste algo raro? Reporta. Los que cuidan la plaza estamos al tanto 👀'
+   151→   151→      )
+   152→   152→      break
+   153→   153→    case 'videos':
+   154→   154→      tips.push(
+   155→   155→        'Videos de la comunidad 📺 con palomitas saben mejor',
+   156→   156→        '¿Tu juego en video? Publica uno y hazte famoso 🎬'
+   157→   157→      )
+   158→   158→      break
+   159→   159→    case 'store':
+   160→   160→      tips.push(
+   161→   161→        'La Tienda está en preparación 🛒 ¡Muy pronto podrás usar tus DevCoins!',
+   162→   162→        'Vi lo que se viene para la Tienda... no puedo contar nada, pero está buenísimo ✨'
+   163→   163→      )
+   164→   164→      break
+   165→   165→    case 'about':
+   166→   166→      tips.push(
+   167→   167→        'Esta es la historia de DevPlay ☕ yo salgo en el capítulo 7',
+   168→   168→        'Cada rincón de DevPlay se hizo con mucho cariño 💛'
+   169→   169→      )
+   170→   170→      break
+   171→   171→    case 'reportes':
+   172→   172→      tips.push('Tus números en privado 📊 como un diario secreto, pero con gráficas bonitas')
+   173→   173→      break
+   174→   174→    case 'profile':
+   175→   175→      if (isOwnProfile) {
+   176→   176→        tips.push(
+   177→   177→          '¡Tu perfil! 👋 Publica algo, que la comunidad quiere conocerte',
+   178→   178→          noPostsYet ? '' : 'Las pestañas Logros y Estadísticas son solo tuyas 🤫',
+   179→   179→          'La rueda ⚙️ del menú configura todo: privacidad, cookies...'
+   180→   180→        )
+   181→   181→      } else {
+   182→   182→        tips.push(
+   183→   183→          '¿Le das a Seguir? Sus novedades no llegan solas 🚀',
+   184→   184→          'Comparte su perfil con el botón Compartir 📤'
+   185→   185→        )
+   186→   186→      }
+   187→   187→      break
+   188→   188→  }
+   189→   189→  if (!canChat) {
+   190→   190→    tips.unshift('Psst: solo los devs registrados pueden hablar conmigo 🤖 ¡Crea tu cuenta!')
+   191→   191→  }
+   192→   192→  if (tips.filter(Boolean).length === 0) {
+   193→   193→    tips.push(
+   194→   194→      '¿Dudas? Tócame y pregúntame lo que quieras 🤖',
+   195→   195→      'Doble clic en mí y me minimizo... es mi modo de guardar energía 👾',
+   196→   196→      'Funciono con café y electricidad ⚡☕',
+   197→   197→      'Arrástrame a donde quieras, me encanta el paseo 🤏',
+   198→   198→      '¿Viste las guías del chat? Te llevan paso a paso 📚'
+   199→   199→    )
+   200→   200→  }
+   201→   201→  return tips.filter(Boolean)
+   202→   202→}
+   203→   203→
+   204→   204→export function PixelBuddy() {
+   205→   205→  const { user, isAuthed, isGuest } = useCurrentUser()
+   206→   206→  const currentView = useUIStore((s) => s.currentView)
+   207→   207→  const profileUserId = useUIStore((s) => s.profileUserId)
+   208→   208→  const openAuth = useUIStore((s) => s.openAuth)
+   209→   209→
+   210→   210→  const [collapsed, setCollapsed] = useState(false)
+   211→   211→  const [chatOpen, setChatOpen] = useState(false)
+   212→   212→  const [registerOpen, setRegisterOpen] = useState(false)
+   213→   213→  const [menuOpen, setMenuOpen] = useState(false)
+   214→   214→  const [muted, setMuted] = useState(false)
+   215→   215→  const [bubbleVisible, setBubbleVisible] = useState(true)
+   216→   216→  const [tip, setTip] = useState('¡Hola! Soy Pixel, tu ayudante de DevPlay 🤖')
+   217→   217→  const [pos, setPos] = useState({ x: 40, y: 24 })
+   218→   218→  const [facing, setFacing] = useState(1)
+   219→   219→  const [mounted, setMounted] = useState(false)
+   220→   220→  const [vp, setVp] = useState({ w: 1280, h: 800 })
+   221→   221→  const [mood, setMood] = useState<Mood>('idle')
+   222→   222→  const [emote, setEmote] = useState<{ kind: Emote; key: number }>({ kind: 'none', key: 0 })
+   223→   223→  const [particles, setParticles] = useState<{ id: number; emoji: string; dx: number }[]>([])
+   224→   224→
+   225→   225→  // Caminata 🚶 y arrastre 🤏
+   226→   226→  const [walking, setWalking] = useState(false)
+   227→   227→  const [walkDur, setWalkDur] = useState(2)
+   228→   228→  const [dragging, setDragging] = useState(false)
+   229→   229→  const dragRef = useRef<{ startX: number; startY: number; offX: number; offY: number; moved: boolean } | null>(null)
+   230→   230→  const wasDraggedRef = useRef(false)
+   231→   231→  const btnRef = useRef<HTMLButtonElement>(null)
+   232→   232→
+   233→   233→  const rootRef = btnRef
+   234→   234→  const menuRef = useRef<HTMLDivElement>(null)
+   235→   235→  const isMobile = vp.w < 1024
+   236→   236→  const mascotSize = isMobile ? 46 : 54
+   237→   237→  const canChat = isAuthed // solo devs registrados; invitados/anónimos solo ven tips
+   238→   238→
+   239→   239→  const clamp = useCallback((v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max)), [])
+   240→   240→
+   241→   241→  // ===== Posición inicial + límites =====
+   242→   242→  const limits = useCallback(
+   243→   243→    (w?: number) => {
+   244→   244→      const vw = w ?? vp.w
+   245→   245→      const desktop = vw >= 1024
+   246→   246→      const chatVisible = desktop && currentView !== 'chat'
+   247→   247→      const minX = desktop ? 250 : 14
+   248→   248→      const maxX = chatVisible ? vw - 400 : vw - (mascotSize + 30)
+   249→   249→      return { minX: Math.max(14, minX), maxX: Math.max(minX + 40, maxX) }
+   250→   250→    },
+   251→   251→    [currentView, vp.w, mascotSize]
+   252→   252→  )
+   253→   253→
+   254→   254→  const pickSpot = useCallback(
+   255→   255→    (wOverride?: number) => {
+   256→   256→      const { minX, maxX } = limits(wOverride)
+   257→   257→      const x = minX + Math.random() * Math.max(maxX - minX, 40)
+   258→   258→      const y = 18 + Math.random() * 66 // px desde abajo
+   259→   259→      return { x, y }
+   260→   260→    },
+   261→   261→    [limits]
+   262→   262→  )
+   263→   263→
+   264→   264→  // ===== Viewport (resize) =====
+   265→   265→  useEffect(() => {
+   266→   266→    setMounted(true)
+   267→   267→    const w = window.innerWidth
+   268→   268→    const h = window.innerHeight
+   269→   269→    setVp({ w, h })
+   270→   270→    // Posición guardada del último arrastre
+   271→   271→    let initial = pickSpot(w)
+   272→   272→    try {
+   273→   273→      const raw = localStorage.getItem('pixel-pos')
+   274→   274→      if (raw) {
+   275→   275→        const saved = JSON.parse(raw)
+   276→   276→        const { minX, maxX } = limits(w)
+   277→   277→        if (saved && typeof saved.x === 'number' && saved.x >= minX - 10 && saved.x <= maxX + 10 && saved.y >= 14 && saved.y <= 130) {
+   278→   278→          initial = { x: saved.x, y: saved.y }
+   279→   279→        }
+   280→   280→      }
+   281→   281→    } catch {}
+   282→   282→    setPos(initial)
+   283→   283→    try { setMuted(localStorage.getItem('pixel-tips-muted') === '1') } catch {}
+   284→   284→    const onR = () => setVp({ w: window.innerWidth, h: window.innerHeight })
+   285→   285→    window.addEventListener('resize', onR)
+   286→   286→    return () => window.removeEventListener('resize', onR)
+   287→   287→  }, [])
+   288→   288→
+   289→   289→  // Mantener dentro de la pantalla al redimensionar
+   290→   290→  useEffect(() => {
+   291→   291→    if (!mounted) return
+   292→   292→    setPos((p) => {
+   293→   293→      const { maxX } = limits()
+   294→   294→      if (p.x > maxX) return { ...p, x: maxX }
+   295→   295→      return p
+   296→   296→    })
+   297→   297→  }, [vp.w, mascotSize, mounted, limits])
+   298→   298→
+   299→   299→  const savePos = useCallback((p: { x: number; y: number }) => {
+   300→   300→    try { localStorage.setItem('pixel-pos', JSON.stringify(p)) } catch {}
+   301→   301→  }, [])
+   302→   302→
+   303→   303→  // ===== Caminar de lado a lado 🚶 =====
+   304→   304→  const walkTo = useCallback(
+   305→   305→    (target: { x: number; y: number }) => {
+   306→   306→      setPos((prev) => {
+   307→   307→        const dist = Math.abs(target.x - prev.x)
+   308→   308→        if (dist < 4) return prev
+   309→   309→        setFacing(target.x > prev.x ? 1 : -1)
+   310→   310→        setWalkDur(Math.min(Math.max(dist / WALK_SPEED, 1.2), 9))
+   311→   311→        setWalking(true)
+   312→   312→        return target
+   313→   313→      })
+   314→   314→    },
+   315→   315→    []
+   316→   316→  )
+   317→   317→
+   318→   318→  useEffect(() => {
+   319→   319→    if (!mounted) return
+   320→   320→    const interval = setInterval(() => {
+   321→   321→      if (chatOpen || registerOpen || dragging) return
+   322→   322→      const { minX, maxX } = limits()
+   323→   323→      // 80% caminata horizontal (misma altura), 20% también cambia de altura
+   324→   324→      if (Math.random() < 0.8) {
+   325→   325→        setPos((prev) => {
+   326→   326→          const x = minX + Math.random() * Math.max(maxX - minX, 40)
+   327→   327→          if (Math.abs(x - prev.x) < 60) return prev
+   328→   328→          setFacing(x > prev.x ? 1 : -1)
+   329→   329→          setWalkDur(Math.min(Math.max(Math.abs(x - prev.x) / WALK_SPEED, 1.2), 9))
+   330→   330→          setWalking(true)
+   331→   331→          return { x, y: prev.y }
+   332→   332→        })
+   333→   333→      } else {
+   334→   334→        walkTo(pickSpot())
+   335→   335→      }
+   336→   336→    }, 18000)
+   337→   337→    return () => clearInterval(interval)
+   338→   338→  }, [mounted, chatOpen, registerOpen, dragging, limits, pickSpot, walkTo])
+   339→   339→
+   340→   340→  // ===== Personalidad: emotes (saltar, bailar, guiñar, chispas) =====
+   341→   341→  const doEmote = useCallback((kind: Emote, m: Mood = 'idle') => {
+   342→   342→    setEmote((e) => ({ kind, key: e.key + 1 }))
+   343→   343→    if (m !== 'idle') {
+   344→   344→      setMood(m)
+   345→   345→      setTimeout(() => setMood('idle'), 2000)
+   346→   346→    }
+   347→   347→  }, [])
+   348→   348→
+   349→   349→  const spawnParticles = useCallback((n = 1) => {
+   350→   350→    const batch = Array.from({ length: n }, (_, i) => ({
+   351→   351→      id: Date.now() + i + Math.random(),
+   352→   352→      emoji: PARTICLE_EMOJIS[Math.floor(Math.random() * PARTICLE_EMOJIS.length)],
+   353→   353→      dx: Math.random() * 48 - 16,
+   354→   354→    }))
+   355→   355→    setParticles((p) => [...p.slice(-6), ...batch])
+   356→   356→    setTimeout(() => setParticles((p) => p.filter((x) => !batch.some((b) => b.id === x.id))), 1600)
+   357→   357→  }, [])
+   358→   358→
+   359→   359→  useEffect(() => {
+   360→   360→    if (!mounted || collapsed || chatOpen || registerOpen || walking || dragging) return
+   361→   361→    const t = setInterval(() => {
+   362→   362→      const r = Math.random()
+   363→   363→      if (r < 0.3) doEmote('jump', 'happy')
+   364→   364→      else if (r < 0.55) doEmote('dance')
+   365→   365→      else if (r < 0.8) { doEmote('jump', 'excited'); spawnParticles(2) }
+   366→   366→      else doEmote('none', 'wink')
+   367→   367→    }, 15000)
+   368→   368→    return () => clearInterval(t)
+   369→   369→  }, [mounted, collapsed, chatOpen, registerOpen, walking, dragging, doEmote, spawnParticles])
+   370→   370→
+   371→   371→  // ===== Dormilón: si nadie lo pela en 100s, se duerme 💤 =====
+   372→   372→  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+   373→   373→  const resetIdle = useCallback(() => {
+   374→   374→    setMood((m) => (m === 'sleepy' ? 'idle' : m))
+   375→   375→    if (idleTimer.current) clearTimeout(idleTimer.current)
+   376→   376→    idleTimer.current = setTimeout(() => {
+   377→   377→      setMood('sleepy')
+   378→   378→    }, 100000)
+   379→   379→  }, [])
+   380→   380→  useEffect(() => {
+   381→   381→    if (!mounted || collapsed) return
+   382→   382→    resetIdle()
+   383→   383→    return () => { if (idleTimer.current) clearTimeout(idleTimer.current) }
+   384→   384→  }, [mounted, collapsed, resetIdle])
+   385→   385→
+   386→   386→  // ===== Tips contextuales =====
+   387→   387→  const isOwnProfile = currentView === 'profile' && profileUserId && user?.id === profileUserId
+   388→   388→  const profileTarget = isOwnProfile ? user?.id : currentView === 'profile' ? profileUserId : null
+   389→   389→
+   390→   390→  const { data: profileData } = useQuery({
+   391→   391→    queryKey: ['user-profile', profileTarget],
+   392→   392→    queryFn: () => userService.get(profileTarget!),
+   393→   393→    enabled: currentView === 'profile' && !!profileTarget,
+   394→   394→    staleTime: 30_000,
+   395→   395→  })
+   396→   396→
+   397→   397→  useEffect(() => {
+   398→   398→    if (collapsed || muted) {
+   399→   399→      setBubbleVisible(false)
+   400→   400→      return
+   401→   401→    }
+   402→   402→    const noPostsYet = Boolean(isOwnProfile) && (profileData?.posts?.length ?? 0) === 0
+   403→   403→    const tips =
+   404→   404→      mood === 'sleepy'
+   405→   405→        ? ['Zzz... 💤 (tócame para despertarme)']
+   406→   406→        : tipsForView(currentView, { isOwnProfile: !!isOwnProfile, noPostsYet, canChat })
+   407→   407→    if (!isAuthed) tips.push('Truco: crea una cuenta gratis para dar like, seguir devs y publicar 😉')
+   408→   408→    let i = 0
+   409→   409→    setBubbleVisible(true)
+   410→   410→    setTip(tips[0])
+   411→   411→    const rotate = setInterval(() => {
+   412→   412→      i = (i + 1) % tips.length
+   413→   413→      setBubbleVisible(false)
+   414→   414→      setTimeout(() => {
+   415→   415→        setTip(tips[i])
+   416→   416→        setBubbleVisible(true)
+   417→   417→      }, 350)
+   418→   418→    }, 12000)
+   419→   419→    return () => clearInterval(rotate)
+   420→   420→  }, [currentView, isOwnProfile, profileData, isAuthed, collapsed, muted, mood, canChat])
+   421→   421→
+   422→   422→  // ===== Ojos que siguen el cursor =====
+   423→   423→  const pupilX = useSpring(useMotionValue(0), { stiffness: 300, damping: 22 })
+   424→   424→  const pupilY = useSpring(useMotionValue(0), { stiffness: 300, damping: 22 })
+   425→   425→
+   426→   426→  useEffect(() => {
+   427→   427→    function onMouseMove(e: MouseEvent) {
+   428→   428→      const el = rootRef.current
+   429→   429→      if (!el) return
+   430→   430→      const rect = el.getBoundingClientRect()
+   431→   431→      const cx = rect.left + rect.width / 2
+   432→   432→      const cy = rect.top + rect.height / 2
+   433→   433→      const dx = e.clientX - cx
+   434→   434→      const dy = e.clientY - cy
+   435→   435→      const dist = Math.hypot(dx, dy) || 1
+   436→   436→      const strength = Math.min(dist / 220, 1)
+   437→   437→      pupilX.set((dx / dist) * 2.4 * strength)
+   438→   438→      pupilY.set((dy / dist) * 2 * strength)
+   439→   439→    }
+   440→   440→    window.addEventListener('mousemove', onMouseMove, { passive: true })
+   441→   441→    return () => window.removeEventListener('mousemove', onMouseMove)
+   442→   442→  }, [pupilX, pupilY])
+   443→   443→
+   444→   444→  // ===== Click y arrastre 🤏 =====
+   445→   445→  function actualPos(): { x: number; y: number } {
+   446→   446→    const el = btnRef.current
+   447→   447→    if (!el) return pos
+   448→   448→    const r = el.getBoundingClientRect()
+   449→   449→    return { x: r.left, y: window.innerHeight - r.bottom }
+   450→   450→  }
+   451→   451→
+   452→   452→  function handleBuddyClick() {
+   453→   453→    resetIdle()
+   454→   454→    setBubbleVisible(false)
+   455→   455→    if (mood === 'sleepy') {
+   456→   456→      setMood('excited')
+   457→   457→      setTimeout(() => setMood('idle'), 1500)
+   458→   458→      spawnParticles(2)
+   459→   459→      setTip('¡Aaah! Me quedé dormido 😴 ¿En qué andamos?')
+   460→   460→      setBubbleVisible(true)
+   461→   461→      setTimeout(() => setBubbleVisible(false), 4200)
+   462→   462→      return
+   463→   463→    }
+   464→   464→    doEmote('jump', 'happy')
+   465→   465→    spawnParticles(1)
+   466→   466→    if (canChat) {
+   467→   467→      setRegisterOpen(false)
+   468→   468→      setChatOpen((v) => !v)
+   469→   469→    } else {
+   470→   470→      setChatOpen(false)
+   471→   471→      setRegisterOpen((v) => !v)
+   472→   472→    }
+   473→   473→  }
+   474→   474→
+   475→   475→  function onPointerDown(e: React.PointerEvent) {
+   476→   476→    if (collapsed) return
+   477→   477→    try { (e.currentTarget as Element).setPointerCapture?.(e.pointerId) } catch {}
+   478→   478→    const p = actualPos()
+   479→   479→    // Detener caminata donde esté y fijar posición real
+   480→   480→    setWalking(false)
+   481→   481→    setPos(p)
+   482→   482→    dragRef.current = { startX: e.clientX, startY: e.clientY, offX: e.clientX - p.x, offY: (window.innerHeight - e.clientY) - p.y, moved: false }
+   483→   483→  }
+   484→   484→
+   485→   485→  function onPointerMove(e: React.PointerEvent) {
+   486→   486→    const d = dragRef.current
+   487→   487→    if (!d) return
+   488→   488→    const dx = e.clientX - d.startX
+   489→   489→    const dy = (window.innerHeight - e.clientY) - (window.innerHeight - d.startY)
+   490→   490→    if (!d.moved && Math.hypot(dx, dy) > 7) {
+   491→   491→      d.moved = true
+   492→   492→      wasDraggedRef.current = true
+   493→   493→      setDragging(true)
+   494→   494→      setBubbleVisible(false)
+   495→   495→      setChatOpen(false)
+   496→   496→      setRegisterOpen(false)
+   497→   497→      setMood('excited')
+   498→   498→    }
+   499→   499→    if (!d.moved) return
+   500→   500→    const { minX, maxX } = limits()
+   501→   501→    setFacing(dx >= 0 ? 1 : -1)
+   502→   502→    setPos({
+   503→   503→      x: clamp(e.clientX - d.offX, minX - 6, maxX + 10),
+   504→   504→      y: clamp((window.innerHeight - e.clientY) - d.offY, 10, Math.max(10, vp.h - mascotSize - 50)),
+   505→   505→    })
+   506→   506→  }
+   507→   507→
+   508→   508→  function onPointerUp() {
+   509→   509→    const d = dragRef.current
+   510→   510→    dragRef.current = null
+   511→   511→    if (!d) return
+   512→   512→    if (d.moved) {
+   513→   513→      wasDraggedRef.current = false
+   514→   514→      setDragging(false)
+   515→   515→      setMood('happy')
+   516→   516→      setTimeout(() => setMood('idle'), 1500)
+   517→   517→      spawnParticles(1)
+   518→   518→      setPos((p) => { savePos(p); return p })
+   519→   519→      doEmote('jump', 'idle')
+   520→   520→    } else {
+   521→   521→      handleBuddyClick()
+   522→   522→    }
+   523→   523→  }
+   524→   524→
+   525→   525→  function onPointerCancel() {
+   526→   526→    const d = dragRef.current
+   527→   527→    dragRef.current = null
+   528→   528→    if (d?.moved) {
+   529→   529→      wasDraggedRef.current = false
+   530→   530→      setDragging(false)
+   531→   531→      setMood('idle')
+   532→   532→      setPos((p) => { savePos(p); return p })
+   533→   533→    }
+   534→   534→  }
+   535→   535→
+   536→   536→  // Red de seguridad: si el pointerup ocurre fuera (caputra perdida), terminar el arrastre
+   537→   537→  useEffect(() => {
+   538→   538→    if (!dragging) return
+   539→   539→    const end = () => {
+   540→   540→      if (dragRef.current?.moved) {
+   541→   541→        wasDraggedRef.current = false
+   542→   542→        setDragging(false)
+   543→   543→        setPos((p) => { savePos(p); return p })
+   544→   544→      }
+   545→   545→      dragRef.current = null
+   546→   546→    }
+   547→   547→    window.addEventListener('pointerup', end)
+   548→   548→    window.addEventListener('blur', end)
+   549→   549→    return () => {
+   550→   550→      window.removeEventListener('pointerup', end)
+   551→   551→      window.removeEventListener('blur', end)
+   552→   552→    }
+   553→   553→  }, [dragging, savePos])
+   554→   554→
+   555→   555→  // ===== Chat con IA (solo registrados) =====
+   556→   556→  const [messages, setMessages] = useState<ChatMsg[]>([])
+   557→   557→  const [input, setInput] = useState('')
+   558→   558→  const [thinking, setThinking] = useState(false)
+   559→   559→  const [copied, setCopied] = useState(false)
+   560→   560→  const [welcome, setWelcome] = useState(WELCOMES[0])
+   561→   561→  const [suggestions, setSuggestions] = useState<string[]>(SUGGESTION_POOL.slice(0, 4))
+   562→   562→  const [guideRunning, setGuideRunning] = useState(false)
+   563→   563→  const listRef = useRef<HTMLDivElement>(null)
+   564→   564→  const storageKey = user && !user.isGuest ? `pixel-chat-${user.id}` : null
+   565→   565→  const loadedRef = useRef(false)
+   566→   566→
+   567→   567→  // Bienvenida y sugerencias nuevas cada vez que se abre el chat vacío
+   568→   568→  useEffect(() => {
+   569→   569→    if (chatOpen && messages.length === 0 && !guideRunning) {
+   570→   570→      setWelcome(pickRandom(WELCOMES))
+   571→   571→      setSuggestions(shuffle(SUGGESTION_POOL).slice(0, 4))
+   572→   572→    }
+   573→   573→  }, [chatOpen])
+   574→   574→
+   575→   575→  // Cargar historial guardado (por usuario) y guardarlo en cada cambio
+   576→   576→  useEffect(() => {
+   577→   577→    loadedRef.current = false
+   578→   578→    if (!storageKey) {
+   579→   579→      setMessages([])
+   580→   580→      return
+   581→   581→    }
+   582→   582→    try {
+   583→   583→      const raw = localStorage.getItem(storageKey)
+   584→   584→      setMessages(raw ? JSON.parse(raw) : [])
+   585→   585→    } catch {
+   586→   586→      setMessages([])
+   587→   587→    }
+   588→   588→    loadedRef.current = true
+   589→   589→  }, [storageKey])
+   590→   590→
+   591→   591→  useEffect(() => {
+   592→   592→    if (!storageKey || !loadedRef.current) return
+   593→   593→    try { localStorage.setItem(storageKey, JSON.stringify(messages.slice(-60))) } catch {}
+   594→   594→  }, [messages, storageKey])
+   595→   595→
+   596→   596→  useEffect(() => {
+   597→   597→    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
+   598→   598→  }, [messages, thinking, chatOpen])
+   599→   599→
+   600→   600→  async function ask(text: string) {
+   601→   601→    const content = text.trim()
+   602→   602→    if (!content || thinking || guideRunning) return
+   603→   603→    const next: ChatMsg[] = [...messages, { role: 'user', content }]
+   604→   604→    setMessages(next)
+   605→   605→    setInput('')
+   606→   606→    setThinking(true)
+   607→   607→    try {
+   608→   608→      const res = await fetch('/api/devplay/buddy', {
+   609→   609→        method: 'POST',
+   610→   610→        headers: { 'Content-Type': 'application/json' },
+   611→   611→        body: JSON.stringify({ messages: next }),
+   612→   612→      })
+   613→   613→      if (res.status === 401) {
+   614→   614→        setChatOpen(false)
+   615→   615→        setRegisterOpen(true)
+   616→   616→        return
+   617→   617→      }
+   618→   618→      const data = await res.json()
+   619→   619→      setMessages((m) => [...m, { role: 'assistant', content: data.reply || data.error || 'Ay, se me nublaban los circuitos 🤖' }])
+   620→   620→    } catch {
+   621→   621→      setMessages((m) => [...m, { role: 'assistant', content: 'No conecté con mi cabecita 🤖 revisa tu conexión e inténtalo otra vez' }])
+   622→   622→    } finally {
+   623→   623→      setThinking(false)
+   624→   624→    }
+   625→   625→  }
+   626→   626→
+   627→   627→  // ===== Guías paso a paso 📚 =====
+   628→   628→  function runGuide(guide: typeof GUIDES[number]) {
+   629→   629→    if (guideRunning || thinking) return
+   630→   630→    setGuideRunning(true)
+   631→   631→    setInput('')
+   632→   632→    const withUser: ChatMsg[] = [...messages, { role: 'user', content: guide.msg }]
+   633→   633→    setMessages(withUser)
+   634→   634→    guide.steps.forEach((step, i) => {
+   635→   635→      setTimeout(() => {
+   636→   636→        setMessages((m) => [...m, { role: 'assistant', content: step }])
+   637→   637→        if (i === guide.steps.length - 1) setGuideRunning(false)
+   638→   638→      }, 1400 * (i + 1))
+   639→   639→    })
+   640→   640→  }
+   641→   641→
+   642→   642→  // ===== Menú ⋮ =====
+   643→   643→  useEffect(() => {
+   644→   644→    if (!menuOpen) return
+   645→   645→    const onDown = (e: MouseEvent | TouchEvent) => {
+   646→   646→      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+   647→   647→    }
+   648→   648→    document.addEventListener('mousedown', onDown)
+   649→   649→    document.addEventListener('touchstart', onDown)
+   650→   650→    return () => {
+   651→   651→      document.removeEventListener('mousedown', onDown)
+   652→   652→      document.removeEventListener('touchstart', onDown)
+   653→   653→    }
+   654→   654→  }, [menuOpen])
+   655→   655→
+   656→   656→  function newChat() {
+   657→   657→    setMessages([])
+   658→   658→    setInput('')
+   659→   659→    setGuideRunning(false)
+   660→   660→    setWelcome(pickRandom(WELCOMES))
+   661→   661→    setSuggestions(shuffle(SUGGESTION_POOL).slice(0, 4))
+   662→   662→    setMenuOpen(false)
+   663→   663→  }
+   664→   664→  function deleteChat() {
+   665→   665→    setMessages([])
+   666→   666→    setGuideRunning(false)
+   667→   667→    if (storageKey) { try { localStorage.removeItem(storageKey) } catch {} }
+   668→   668→    setMenuOpen(false)
+   669→   669→    setChatOpen(false)
+   670→   670→    setTip('¡Listo! Conversación eliminada correctamente 🧹')
+   671→   671→    setBubbleVisible(true)
+   672→   672→    setTimeout(() => setBubbleVisible(false), 4000)
+   673→   673→  }
+   674→   674→  function copyChat() {
+   675→   675→    if (messages.length === 0) return
+   676→   676→    const txt = messages.map((m) => `${m.role === 'user' ? 'Tú' : 'Pixel'}: ${m.content}`).join('\n')
+   677→   677→    navigator.clipboard?.writeText(txt).catch(() => {})
+   678→   678→    setCopied(true)
+   679→   679→    setTimeout(() => setCopied(false), 1500)
+   680→   680→  }
+   681→   681→  function toggleMute() {
+   682→   682→    setMuted((v) => {
+   683→   683→      const nv = !v
+   684→   684→      try { localStorage.setItem('pixel-tips-muted', nv ? '1' : '0') } catch {}
+   685→   685→      return nv
+   686→   686→    })
+   687→   687→    setMenuOpen(false)
+   688→   688→  }
+   689→   689→  function minimizePixel() {
+   690→   690→    setCollapsed(true)
+   691→   691→    setChatOpen(false)
+   692→   692→    setRegisterOpen(false)
+   693→   693→    setMenuOpen(false)
+   694→   694→  }
+   695→   695→
+   696→   696→  if (!mounted) return null
+   697→   697→
+   698→   698→  // ===== Geometría responsive (todo dentro de la pantalla) =====
+   699→   699→  const bubbleW = isMobile ? 180 : 208
+   700→   700→  const bubbleLeft = clamp(pos.x + mascotSize / 2 - bubbleW / 2, 8, vp.w - bubbleW - 8)
+   701→   701→  const arrowLeft = clamp(pos.x + mascotSize / 2 - bubbleLeft - 7, 14, bubbleW - 28)
+   702→   702→  const panelW = Math.min(300, vp.w - 16)
+   703→   703→  const panelLeft = isMobile ? 8 : clamp(pos.x + mascotSize / 2 - panelW / 2, 10, vp.w - panelW - 10)
+   704→   704→  const panelBottom = isMobile ? 10 : pos.y + mascotSize + 10
+   705→   705→
+   706→   706→  if (collapsed) {
+   707→   707→    return (
+   708→   708→      <motion.button
+   709→   709→        initial={{ opacity: 0, scale: 0.6 }}
+   710→   710→        animate={{ opacity: 1, scale: 1 }}
+   711→   711→        onClick={() => { setCollapsed(false); resetIdle() }}
+   712→   712→        className="fixed bottom-4 right-4 z-40 h-11 w-11 rounded-full glass-strong shadow-lg flex items-center justify-center"
+   713→   713→        data-tour="pixel-buddy"
+   714→   714→        title="Abrir a Pixel"
+   715→   715→      >
+   716→   716→        <MiniPixelFace />
+   717→   717→      </motion.button>
+   718→   718→    )
+   719→   719→  }
+   720→   720→
+   721→   721→  return (
+   722→   722→    <div className="pointer-events-none fixed inset-0 z-40" data-tour="pixel-buddy">
+   723→   723→      {/* ===== Partículas emoji ===== */}
+   724→   724→      <AnimatePresence>
+   725→   725→        {particles.map((p) => (
+   726→   726→          <motion.span
+   727→   727→            key={p.id}
+   728→   728→            initial={{ opacity: 0, y: 0, scale: 0.5 }}
+   729→   729→            animate={{ opacity: [0, 1, 1, 0], y: -46, scale: 1.1 }}
+   730→   730→            exit={{ opacity: 0 }}
+   731→   731→            transition={{ duration: 1.5, ease: 'easeOut' }}
+   732→   732→            className="absolute text-sm select-none"
+   733→   733→            style={{ left: pos.x + mascotSize / 2 - 8 + p.dx, bottom: pos.y + mascotSize + 4 }}
+   734→   734→          >
+   735→   735→            {p.emoji}
+   736→   736→          </motion.span>
+   737→   737→        ))}
+   738→   738→      </AnimatePresence>
+   739→   739→
+   740→   740→      {/* ===== Burbuja de mensaje ===== */}
+   741→   741→      <AnimatePresence>
+   742→   742→        {bubbleVisible && !chatOpen && !registerOpen && !walking && !dragging && (
+   743→   743→          <motion.div
+   744→   744→            key={tip}
+   745→   745→            initial={{ opacity: 0, y: 8, scale: 0.9 }}
+   746→   746→            animate={{ opacity: 1, y: 0, scale: 1 }}
+   747→   747→            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+   748→   748→            className="pointer-events-auto absolute"
+   749→   749→            style={{ left: bubbleLeft, bottom: pos.y + mascotSize + 8, width: bubbleW }}
+   750→   750→          >
+   751→   751→            <div className="glass-strong rounded-lg rounded-bl-none border border-border/60 px-3 py-2 shadow-lg relative">
+   752→   752→              <button
+   753→   753→                onClick={() => setBubbleVisible(false)}
+   754→   754→                className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-secondary text-muted-foreground flex items-center justify-center hover:text-foreground transition"
+   755→   755→                aria-label="Cerrar mensaje"
+   756→   756→              >
+   757→   757→                <X className="h-2.5 w-2.5" />
+   758→   758→              </button>
+   759→   759→              <p className="text-[11px] leading-snug text-foreground/90">{tip}</p>
+   760→   760→            </div>
+   761→   761→            <div
+   762→   762→              className="h-0 w-0 border-l-[7px] border-r-[7px] border-t-[8px] border-l-transparent border-r-transparent border-t-border/60"
+   763→   763→              style={{ marginLeft: arrowLeft }}
+   764→   764→            />
+   765→   765→          </motion.div>
+   766→   766→        )}
+   767→   767→      </AnimatePresence>
+   768→   768→
+   769→   769→      {/* ===== Panel de registro (invitados) ===== */}
+   770→   770→      <AnimatePresence>
+   771→   771→        {registerOpen && (
+   772→   772→          <motion.div
+   773→   773→            key="register"
+   774→   774→            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+   775→   775→            animate={{ opacity: 1, y: 0, scale: 1 }}
+   776→   776→            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+   777→   777→            className="pointer-events-auto absolute z-10 glass-strong rounded-lg border border-border/60 shadow-xl overflow-hidden"
+   778→   778→            style={{ left: panelLeft, width: isMobile ? undefined : panelW, right: isMobile ? 8 : undefined, bottom: panelBottom }}
+   779→   779→          >
+   780→   780→            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-gradient-to-r from-primary/15 via-accent/10 to-transparent">
+   781→   781→              <PixelIcon size={26} mood="wink" />
+   782→   782→              <div className="flex-1 min-w-0">
+   783→   783→                <p className="text-xs font-bold leading-none">Pixel</p>
+   784→   784→                <p className="text-[9px] text-muted-foreground mt-0.5">Zona exclusiva de devs registrados</p>
+   785→   785→              </div>
+   786→   786→              <button
+   787→   787→                onClick={() => setRegisterOpen(false)}
+   788→   788→                className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary/60 transition"
+   789→   789→                aria-label="Cerrar"
+   790→   790→              >
+   791→   791→                <X className="h-3.5 w-3.5" />
+   792→   792→              </button>
+   793→   793→            </div>
+   794→   794→            <div className="px-4 py-4 text-center">
+   795→   795→              <PixelIcon size={46} mood="happy" className="mx-auto mb-2" />
+   796→   796→              <p className="text-xs font-bold mb-1">¡Hola! Soy Pixel 🤖</p>
+   797→   797→              <p className="text-[11px] text-muted-foreground leading-snug mb-3">
+   798→   798→                Solo puedo platicar con devs registrados... ¡es mi regla de oro!
+   799→   799→                Pero mis tips te los regalo igual 😉
+   800→   800→              </p>
+   801→   801→              <div className="flex flex-col gap-1.5">
+   802→   802→                <button
+   803→   803→                  onClick={() => { setRegisterOpen(false); openAuth('register') }}
+   804→   804→                  className="btn-gradient-primary rounded-full py-2 text-xs font-bold text-white transition hover:opacity-90"
+   805→   805→                >
+   806→   806→                  Crear cuenta gratis
+   807→   807→                </button>
+   808→   808→                <button
+   809→   809→                  onClick={() => { setRegisterOpen(false); openAuth('login') }}
+   810→   810→                  className="rounded-full border border-border py-2 text-xs font-bold hover:bg-secondary/60 transition"
+   811→   811→                >
+   812→   812→                  Ya tengo cuenta
+   813→   813→                </button>
+   814→   814→              </div>
+   815→   815→            </div>
+   816→   816→          </motion.div>
+   817→   817→        )}
+   818→   818→      </AnimatePresence>
+   819→   819→
+   820→   820→      {/* ===== Panel de preguntas (IA) ===== */}
+   821→   821→      <AnimatePresence>
+   822→   822→        {chatOpen && (
+   823→   823→          <motion.div
+   824→   824→            key="chat"
+   825→   825→            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+   826→   826→            animate={{ opacity: 1, y: 0, scale: 1 }}
+   827→   827→            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+   828→   828→            className="pointer-events-auto absolute z-10 glass-strong rounded-lg border border-border/60 shadow-xl overflow-hidden flex flex-col"
+   829→   829→            style={{
+   830→   830→              left: panelLeft,
+   831→   831→              width: isMobile ? undefined : panelW,
+   832→   832→              right: isMobile ? 8 : undefined,
+   833→   833→              bottom: panelBottom,
+   834→   834→              maxHeight: isMobile ? '58vh' : undefined,
+   835→   835→            }}
+   836→   836→          >
+   837→   837→            {/* Header */}
+   838→   838→            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-gradient-to-r from-primary/15 via-accent/10 to-transparent">
+   839→   839→              <PixelIcon size={28} mood={mood} />
+   840→   840→              <div className="flex-1 min-w-0">
+   841→   841→                <p className="text-xs font-bold leading-none">Pixel</p>
+   842→   842→                <p className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
+   843→   843→                  <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
+   844→   844→                  {guideRunning ? 'Guiándote paso a paso...' : 'Asistente con IA · pregúntame'}
+   845→   845→                </p>
+   846→   846→              </div>
+   847→   847→              <div className="relative" ref={menuRef}>
+   848→   848→                <button
+   849→   849→                  onClick={() => setMenuOpen((v) => !v)}
+   850→   850→                  className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary/60 transition"
+   851→   851→                  aria-label="Opciones del chat"
+   852→   852→                  title="Opciones del chat"
+   853→   853→                >
+   854→   854→                  <MoreVertical className="h-3.5 w-3.5" />
+   855→   855→                </button>
+   856→   856→                <AnimatePresence>
+   857→   857→                  {menuOpen && (
+   858→   858→                    <motion.div
+   859→   859→                      key="menu"
+   860→   860→                      initial={{ opacity: 0, y: -4, scale: 0.96 }}
+   861→   861→                      animate={{ opacity: 1, y: 0, scale: 1 }}
+   862→   862→                      exit={{ opacity: 0, y: -4, scale: 0.96 }}
+   863→   863→                      transition={{ duration: 0.12 }}
+   864→   864→                      className="absolute right-0 top-7 z-20 w-48 glass-strong rounded-md border border-border/60 shadow-lg py-1"
+   865→   865→                    >
+   866→   866→                      <MenuItem icon={MessageSquarePlus} label="Nuevo chat" onClick={newChat} />
+   867→   867→                      <MenuItem icon={Trash2} label="Eliminar conversación" onClick={deleteChat} danger />
+   868→   868→                      <MenuItem
+   869→   869→                        icon={copied ? Check : Copy}
+   870→   870→                        label={copied ? '¡Copiado!' : 'Copiar conversación'}
+   871→   871→                        onClick={copyChat}
+   872→   872→                        disabled={messages.length === 0}
+   873→   873→                      />
+   874→   874→                      <MenuItem
+   875→   875→                        icon={muted ? VolumeX : Volume2}
+   876→   876→                        label={muted ? 'Activar burbujas' : 'Silenciar burbujas'}
+   877→   877→                        onClick={toggleMute}
+   878→   878→                      />
+   879→   879→                      <MenuItem icon={Minimize2} label="Minimizar Pixel" onClick={minimizePixel} />
+   880→   880→                    </motion.div>
+   881→   881→                  )}
+   882→   882→                </AnimatePresence>
+   883→   883→              </div>
+   884→   884→              <button
+   885→   885→                onClick={() => setChatOpen(false)}
+   886→   886→                className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary/60 transition"
+   887→   887→                aria-label="Cerrar chat"
+   888→   888→              >
+   889→   889→                <X className="h-3.5 w-3.5" />
+   890→   890→              </button>
+   891→   891→            </div>
+   892→   892→
+   893→   893→            {/* Mensajes */}
+   894→   894→            <div
+   895→   895→              ref={listRef}
+   896→   896→              className={cn('overflow-y-auto custom-scroll px-3 py-2.5 space-y-2', isMobile ? 'h-44' : 'h-64')}
+   897→   897→            >
+   898→   898→              {messages.length === 0 && (
+   899→   899→                <div className="text-center py-3">
+   900→   900→                  <PixelIcon size={40} mood="happy" className="mx-auto mb-1.5" />
+   901→   901→                  <p className="text-[11px] text-muted-foreground leading-snug px-2">{welcome}</p>
+   902→   902→                </div>
+   903→   903→              )}
+   904→   904→              {messages.map((m, i) => (
+   905→   905→                <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+   906→   906→                  <div
+   907→   907→                    className={cn(
+   908→   908→                      'max-w-[85%] rounded-lg px-2.5 py-1.5 text-[11px] leading-snug',
+   909→   909→                      m.role === 'user'
+   910→   910→                        ? 'btn-gradient-primary text-white rounded-br-sm'
+   911→   911→                        : 'glass border border-border/50 rounded-bl-sm'
+   912→   912→                    )}
+   913→   913→                  >
+   914→   914→                    {m.content}
+   915→   915→                  </div>
+   916→   916→                </div>
+   917→   917→              ))}
+   918→   918→              {thinking && (
+   919→   919→                <div className="flex justify-start">
+   920→   920→                  <div className="glass border border-border/50 rounded-lg rounded-bl-sm px-2.5 py-2 flex items-center gap-1">
+   921→   921→                    {[0, 1, 2].map((d) => (
+   922→   922→                      <span
+   923→   923→                        key={d}
+   924→   924→                        className="h-1.5 w-1.5 rounded-full bg-primary/70 animate-bounce"
+   925→   925→                        style={{ animationDelay: `${d * 0.15}s` }}
+   926→   926→                      />
+   927→   927→                    ))}
+   928→   928→                  </div>
+   929→   929→                </div>
+   930→   930→              )}
+   931→   931→            </div>
+   932→   932→
+   933→   933→            {/* Guías paso a paso 📚 */}
+   934→   934→            <div className="px-2.5 pt-1.5 pb-1 border-t border-border/40">
+   935→   935→              <div className="flex items-center gap-1.5 flex-wrap">
+   936→   936→                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Guías:</span>
+   937→   937→                {GUIDES.map((g) => (
+   938→   938→                  <button
+   939→   939→                    key={g.id}
+   940→   940→                    onClick={() => runGuide(g)}
+   941→   941→                    disabled={guideRunning || thinking}
+   942→   942→                    className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary hover:bg-primary/20 transition disabled:opacity-40"
+   943→   943→                  >
+   944→   944→                    {g.label}
+   945→   945→                  </button>
+   946→   946→                ))}
+   947→   947→              </div>
+   948→   948→            </div>
+   949→   949→
+   950→   950→            {/* Sugerencias */}
+   951→   951→            {messages.length === 0 && (
+   952→   952→              <div className="px-2.5 pb-1 pt-1 flex flex-wrap gap-1">
+   953→   953→                {suggestions.map((s) => (
+   954→   954→                  <button
+   955→   955→                    key={s}
+   956→   956→                    onClick={() => ask(s)}
+   957→   957→                    className="rounded-full border border-border/60 bg-secondary/50 px-2 py-0.5 text-[9px] font-medium hover:bg-secondary transition"
+   958→   958→                  >
+   959→   959→                    {s}
+   960→   960→                  </button>
+   961→   961→                ))}
+   962→   962→              </div>
+   963→   963→            )}
+   964→   964→
+   965→   965→            {/* Input */}
+   966→   966→            <form
+   967→   967→              onSubmit={(e) => { e.preventDefault(); ask(input) }}
+   968→   968→              className="flex items-center gap-1.5 border-t border-border/50 p-2"
+   969→   969→            >
+   970→   970→              <input
+   971→   971→                value={input}
+   972→   972→                onChange={(e) => setInput(e.target.value)}
+   973→   973→                placeholder={guideRunning ? 'Pixel está guiándote...' : 'Pregúntale a Pixel...'}
+   974→   974→                maxLength={300}
+   975→   975→                disabled={guideRunning}
+   976→   976→                className="flex-1 min-w-0 rounded-full border border-input bg-transparent px-3 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+   977→   977→              />
+   978→   978→              <button
+   979→   979→                type="submit"
+   980→   980→                disabled={thinking || !input.trim() || guideRunning}
+   981→   981→                className="btn-gradient-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white disabled:opacity-50 transition"
+   982→   982→                aria-label="Enviar"
+   983→   983→              >
+   984→   984→                <Send className="h-3 w-3" />
+   985→   985→              </button>
+   986→   986→            </form>
+   987→   987→          </motion.div>
+   988→   988→        )}
+   989→   989→      </AnimatePresence>
+   990→   990→
+   991→   991→      {/* ===== El muñequito (caminante y arrastrable) ===== */}
+   992→   992→      <motion.button
+   993→   993→        ref={btnRef}
+   994→   994→        onClick={() => { if (wasDraggedRef.current) { wasDraggedRef.current = false; return } }}
+   995→   995→        onDoubleClick={() => minimizePixel()}
+   996→   996→        onPointerDown={onPointerDown}
+   997→   997→        onPointerMove={onPointerMove}
+   998→   998→        onPointerUp={onPointerUp}
+   999→   999→        onPointerCancel={onPointerCancel}
+  1000→  1000→        animate={{ x: pos.x, y: -pos.y }}
+  1001→  1001→        transition={dragging ? { duration: 0 } : walking ? { duration: walkDur, ease: 'linear' } : { type: 'spring', stiffness: 60, damping: 15 }}
+  1002→  1002→        onAnimationComplete={() => {
+  1003→  1003→          setWalking((w) => {
+  1004→  1004→            if (w) savePos(pos)
+  1005→  1005→            return false
+  1006→  1006→          })
+  1007→  1007→        }}
+  1008→  1008→        className={cn(
+  1009→  1009→          'pointer-events-auto absolute left-0 bottom-0 cursor-grab select-none touch-none',
+  1010→  1010→          dragging && 'cursor-grabbing z-30'
+  1011→  1011→        )}
+  1012→  1012→        title="Pixel · arrástrame donde quieras, tócame para hablar (doble clic minimiza)"
+  1013→  1013→        aria-label="Pixel, asistente de IA"
+  1014→  1014→      >
+  1015→  1015→        {/* Flotación suave (solo cuando está quieto) */}
+  1016→  1016→        <motion.div
+  1017→  1017→          animate={walking || dragging ? { y: 0 } : mood === 'sleepy' ? { y: [0, -2, 0] } : { y: [0, -5, 0] }}
+  1018→  1018→          transition={{ duration: mood === 'sleepy' ? 4 : 2.4, repeat: walking || dragging ? 0 : Infinity, ease: 'easeInOut' }}
+  1019→  1019→          whileHover={{ scale: walking || dragging ? 1 : 1.1 }}
+  1020→  1020→        >
+  1021→  1021→          {/* Emotes de un disparo (salto / baile) */}
+  1022→  1022→          <motion.div
+  1023→  1023→            key={emote.key}
+  1024→  1024→            animate={
+  1025→  1025→              dragging ? { rotate: [-4, 4, -4] }
+  1026→  1026→                : emote.kind === 'jump'
+  1027→  1027→                  ? { y: [0, -20, 0, -8, 0], rotate: 0 }
+  1028→  1028→                  : emote.kind === 'dance'
+  1029→  1029→                    ? { rotate: [0, -8, 8, -6, 6, 0], y: [0, -3, 0, -3, 0, 0] }
+  1030→  1030→                    : { y: 0, rotate: 0 }
+  1031→  1031→            }
+  1032→  1032→            transition={dragging ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : { duration: emote.kind === 'jump' ? 0.9 : 1.4, ease: 'easeInOut' }}
+  1033→  1033→          >
+  1034→  1034→            <motion.div animate={{ scaleX: facing }} transition={{ duration: 0.25 }}>
+  1035→  1035→              <PixelIcon size={mascotSize} pupilX={pupilX} pupilY={pupilY} mood={mood} walking={walking || dragging} />
+  1036→  1036→            </motion.div>
+  1037→  1037→            {/* Badge IA */}
+  1038→  1038→            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-bronze-500 shadow">
+  1039→  1039→              <Sparkles className="h-2.5 w-2.5 text-white" />
+  1040→  1040→            </span>
+  1041→  1041→          </motion.div>
+  1042→  1042→        </motion.div>
+  1043→  1043→      </motion.button>
+  1044→  1044→    </div>
+  1045→  1045→  )
+  1046→  1046→}
+  1047→  1047→
+  1048→  1048→// ===== Ítem del menú ⋮ =====
+  1049→  1049→function MenuItem({
+  1050→  1050→  icon: Icon,
+  1051→  1051→  label,
+  1052→  1052→  onClick,
+  1053→  1053→  danger,
+  1054→  1054→  disabled,
+  1055→  1055→}: {
+  1056→  1056→  icon: any
+  1057→  1057→  label: string
+  1058→  1058→  onClick: () => void
+  1059→  1059→  danger?: boolean
+  1060→  1060→  disabled?: boolean
+  1061→  1061→}) {
+  1062→  1062→  return (
+  1063→  1063→    <button
+  1064→  1064→      onClick={onClick}
+  1065→  1065→      disabled={disabled}
+  1066→  1066→      className={cn(
+  1067→  1067→        'flex w-full items-center gap-2 px-3 py-1.5 text-[11px] font-medium text-left transition',
+  1068→  1068→        disabled
+  1069→  1069→          ? 'opacity-40 cursor-not-allowed'
+  1070→  1070→          : danger
+  1071→  1071→            ? 'text-wine-600 hover:bg-wine-500/10'
+  1072→  1072→            : 'text-foreground/85 hover:bg-secondary/70'
+  1073→  1073→      )}
+  1074→  1074→    >
+  1075→  1075→      <Icon className="h-3.5 w-3.5 shrink-0" />
+  1076→  1076→      {label}
+  1077→  1077→    </button>
+  1078→  1078→  )
+  1079→  1079→}
+  1080→  1080→
+  1081→  1081→// ===== Robot SVG con humores y caminata =====
+  1082→  1082→export function PixelIcon({
+  1083→  1083→  size = 48,
+  1084→  1084→  pupilX,
+  1085→  1085→  pupilY,
+  1086→  1086→  mood = 'idle',
+  1087→  1087→  walking = false,
+  1088→  1088→  className,
+  1089→  1089→}: {
+  1090→  1090→  size?: number
+  1091→  1091→  pupilX?: any
+  1092→  1092→  pupilY?: any
+  1093→  1093→  mood?: Mood
+  1094→  1094→  walking?: boolean
+  1095→  1095→  className?: string
+  1096→  1096→}) {
+  1097→  1097→  const hasTracking = !!pupilX && !!pupilY
+  1098→  1098→
+  1099→  1099→  const eyes = () => {
+  1100→  1100→    if (mood === 'sleepy') {
+  1101→  1101→      return (
+  1102→  1102→        <g stroke="#4A2E21" strokeWidth="1.8" strokeLinecap="round" fill="none">
+  1103→  1103→          <path d="M22.5 29.5 Q25.5 32.5 28.5 29.5" />
+  1104→  1104→          <path d="M35.5 29.5 Q38.5 32.5 41.5 29.5" />
+  1105→  1105→        </g>
+  1106→  1106→      )
+  1107→  1107→    }
+  1108→  1108→    if (mood === 'happy') {
+  1109→  1109→      return (
+  1110→  1110→        <g stroke="#4A2E21" strokeWidth="2" strokeLinecap="round" fill="none">
+  1111→  1111→          <path d="M22.5 30 Q25.5 26 28.5 30" />
+  1112→  1112→          <path d="M35.5 30 Q38.5 26 41.5 30" />
+  1113→  1113→        </g>
+  1114→  1114→      )
+  1115→  1115→    }
+  1116→  1116→    if (mood === 'wink') {
+  1117→  1117→      return (
+  1118→  1118→        <g>
+  1119→  1119→          <circle cx="25.5" cy="29" r="3.4" fill="#4A2E21" />
+  1120→  1120→          <circle cx="26.6" cy="28" r="1.1" fill="#FFF6E8" />
+  1121→  1121→          <path d="M35.5 29 Q38.5 32 41.5 29" stroke="#4A2E21" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+  1122→  1122→        </g>
+  1123→  1123→      )
+  1124→  1124→    }
+  1125→  1125→    return (
+  1126→  1126→      <motion.g
+  1127→  1127→        style={hasTracking ? { x: pupilX, y: pupilY } : undefined}
+  1128→  1128→        animate={mood === 'idle' && !walking ? { scaleY: [1, 1, 0.12, 1] } : { scaleY: 1 }}
+  1129→  1129→        transition={mood === 'idle' && !walking ? { duration: 0.5, times: [0, 0.72, 0.86, 1], repeat: Infinity, repeatDelay: 3.4 } : undefined}
+  1130→  1130→      >
+  1131→  1131→        <circle cx="25.5" cy="29" r={mood === 'excited' ? 3.9 : 3.4} fill="#4A2E21" />
+  1132→  1132→        <circle cx="38.5" cy="29" r={mood === 'excited' ? 3.9 : 3.4} fill="#4A2E21" />
+  1133→  1133→        <circle cx="26.6" cy="28" r="1.1" fill="#FFF6E8" />
+  1134→  1134→        <circle cx="39.6" cy="28" r="1.1" fill="#FFF6E8" />
+  1135→  1135→      </motion.g>
+  1136→  1136→    )
+  1137→  1137→  }
+  1138→  1138→
+  1139→  1139→  const mouth = () => {
+  1140→  1140→    if (mood === 'excited') {
+  1141→  1141→      return <ellipse cx="32" cy="37" rx="2.6" ry="3" fill="#4A2E21" />
+  1142→  1142→    }
+  1143→  1143→    if (mood === 'sleepy') {
+  1144→  1144→      return <path d="M30 37 Q32 38.4 34 37" stroke="#4A2E21" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+  1145→  1145→    }
+  1146→  1146→    if (mood === 'happy') {
+  1147→  1147→      return <path d="M26 34.5 Q32 41 38 34.5" stroke="#4A2E21" strokeWidth="1.9" fill="none" strokeLinecap="round" />
+  1148→  1148→    }
+  1149→  1149→    return <path d="M27 35.5 Q32 39.5 37 35.5" stroke="#4A2E21" strokeWidth="1.7" fill="none" strokeLinecap="round" />
+  1150→  1150→  }
+  1151→  1151→
+  1152→  1152→  // Pasitos 🚶 — pies alternando
+  1153→  1153→  const stepDur = 0.42
+  1154→  1154→  const foot = (side: 1 | -1) => {
+  1155→  1155→    if (!walking) {
+  1156→  1156→      return <rect x={side === 1 ? 20 : 34} y="50" width="10" height="6" rx="3" fill="#8A4526" />
+  1157→  1157→    }
+  1158→  1158→    return (
+  1159→  1159→      <motion.rect
+  1160→  1160→        y="50"
+  1161→  1161→        width="10"
+  1162→  1162→        height="6"
+  1163→  1163→        rx="3"
+  1164→  1164→        fill="#8A4526"
+  1165→  1165→        animate={{ x: side === 1 ? [20, 25, 20, 15, 20] : [34, 29, 34, 39, 34], y: [50, 47, 50, 47, 50] }}
+  1166→  1166→        transition={{ duration: stepDur, repeat: Infinity, ease: 'linear' }}
+  1167→  1167→      />
+  1168→  1168→    )
+  1169→  1169→  }
+  1170→  1170→
+  1171→  1171→  // Bracitos que se mecen al caminar
+  1172→  1172→  const arm = (side: 1 | -1) => {
+  1173→  1173→    const cx = side === 1 ? 9 : 55
+  1174→  1174→    if (!walking) return <circle cx={cx} cy="34" r="4" fill="#A9552F" />
+  1175→  1175→    return (
+  1176→  1176→      <motion.circle
+  1177→  1177→        cy="34"
+  1178→  1178→        r="4"
+  1179→  1179→        fill="#A9552F"
+  1180→  1180→        animate={{ cy: side === 1 ? [34, 30, 34, 38, 34] : [34, 38, 34, 30, 34] }}
+  1181→  1181→        transition={{ duration: stepDur * 2, repeat: Infinity, ease: 'linear' }}
+  1182→  1182→      />
+  1183→  1183→    )
+  1184→  1184→  }
+  1185→  1185→
+  1186→  1186→  return (
+  1187→  1187→    <svg width={size} height={size} viewBox="0 0 64 64" className={className}>
+  1188→  1188→      {/* Sombra */}
+  1189→  1189→      <ellipse cx="32" cy="60" rx={walking ? 10 : 14} ry="2.6" fill="rgba(74,46,33,0.25)" />
+  1190→  1190→      {/* Antena */}
+  1191→  1191→      <line x1="32" y1="8" x2="32" y2="14" stroke="#A9552F" strokeWidth="2.4" strokeLinecap="round" />
+  1192→  1192→      <circle cx="32" cy="6.5" r="3.2" fill="#E8A04C">
+  1193→  1193→        <animate attributeName="r" values="3.2;3.8;3.2" dur="1.6s" repeatCount="indefinite" />
+  1194→  1194→      </circle>
+  1195→  1195→      {/* Cuerpo (con rebote al caminar) */}
+  1196→  1196→      <motion.g
+  1197→  1197→        animate={walking ? { y: [0, -1.6, 0] } : { y: 0 }}
+  1198→  1198→        transition={walking ? { duration: stepDur, repeat: Infinity, ease: 'linear' } : undefined}
+  1199→  1199→      >
+  1200→  1200→        <rect x="12" y="14" width="40" height="36" rx="13" fill="#C66E41" />
+  1201→  1201→        <rect x="12" y="14" width="40" height="36" rx="13" fill="url(#pixelBody)" />
+  1202→  1202→        <defs>
+  1203→  1203→          <linearGradient id="pixelBody" x1="0" y1="0" x2="0" y2="1">
+  1204→  1204→            <stop offset="0" stopColor="rgba(255,235,210,0.28)" />
+  1205→  1205→            <stop offset="1" stopColor="rgba(74,46,33,0.18)" />
+  1206→  1206→          </linearGradient>
+  1207→  1207→        </defs>
+  1208→  1208→        {/* Brazos */}
+  1209→  1209→        {arm(1)}
+  1210→  1210→        {arm(-1)}
+  1211→  1211→        {/* Pantalla de cara */}
+  1212→  1212→        <rect x="17" y="19.5" width="30" height="21" rx="9" fill="#F6E8D4" />
+  1213→  1213→        {/* Ojos según humor */}
+  1214→  1214→        {eyes()}
+  1215→  1215→        {/* Boca según humor */}
+  1216→  1216→        {mouth()}
+  1217→  1217→        {/* Mejillas */}
+  1218→  1218→        <circle cx="21.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
+  1219→  1219→        <circle cx="42.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
+  1220→  1220→        {/* Panza */}
+  1221→  1221→        <rect x="24" y="43" width="16" height="4" rx="2" fill="#8A4526" opacity="0.55" />
+  1222→  1222→      </motion.g>
+  1223→  1223→      {/* Pies */}
+  1224→  1224→      {foot(1)}
+  1225→  1225→      {foot(-1)}
+  1226→  1226→      {/* Zzz cuando duerme */}
+  1227→  1227→      {mood === 'sleepy' && (
+  1228→  1228→        <g fill="#4A2E21" fontWeight="bold" fontFamily="monospace">
+  1229→  1229→          <text x="50" y="14" fontSize="8" opacity="0.85">
+  1230→  1230→            Z<animate attributeName="opacity" values="0;0.85;0" dur="2.2s" repeatCount="indefinite" />
+  1231→  1231→          </text>
+  1232→  1232→          <text x="55" y="8" fontSize="6" opacity="0.6">
+  1233→  1233→            Z<animate attributeName="opacity" values="0;0.6;0" dur="2.2s" begin="0.7s" repeatCount="indefinite" />
+  1234→  1234→          </text>
+  1235→  1235→        </g>
+  1236→  1236→      )}
+  1237→  1237→    </svg>
+  1238→  1238→  )
+  1239→  1239→}
+  1240→  1240→
+  1241→  1241→function MiniPixelFace() {
+  1242→  1242→  return (
+  1243→  1243→    <svg width="30" height="30" viewBox="0 0 64 64">
+  1244→  1244→      <rect x="12" y="14" width="40" height="36" rx="13" fill="#C66E41" />
+  1245→  1245→      <rect x="17" y="19.5" width="30" height="21" rx="9" fill="#F6E8D4" />
+  1246→  1246→      <circle cx="25.5" cy="29" r="3.4" fill="#4A2E21" />
+  1247→  1247→      <circle cx="38.5" cy="29" r="3.4" fill="#4A2E21" />
+  1248→  1248→      <path d="M27 35.5 Q32 39.5 37 35.5" stroke="#4A2E21" strokeWidth="1.7" fill="none" strokeLinecap="round" />
+  1249→  1249→      <circle cx="21.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
+  1250→  1250→      <circle cx="42.5" cy="33.5" r="1.8" fill="#E8A04C" opacity="0.75" />
+  1251→  1251→    </svg>
+  1252→  1252→  )
+  1253→  1253→}
+  1254→  1254→
+  1255→  1255→
+  1256→  1256→
+  1257→  1257→
+  1258→  1258→
+  1259→  1259→
+  1260→  1260→
+  1261→  1261→

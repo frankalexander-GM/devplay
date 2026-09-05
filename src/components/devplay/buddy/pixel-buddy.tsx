@@ -28,81 +28,23 @@ interface ChatMsg {
   content: string
 }
 
-type Mood = 'idle' | 'happy' | 'excited' | 'wink' | 'sleepy'
-type Emote = 'none' | 'jump' | 'dance'
+type Mood = 'idle' | 'happy' | 'excited' | 'wink' | 'sleepy' | 'dizzy' | 'shocked'
+type Emote = 'none' | 'jump' | 'dance' | 'land'
 
-const PARTICLE_EMOJIS = ['✨', '🎮', '☕', '🚀', '👾', '💡', '❤️']
-const WALK_SPEED = 60 // px por segundo
+const PARTICLE_EMOJIS = ['✨', '🎮', '☕', '🚀', '👾', '💡', '❤️', '💫']
+const WALK_SPEED = 70 // px por segundo
+const FLOOR_Y = 12 // px desde el borde inferior: Pixel SIEMPRE vive en el suelo
 
 const WELCOMES = [
-  '¡Holi! Soy Pixel 🤖 Pregúntame lo que quieras sobre DevPlay o toca una guía paso a paso 👇',
-  '¡Aquí Pixel! 🤖 ¿Dudas? Pregunta sin miedo, o toca una guía y te llevo de la manito 👇',
-  '¡Hola! ¿Sabías que puedes pedirme guías para publicar, subir tu beta o crear tu cuenta? 👇',
-  '¡Qué alegría verte! 🤖 Escríbeme lo que necesites o elige una guía rapidita 👇',
-  'Soy Pixel, tu compa de DevPlay 🤖 Pide ayuda cuando quieras o mira las guías de abajo 👇',
-]
-
-const SUGGESTION_POOL = [
-  '¿Cómo subo una beta?',
-  '¿Qué es el Chat Mundial?',
-  '¿Cómo gano DevCoins?',
-  'Dame ideas para mi juego',
-  '¿La Tienda ya está disponible?',
-  '¿Cómo sigo a otros devs?',
-  '¿Cómo edito mi perfil?',
-  '¿Qué son los Reportes?',
-]
-
-const GUIDES = [
-  {
-    id: 'publicar',
-    label: 'Publicar 📝',
-    msg: 'Guíame: quiero publicar algo',
-    steps: [
-      '¡Claro que sí! Te enseño a publicar tu primera historia 📝',
-      'Paso 1: Toca el botón ➕ de la barra de arriba.',
-      'Paso 2: Elige "Publicación", escribe lo que quieras compartir y agrégale una foto si te apetece 📸',
-      'Paso 3: Toca "Publicar" ¡y listo! Tu historia la verá toda la comunidad 🎉',
-      'Dato extra: las historias con foto gustan el triple 😉 ¿Te guío con algo más?',
-    ],
-  },
-  {
-    id: 'beta',
-    label: 'Subir beta 🎮',
-    msg: 'Guíame: quiero subir mi beta',
-    steps: [
-      '¡Sí! Vamos a subir tu juego para que todos lo prueben 🎮',
-      'Paso 1: Toca el botón ➕ de arriba y elige "Beta".',
-      'Paso 2: Ponle nombre a tu juego, cuéntalo bonito y agrega imágenes o el archivo para descargar.',
-      'Paso 3: Toca "Publicar beta" y la comunidad podrá probarla y dejarte sus opiniones ⭐',
-      'Consejo: responde rapidito a los comentarios, ¡la gente lo agradece un montón! 💛',
-    ],
-  },
-  {
-    id: 'cuenta',
-    label: 'Crear cuenta ✨',
-    msg: 'Guíame: quiero crear mi cuenta',
-    steps: [
-      '¡Genial! Tener tu cuenta es rapidísimo ✨',
-      'Paso 1: Toca "Entrar" arriba a la derecha.',
-      'Paso 2: Ve a la pestaña "Crear cuenta", pon tu correo, tu nombre y una clave secreta.',
-      'Paso 3: Acepta los términos, toca "Crear cuenta" ¡y bienvenido a la familia! 🎉',
-      'Con cuenta puedes publicar, seguir a tus favoritos y hablar conmigo cuando quieras 🤖💕',
-    ],
-  },
+  '¡Holi! Soy Pixel 🤖 Pregúntame lo que quieras sobre DevPlay, ¡aquí estoy para ayudarte!',
+  '¡Aquí Pixel! 🤖 ¿Dudas? Pregunta sin miedo, para eso estoy 💛',
+  '¡Hola! ¿Sabías que puedo explicarte cómo funciona casi todo DevPlay? Pregúntame 👀',
+  '¡Qué alegría verte! 🤖 Cuéntame, ¿en qué te ayudo hoy?',
+  'Soy Pixel, tu compa de DevPlay 🤖 Escríbeme y te echo una manita al instante ✨',
 ]
 
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
 }
 
 function timeGreeting(): string {
@@ -164,8 +106,8 @@ function tipsForView(
       break
     case 'about':
       tips.push(
-        'Esta es la historia de DevPlay ☕ yo salgo en el capítulo 7',
-        'Cada rincón de DevPlay se hizo con mucho cariño 💛'
+        'Aquí está la letra clarita: privacidad, términos y reglas 📜',
+        'Tus datos son tuyos. Aquí explicamos cómo los cuidamos 🔒'
       )
       break
     case 'reportes':
@@ -195,7 +137,7 @@ function tipsForView(
       'Doble clic en mí y me minimizo... es mi modo de guardar energía 👾',
       'Funciono con café y electricidad ⚡☕',
       'Arrástrame a donde quieras, me encanta el paseo 🤏',
-      '¿Viste las guías del chat? Te llevan paso a paso 📚'
+      'Escríbeme en el chat y te explico lo que quieras 🤖',
     )
   }
   return tips.filter(Boolean)
@@ -222,10 +164,20 @@ export function PixelBuddy() {
   const [emote, setEmote] = useState<{ kind: Emote; key: number }>({ kind: 'none', key: 0 })
   const [particles, setParticles] = useState<{ id: number; emoji: string; dx: number }[]>([])
 
-  // Caminata 🚶 y arrastre 🤏
+  // Caminata 🚶, arrastre 🤏 y caiditas 🍂
   const [walking, setWalking] = useState(false)
   const [walkDur, setWalkDur] = useState(2)
   const [dragging, setDragging] = useState(false)
+  const [falling, setFalling] = useState(false)
+  const [fallDur, setFallDur] = useState(0.4)
+  // Gestos al hablar 🗣️: boca y bracitos se mueven mientras Pixel responde
+  const [talking, setTalking] = useState(false)
+  const talkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const nudgeTalk = useCallback((ms = 2400) => {
+    setTalking(true)
+    if (talkTimer.current) clearTimeout(talkTimer.current)
+    talkTimer.current = setTimeout(() => setTalking(false), ms)
+  }, [])
   const dragRef = useRef<{ startX: number; startY: number; offX: number; offY: number; moved: boolean } | null>(null)
   const wasDraggedRef = useRef(false)
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -238,27 +190,13 @@ export function PixelBuddy() {
 
   const clamp = useCallback((v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max)), [])
 
-  // ===== Posición inicial + límites =====
+  // ===== Posición + límites: TODA la pantalla, de pared a pared 🌍 =====
   const limits = useCallback(
     (w?: number) => {
       const vw = w ?? vp.w
-      const desktop = vw >= 1024
-      const chatVisible = desktop && currentView !== 'chat'
-      const minX = desktop ? 250 : 14
-      const maxX = chatVisible ? vw - 400 : vw - (mascotSize + 30)
-      return { minX: Math.max(14, minX), maxX: Math.max(minX + 40, maxX) }
+      return { minX: 12, maxX: Math.max(60, vw - mascotSize - 12) }
     },
-    [currentView, vp.w, mascotSize]
-  )
-
-  const pickSpot = useCallback(
-    (wOverride?: number) => {
-      const { minX, maxX } = limits(wOverride)
-      const x = minX + Math.random() * Math.max(maxX - minX, 40)
-      const y = 18 + Math.random() * 66 // px desde abajo
-      return { x, y }
-    },
-    [limits]
+    [vp.w, mascotSize]
   )
 
   // ===== Viewport (resize) =====
@@ -267,15 +205,15 @@ export function PixelBuddy() {
     const w = window.innerWidth
     const h = window.innerHeight
     setVp({ w, h })
-    // Posición guardada del último arrastre
-    let initial = pickSpot(w)
+    // Posición guardada (solo X: Pixel siempre vive en el suelo)
+    let initial = { x: 40, y: FLOOR_Y }
     try {
       const raw = localStorage.getItem('pixel-pos')
       if (raw) {
         const saved = JSON.parse(raw)
         const { minX, maxX } = limits(w)
-        if (saved && typeof saved.x === 'number' && saved.x >= minX - 10 && saved.x <= maxX + 10 && saved.y >= 14 && saved.y <= 130) {
-          initial = { x: saved.x, y: saved.y }
+        if (saved && typeof saved.x === 'number' && saved.x >= minX - 10 && saved.x <= maxX + 10) {
+          initial = { x: saved.x, y: FLOOR_Y }
         }
       }
     } catch {}
@@ -300,42 +238,27 @@ export function PixelBuddy() {
     try { localStorage.setItem('pixel-pos', JSON.stringify(p)) } catch {}
   }, [])
 
-  // ===== Caminar de lado a lado 🚶 =====
-  const walkTo = useCallback(
-    (target: { x: number; y: number }) => {
-      setPos((prev) => {
-        const dist = Math.abs(target.x - prev.x)
-        if (dist < 4) return prev
-        setFacing(target.x > prev.x ? 1 : -1)
-        setWalkDur(Math.min(Math.max(dist / WALK_SPEED, 1.2), 9))
-        setWalking(true)
-        return target
-      })
-    },
-    []
-  )
-
+  // ===== Caminar por todo el suelo, de pared a pared 🚶 =====
   useEffect(() => {
     if (!mounted) return
     const interval = setInterval(() => {
-      if (chatOpen || registerOpen || dragging) return
+      if (chatOpen || registerOpen || dragging || falling) return
       const { minX, maxX } = limits()
-      // 80% caminata horizontal (misma altura), 20% también cambia de altura
-      if (Math.random() < 0.8) {
-        setPos((prev) => {
-          const x = minX + Math.random() * Math.max(maxX - minX, 40)
-          if (Math.abs(x - prev.x) < 60) return prev
-          setFacing(x > prev.x ? 1 : -1)
-          setWalkDur(Math.min(Math.max(Math.abs(x - prev.x) / WALK_SPEED, 1.2), 9))
-          setWalking(true)
-          return { x, y: prev.y }
-        })
-      } else {
-        walkTo(pickSpot())
-      }
-    }, 18000)
+      const span = maxX - minX
+      // A veces paseo cortito, a veces atravieso TODA la pantalla
+      const x = Math.random() < 0.45
+        ? (Math.random() < 0.5 ? minX + Math.random() * span * 0.3 : maxX - Math.random() * span * 0.3)
+        : minX + Math.random() * span
+      setPos((prev) => {
+        if (Math.abs(x - prev.x) < 50) return prev
+        setFacing(x > prev.x ? 1 : -1)
+        setWalkDur(Math.min(Math.max(Math.abs(x - prev.x) / WALK_SPEED, 0.8), 9))
+        setWalking(true)
+        return { x, y: FLOOR_Y }
+      })
+    }, 15000)
     return () => clearInterval(interval)
-  }, [mounted, chatOpen, registerOpen, dragging, limits, pickSpot, walkTo])
+  }, [mounted, chatOpen, registerOpen, dragging, falling, limits])
 
   // ===== Personalidad: emotes (saltar, bailar, guiñar, chispas) =====
   const doEmote = useCallback((kind: Emote, m: Mood = 'idle') => {
@@ -357,7 +280,7 @@ export function PixelBuddy() {
   }, [])
 
   useEffect(() => {
-    if (!mounted || collapsed || chatOpen || registerOpen || walking || dragging) return
+    if (!mounted || collapsed || chatOpen || registerOpen || walking || dragging || falling || mood === 'dizzy') return
     const t = setInterval(() => {
       const r = Math.random()
       if (r < 0.3) doEmote('jump', 'happy')
@@ -366,7 +289,7 @@ export function PixelBuddy() {
       else doEmote('none', 'wink')
     }, 15000)
     return () => clearInterval(t)
-  }, [mounted, collapsed, chatOpen, registerOpen, walking, dragging, doEmote, spawnParticles])
+  }, [mounted, collapsed, chatOpen, registerOpen, walking, dragging, falling, mood, doEmote, spawnParticles])
 
   // ===== Dormilón: si nadie lo pela en 100s, se duerme 💤 =====
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -449,6 +372,38 @@ export function PixelBuddy() {
     return { x: r.left, y: window.innerHeight - r.bottom }
   }
 
+  // ===== Caída con gravedad 🍂: al soltar, cae hasta el suelo con carita de susto =====
+  function startFall() {
+    const p = actualPos()
+    const { minX, maxX } = limits()
+    const x = clamp(p.x, minX - 2, maxX + 2)
+    const h = Math.max(0, p.y - FLOOR_Y)
+    if (h < 4) {
+      // Ya estaba en el suelo: solo un plop de aterrizaje
+      setPos((pp) => { savePos({ x: pp.x, y: FLOOR_Y }); return { x: pp.x, y: FLOOR_Y } })
+      doEmote('land')
+      spawnParticles(2)
+      setMood('dizzy')
+      setTimeout(() => setMood('happy'), 1000)
+      setTimeout(() => setMood('idle'), 2400)
+      return
+    }
+    setFallDur(Math.min(Math.max(Math.sqrt(h / 2400), 0.16), 0.75))
+    setMood('shocked')
+    setFalling(true)
+    setPos({ x, y: FLOOR_Y })
+  }
+
+  function landIt() {
+    setFalling(false)
+    setPos((p) => { savePos({ x: p.x, y: FLOOR_Y }); return p })
+    doEmote('land')
+    spawnParticles(2)
+    setMood('dizzy')
+    setTimeout(() => setMood('happy'), 1000)
+    setTimeout(() => setMood('idle'), 2400)
+  }
+
   function handleBuddyClick() {
     resetIdle()
     setBubbleVisible(false)
@@ -501,7 +456,7 @@ export function PixelBuddy() {
     setFacing(dx >= 0 ? 1 : -1)
     setPos({
       x: clamp(e.clientX - d.offX, minX - 6, maxX + 10),
-      y: clamp((window.innerHeight - e.clientY) - d.offY, 10, Math.max(10, vp.h - mascotSize - 50)),
+      y: clamp((window.innerHeight - e.clientY) - d.offY, FLOOR_Y, Math.max(FLOOR_Y, vp.h - mascotSize - 14)),
     })
   }
 
@@ -512,11 +467,7 @@ export function PixelBuddy() {
     if (d.moved) {
       wasDraggedRef.current = false
       setDragging(false)
-      setMood('happy')
-      setTimeout(() => setMood('idle'), 1500)
-      spawnParticles(1)
-      setPos((p) => { savePos(p); return p })
-      doEmote('jump', 'idle')
+      startFall()
     } else {
       handleBuddyClick()
     }
@@ -528,19 +479,18 @@ export function PixelBuddy() {
     if (d?.moved) {
       wasDraggedRef.current = false
       setDragging(false)
-      setMood('idle')
-      setPos((p) => { savePos(p); return p })
+      startFall()
     }
   }
 
-  // Red de seguridad: si el pointerup ocurre fuera (caputra perdida), terminar el arrastre
+  // Red de seguridad: si el pointerup ocurre fuera (captura perdida), terminar el arrastre con caidita
   useEffect(() => {
     if (!dragging) return
     const end = () => {
       if (dragRef.current?.moved) {
         wasDraggedRef.current = false
         setDragging(false)
-        setPos((p) => { savePos(p); return p })
+        startFall()
       }
       dragRef.current = null
     }
@@ -558,19 +508,16 @@ export function PixelBuddy() {
   const [thinking, setThinking] = useState(false)
   const [copied, setCopied] = useState(false)
   const [welcome, setWelcome] = useState(WELCOMES[0])
-  const [suggestions, setSuggestions] = useState<string[]>(SUGGESTION_POOL.slice(0, 4))
-  const [guideRunning, setGuideRunning] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const storageKey = user && !user.isGuest ? `pixel-chat-${user.id}` : null
   const loadedRef = useRef(false)
 
-  // Bienvenida y sugerencias nuevas cada vez que se abre el chat vacío
+  // Bienvenida nueva cada vez que se abre el chat vacío
   useEffect(() => {
-    if (chatOpen && messages.length === 0 && !guideRunning) {
+    if (chatOpen && messages.length === 0) {
       setWelcome(pickRandom(WELCOMES))
-      setSuggestions(shuffle(SUGGESTION_POOL).slice(0, 4))
     }
-  }, [chatOpen])
+  }, [chatOpen, messages.length])
 
   // Cargar historial guardado (por usuario) y guardarlo en cada cambio
   useEffect(() => {
@@ -599,11 +546,12 @@ export function PixelBuddy() {
 
   async function ask(text: string) {
     const content = text.trim()
-    if (!content || thinking || guideRunning) return
+    if (!content || thinking) return
     const next: ChatMsg[] = [...messages, { role: 'user', content }]
     setMessages(next)
     setInput('')
     setThinking(true)
+    nudgeTalk(15000)
     try {
       const res = await fetch('/api/devplay/buddy', {
         method: 'POST',
@@ -617,26 +565,13 @@ export function PixelBuddy() {
       }
       const data = await res.json()
       setMessages((m) => [...m, { role: 'assistant', content: data.reply || data.error || 'Ay, se me nublaban los circuitos 🤖' }])
+      nudgeTalk(2600)
     } catch {
       setMessages((m) => [...m, { role: 'assistant', content: 'No conecté con mi cabecita 🤖 revisa tu conexión e inténtalo otra vez' }])
+      nudgeTalk(1500)
     } finally {
       setThinking(false)
     }
-  }
-
-  // ===== Guías paso a paso 📚 =====
-  function runGuide(guide: typeof GUIDES[number]) {
-    if (guideRunning || thinking) return
-    setGuideRunning(true)
-    setInput('')
-    const withUser: ChatMsg[] = [...messages, { role: 'user', content: guide.msg }]
-    setMessages(withUser)
-    guide.steps.forEach((step, i) => {
-      setTimeout(() => {
-        setMessages((m) => [...m, { role: 'assistant', content: step }])
-        if (i === guide.steps.length - 1) setGuideRunning(false)
-      }, 1400 * (i + 1))
-    })
   }
 
   // ===== Menú ⋮ =====
@@ -656,18 +591,15 @@ export function PixelBuddy() {
   function newChat() {
     setMessages([])
     setInput('')
-    setGuideRunning(false)
     setWelcome(pickRandom(WELCOMES))
-    setSuggestions(shuffle(SUGGESTION_POOL).slice(0, 4))
     setMenuOpen(false)
   }
   function deleteChat() {
     setMessages([])
-    setGuideRunning(false)
     if (storageKey) { try { localStorage.removeItem(storageKey) } catch {} }
     setMenuOpen(false)
     setChatOpen(false)
-    setTip('¡Listo! Conversación eliminada correctamente 🧹')
+    setTip('¡Puf! Todo limpiecito y como nuevo ✨')
     setBubbleVisible(true)
     setTimeout(() => setBubbleVisible(false), 4000)
   }
@@ -739,7 +671,7 @@ export function PixelBuddy() {
 
       {/* ===== Burbuja de mensaje ===== */}
       <AnimatePresence>
-        {bubbleVisible && !chatOpen && !registerOpen && !walking && !dragging && (
+        {bubbleVisible && !chatOpen && !registerOpen && !walking && !dragging && !falling && (
           <motion.div
             key={tip}
             initial={{ opacity: 0, y: 8, scale: 0.9 }}
@@ -841,7 +773,7 @@ export function PixelBuddy() {
                 <p className="text-xs font-bold leading-none">Pixel</p>
                 <p className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
-                  {guideRunning ? 'Guiándote paso a paso...' : 'Asistente con IA · pregúntame'}
+                  {thinking ? 'Pensandito...' : 'Asistente con IA · pregúntame'}
                 </p>
               </div>
               <div className="relative" ref={menuRef}>
@@ -930,38 +862,6 @@ export function PixelBuddy() {
               )}
             </div>
 
-            {/* Guías paso a paso 📚 */}
-            <div className="px-2.5 pt-1.5 pb-1 border-t border-border/40">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Guías:</span>
-                {GUIDES.map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => runGuide(g)}
-                    disabled={guideRunning || thinking}
-                    className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary hover:bg-primary/20 transition disabled:opacity-40"
-                  >
-                    {g.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Sugerencias */}
-            {messages.length === 0 && (
-              <div className="px-2.5 pb-1 pt-1 flex flex-wrap gap-1">
-                {suggestions.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => ask(s)}
-                    className="rounded-full border border-border/60 bg-secondary/50 px-2 py-0.5 text-[9px] font-medium hover:bg-secondary transition"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* Input */}
             <form
               onSubmit={(e) => { e.preventDefault(); ask(input) }}
@@ -970,14 +870,13 @@ export function PixelBuddy() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={guideRunning ? 'Pixel está guiándote...' : 'Pregúntale a Pixel...'}
+                placeholder="Pregúntale a Pixel..."
                 maxLength={300}
-                disabled={guideRunning}
                 className="flex-1 min-w-0 rounded-full border border-input bg-transparent px-3 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={thinking || !input.trim() || guideRunning}
+                disabled={thinking || !input.trim()}
                 className="btn-gradient-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white disabled:opacity-50 transition"
                 aria-label="Enviar"
               >
@@ -998,41 +897,58 @@ export function PixelBuddy() {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
         animate={{ x: pos.x, y: -pos.y }}
-        transition={dragging ? { duration: 0 } : walking ? { duration: walkDur, ease: 'linear' } : { type: 'spring', stiffness: 60, damping: 15 }}
+        transition={
+          dragging ? { duration: 0 }
+            : falling ? { duration: fallDur, ease: 'easeIn' }
+            : walking ? { duration: walkDur, ease: 'linear' }
+            : { type: 'spring', stiffness: 60, damping: 15 }
+        }
         onAnimationComplete={() => {
+          if (falling) {
+            landIt()
+            return
+          }
           setWalking((w) => {
-            if (w) savePos(pos)
+            if (w) savePos({ x: pos.x, y: FLOOR_Y })
             return false
           })
         }}
         className={cn(
-          'pointer-events-auto absolute left-0 bottom-0 cursor-grab select-none touch-none',
+          'pointer-events-auto absolute left-0 bottom-0 z-0 cursor-grab select-none touch-none',
           dragging && 'cursor-grabbing z-30'
         )}
-        title="Pixel · arrástrame donde quieras, tócame para hablar (doble clic minimiza)"
+        title="Pixel · tócame para hablar, arrástrame y suéltame ¡hago caiditas! (doble clic minimiza)"
         aria-label="Pixel, asistente de IA"
       >
         {/* Flotación suave (solo cuando está quieto) */}
         <motion.div
-          animate={walking || dragging ? { y: 0 } : mood === 'sleepy' ? { y: [0, -2, 0] } : { y: [0, -5, 0] }}
-          transition={{ duration: mood === 'sleepy' ? 4 : 2.4, repeat: walking || dragging ? 0 : Infinity, ease: 'easeInOut' }}
-          whileHover={{ scale: walking || dragging ? 1 : 1.1 }}
+          animate={walking || dragging || falling ? { y: 0 } : mood === 'sleepy' ? { y: [0, -2, 0] } : { y: [0, -5, 0] }}
+          transition={{ duration: mood === 'sleepy' ? 4 : 2.4, repeat: walking || dragging || falling ? 0 : Infinity, ease: 'easeInOut' }}
+          whileHover={{ scale: walking || dragging || falling ? 1 : 1.1 }}
         >
-          {/* Emotes de un disparo (salto / baile) */}
+          {/* Emotes de un disparo (salto / baile / aterrizaje) */}
           <motion.div
             key={emote.key}
+            style={{ transformOrigin: '50% 100%' }}
             animate={
               dragging ? { rotate: [-4, 4, -4] }
-                : emote.kind === 'jump'
-                  ? { y: [0, -20, 0, -8, 0], rotate: 0 }
-                  : emote.kind === 'dance'
-                    ? { rotate: [0, -8, 8, -6, 6, 0], y: [0, -3, 0, -3, 0, 0] }
-                    : { y: 0, rotate: 0 }
+                : falling ? { rotate: [-6, 5, -6] }
+                  : emote.kind === 'land'
+                    ? { scaleY: [1, 0.6, 1.15, 0.92, 1], scaleX: [1, 1.3, 0.9, 1.05, 1], y: [0, 5, -3, 0, 0] }
+                    : emote.kind === 'jump'
+                      ? { y: [0, -20, 0, -8, 0], rotate: 0 }
+                      : emote.kind === 'dance'
+                        ? { rotate: [0, -8, 8, -6, 6, 0], y: [0, -3, 0, -3, 0, 0] }
+                        : { y: 0, rotate: 0 }
             }
-            transition={dragging ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : { duration: emote.kind === 'jump' ? 0.9 : 1.4, ease: 'easeInOut' }}
+            transition={
+              dragging ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' }
+                : falling ? { duration: 0.35, repeat: Infinity, ease: 'easeInOut' }
+                  : { duration: emote.kind === 'land' ? 0.55 : emote.kind === 'jump' ? 0.9 : 1.4, ease: 'easeOut' }
+            }
           >
             <motion.div animate={{ scaleX: facing }} transition={{ duration: 0.25 }}>
-              <PixelIcon size={mascotSize} pupilX={pupilX} pupilY={pupilY} mood={mood} walking={walking || dragging} />
+              <PixelIcon size={mascotSize} pupilX={pupilX} pupilY={pupilY} mood={mood} walking={walking} carried={dragging} falling={falling} talking={talking} />
             </motion.div>
             {/* Badge IA */}
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-bronze-500 shadow">
@@ -1078,13 +994,16 @@ function MenuItem({
   )
 }
 
-// ===== Robot SVG con humores y caminata =====
+// ===== Robot SVG con humores, caminata real, caída y gestos al hablar =====
 export function PixelIcon({
   size = 48,
   pupilX,
   pupilY,
   mood = 'idle',
   walking = false,
+  carried = false,
+  falling = false,
+  talking = false,
   className,
 }: {
   size?: number
@@ -1092,11 +1011,34 @@ export function PixelIcon({
   pupilY?: any
   mood?: Mood
   walking?: boolean
+  carried?: boolean
+  falling?: boolean
+  talking?: boolean
   className?: string
 }) {
   const hasTracking = !!pupilX && !!pupilY
 
   const eyes = () => {
+    if (mood === 'dizzy') {
+      // Ojos en X de tanto girar 🍂
+      return (
+        <g stroke="#4A2E21" strokeWidth="1.9" strokeLinecap="round" fill="none">
+          <path d="M23 26.5 L28 31.5 M28 26.5 L23 31.5" />
+          <path d="M36 26.5 L41 31.5 M41 26.5 L36 31.5" />
+        </g>
+      )
+    }
+    if (mood === 'shocked' || falling) {
+      // ¡¿QUÉ?! Ojos de plato
+      return (
+        <g>
+          <circle cx="25.5" cy="29" r="4.8" fill="#FFF6E8" stroke="#4A2E21" strokeWidth="1.6" />
+          <circle cx="38.5" cy="29" r="4.8" fill="#FFF6E8" stroke="#4A2E21" strokeWidth="1.6" />
+          <circle cx="25.5" cy="29.6" r="1.8" fill="#4A2E21" />
+          <circle cx="38.5" cy="29.6" r="1.8" fill="#4A2E21" />
+        </g>
+      )
+    }
     if (mood === 'sleepy') {
       return (
         <g stroke="#4A2E21" strokeWidth="1.8" strokeLinecap="round" fill="none">
@@ -1137,6 +1079,21 @@ export function PixelIcon({
   }
 
   const mouth = () => {
+    if (talking) {
+      // Boquita que se mueve mientras habla 🗣️
+      return (
+        <ellipse cx="32" cy="36.5" rx="3" ry="2.2" fill="#4A2E21">
+          <animate attributeName="ry" values="1.1;2.8;1.1" dur="0.32s" repeatCount="indefinite" />
+          <animate attributeName="rx" values="2.3;3.5;2.3" dur="0.32s" repeatCount="indefinite" />
+        </ellipse>
+      )
+    }
+    if (mood === 'dizzy') {
+      return <path d="M27.5 36.5 Q29.75 34.6 32 36.5 Q34.25 38.4 36.5 36.5" stroke="#4A2E21" strokeWidth="1.7" fill="none" strokeLinecap="round" />
+    }
+    if (mood === 'shocked' || falling) {
+      return <ellipse cx="32" cy="37.5" rx="2.7" ry="3.1" fill="#4A2E21" />
+    }
     if (mood === 'excited') {
       return <ellipse cx="32" cy="37" rx="2.6" ry="3" fill="#4A2E21" />
     }
@@ -1149,44 +1106,96 @@ export function PixelIcon({
     return <path d="M27 35.5 Q32 39.5 37 35.5" stroke="#4A2E21" strokeWidth="1.7" fill="none" strokeLinecap="round" />
   }
 
-  // Pasitos 🚶 — pies alternando
-  const stepDur = 0.42
+  // Pasitos 🚶 — zancada alternada: un pie siempre apoyado, sin brincos raros
+  const cycleDur = 0.8
+  const stepTimes = [0, 0.2, 0.5, 0.7, 1]
   const foot = (side: 1 | -1) => {
+    if (falling) {
+      // Piernitas juntitas de susto
+      return <rect x={side === 1 ? 23 : 31} y="52" width="10" height="6" rx="3" fill="#8A4526" />
+    }
+    if (carried) {
+      // Colgaditos, bien relajados
+      return <rect x={side === 1 ? 22 : 32} y="51.5" width="10" height="6" rx="3" fill="#8A4526" />
+    }
     if (!walking) {
       return <rect x={side === 1 ? 20 : 34} y="50" width="10" height="6" rx="3" fill="#8A4526" />
     }
-    return (
+    return side === 1 ? (
       <motion.rect
-        y="50"
         width="10"
         height="6"
         rx="3"
         fill="#8A4526"
-        animate={{ x: side === 1 ? [20, 25, 20, 15, 20] : [34, 29, 34, 39, 34], y: [50, 47, 50, 47, 50] }}
-        transition={{ duration: stepDur, repeat: Infinity, ease: 'linear' }}
+        animate={{ x: [20, 26, 26, 16, 20], y: [50, 46.5, 50, 50, 50] }}
+        transition={{ duration: cycleDur, times: stepTimes, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    ) : (
+      <motion.rect
+        width="10"
+        height="6"
+        rx="3"
+        fill="#8A4526"
+        animate={{ x: [34, 30, 30, 38, 34], y: [50, 50, 46.5, 50, 50] }}
+        transition={{ duration: cycleDur, times: stepTimes, repeat: Infinity, ease: 'easeInOut' }}
       />
     )
   }
 
-  // Bracitos que se mecen al caminar
+  // Bracitos: se mecen al caminar 🚶, arriba en la caída 😱, colgando en el aire y saludan al hablar 👋
   const arm = (side: 1 | -1) => {
     const cx = side === 1 ? 9 : 55
+    if (falling) {
+      return (
+        <motion.circle
+          cx={side === 1 ? 7 : 57}
+          r="4"
+          fill="#A9552F"
+          animate={{ cy: [25, 21.5, 25] }}
+          transition={{ duration: 0.3, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )
+    }
+    if (carried) {
+      return <circle cx={side === 1 ? 8 : 56} cy="36.5" r="4" fill="#A9552F" />
+    }
+    if (talking && side === -1) {
+      // ¡Holaaa! Manito que saluda
+      return (
+        <motion.circle
+          r="4"
+          fill="#A9552F"
+          animate={{ cy: [34, 26.5, 26.5, 34], cx: [55, 57, 52, 55] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )
+    }
+    if (talking && side === 1) {
+      return <circle cx={cx} cy="35.5" r="4" fill="#A9552F" />
+    }
     if (!walking) return <circle cx={cx} cy="34" r="4" fill="#A9552F" />
     return (
       <motion.circle
         cy="34"
         r="4"
         fill="#A9552F"
-        animate={{ cy: side === 1 ? [34, 30, 34, 38, 34] : [34, 38, 34, 30, 34] }}
-        transition={{ duration: stepDur * 2, repeat: Infinity, ease: 'linear' }}
+        animate={{ cy: side === 1 ? [34, 38, 34, 30, 34] : [34, 30, 34, 38, 34] }}
+        transition={{ duration: cycleDur, times: stepTimes, repeat: Infinity, ease: 'easeInOut' }}
       />
     )
   }
 
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" className={className}>
-      {/* Sombra */}
-      <ellipse cx="32" cy="60" rx={walking ? 10 : 14} ry="2.6" fill="rgba(74,46,33,0.25)" />
+      {/* Sombra: se achica cuando vuela 🍂 */}
+      <ellipse
+        cx="32"
+        cy="60"
+        rx={carried || falling ? 7 : walking ? 10 : 14}
+        ry="2.6"
+        fill="rgba(74,46,33,0.25)"
+        opacity={carried || falling ? 0.45 : 1}
+      />
       {/* Antena */}
       <line x1="32" y1="8" x2="32" y2="14" stroke="#A9552F" strokeWidth="2.4" strokeLinecap="round" />
       <circle cx="32" cy="6.5" r="3.2" fill="#E8A04C">
@@ -1195,7 +1204,7 @@ export function PixelIcon({
       {/* Cuerpo (con rebote al caminar) */}
       <motion.g
         animate={walking ? { y: [0, -1.6, 0] } : { y: 0 }}
-        transition={walking ? { duration: stepDur, repeat: Infinity, ease: 'linear' } : undefined}
+        transition={walking ? { duration: 0.4, repeat: Infinity, ease: 'linear' } : undefined}
       >
         <rect x="12" y="14" width="40" height="36" rx="13" fill="#C66E41" />
         <rect x="12" y="14" width="40" height="36" rx="13" fill="url(#pixelBody)" />
