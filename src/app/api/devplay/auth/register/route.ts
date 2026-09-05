@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { mailEnabled, sendMail, welcomeEmail } from '@/lib/mailer'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -35,6 +36,12 @@ export async function POST(req: NextRequest) {
         role: 'USER',
       },
     })
+
+    // Correo de bienvenida 🎉 (no bloquea el registro si falla)
+    if (mailEnabled()) {
+      const tpl = welcomeEmail(user.username)
+      sendMail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => {})
+    }
 
     return NextResponse.json({
       id: user.id,

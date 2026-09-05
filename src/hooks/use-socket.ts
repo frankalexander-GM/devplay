@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
 import type { ChatMessage } from '@/types/devplay'
+// Re-export para que los componentes puedan importar el tipo desde aquí
+export type { ChatMessage } from '@/types/devplay'
 import { chatService } from '@/services/devplay-service'
 
 export interface LiveNotification {
@@ -62,7 +64,6 @@ export function useSocket() {
 
 export function useWorldChat(currentUserId: string | null | undefined, currentUsername: string | null | undefined) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [onlineCount, setOnlineCount] = useState(0)
   const { socket, isConnected } = useSocket()
   const hasJoined = useRef(false)
 
@@ -85,19 +86,18 @@ export function useWorldChat(currentUserId: string | null | undefined, currentUs
     const onChatMessage = (msg: ChatMessage) => {
       setMessages((prev) => [...prev.slice(-100), msg])
     }
-    const onOnlineCount = (count: number) => setOnlineCount(count)
+    // Privacidad total 🤫: el servidor ya NO emite conteos de conectados
+    // ni listas de presentes — nadie sabe quién está en la sala.
     const onMessagesDeleted = (payload: { ids?: string[] }) => {
       const ids = new Set(payload?.ids ?? [])
       setMessages((prev) => prev.filter((m) => !ids.has(m.id)))
     }
 
     socket.on('chat:message', onChatMessage)
-    socket.on('chat:online-count', onOnlineCount)
     socket.on('chat:message:deleted', onMessagesDeleted)
 
     return () => {
       socket.off('chat:message', onChatMessage)
-      socket.off('chat:online-count', onOnlineCount)
       socket.off('chat:message:deleted', onMessagesDeleted)
     }
   }, [socket])
@@ -153,7 +153,7 @@ export function useWorldChat(currentUserId: string | null | undefined, currentUs
     }
   }, [currentUserId])
 
-  return { messages, onlineCount, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected }
+  return { messages, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected }
 }
 
 export function useLiveNotifications(onLive: (n: LiveNotification) => void) {

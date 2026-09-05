@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { mailEnabled, sendMail, resetPasswordEmail } from '@/lib/mailer'
 
 const schema = z.object({
   email: z.string().email(),
 })
 
 // POST /api/devplay/auth/forgot-password
-// Genera un token de recuperación y lo guarda en la DB
-// En producción: enviar email con el enlace. En demo: devolver el token.
+// Genera un token de recuperación y lo guarda en la DB.
+// Con SMTP configurado envía el correo real; sin SMTP, modo demo (token en log).
 export async function POST(req: NextRequest) {
   const body = await req.json()
   const parsed = schema.safeParse(body)
@@ -44,20 +45,25 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  // En producción: enviar email con nodemailer/SendGrid/etc
-  // El enlace sería: https://devplay.app/reset-password?token=XXXX
-  //
-  // Para demo: devolvemos el token para que se pueda usar directamente
-  // (en producción, NO devolver el token en la respuesta)
-
-  console.log(`[forgot-password] Token para ${email}: ${token}`)
+  // Correo real si hay SMTP; si no, modo demo (token en log del servidor)
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const resetUrl = `${baseUrl.replace(/\/$/, '')}/?reset=${token}`
+  let sent = false
+  if (mailEnabled()) {
+    const tpl = resetPasswordEmail(user.username, resetUrl)
+    sent = await sendMail({ to: email, subject: tpl.subject, html: tpl.html })
+  }
+  if (!sent) {
+    console.log(`[forgot-password] Token para ${email}: ${token}`)
+    console.log(`[forgot-password] Enlace de recuperación: /?reset=${token}`)
+  }
 
   return NextResponse.json({
     ok: true,
     message: 'Si el email existe, recibirás un enlace de recuperación',
-    // Solo en desarrollo/demo: devolver el token
-    demoToken: process.env.NODE_ENV === 'development' ? token : undefined,
-    demoResetUrl: process.env.NODE_ENV === 'development'
+    // Solo en desarrollo/demo (sin SMTP): devolver el enlace para probar
+    demoToken: !sent && process.env.NODE_ENV === 'development' ? token : undefined,
+    demoResetUrl: !sent && process.env.NODE_ENV === 'development'
       ? `/?reset=${token}`
       : undefined,
   })

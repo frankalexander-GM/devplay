@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { postService } from '@/services/devplay-service'
 import { PostCard } from '@/components/devplay/post/post-card'
+import { AdSlot } from '@/components/devplay/shared/ad-slot'
+import { AD_EVERY_POSTS } from '@/lib/ads'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import {
@@ -268,8 +270,12 @@ export function ExploreView() {
         </div>
       ) : sorted.length > 0 ? (
         <div className="space-y-4">
-          {sorted.map((post) => (
-            <PostCard key={post.id} post={post} onChange={refresh} />
+          {sorted.map((post, i) => (
+            <div key={post.id} className="space-y-4">
+              <PostCard post={post} onChange={refresh} />
+              {/* Espacio de publicidad cada N posts 📢 (no molesta, patrocina la plaza) */}
+              {(i + 1) % AD_EVERY_POSTS === 0 && i !== sorted.length - 1 && <AdSlot />}
+            </div>
           ))}
         </div>
       ) : (

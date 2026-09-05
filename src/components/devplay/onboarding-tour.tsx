@@ -24,7 +24,16 @@ export function OnboardingTour() {
     const buildAndDrive = () => {
       const header = document.getElementById('devplay-header')
       const sidebar = document.querySelector('aside nav') as HTMLElement | null
-      const createBtn = document.querySelector('[data-tour="create"]') as HTMLElement | null
+      // El botón Crear existe dos veces (header desktop + dock móvil): usar el VISIBLE
+      // Nota: los elementos fixed tienen offsetParent null → usar rect + checkVisibility
+      const isVisible = (el: HTMLElement) => {
+        if (typeof el.checkVisibility === 'function') return el.checkVisibility()
+        const r = el.getBoundingClientRect()
+        return r.width > 0 && r.height > 0
+      }
+      const createBtn = (
+        Array.from(document.querySelectorAll<HTMLElement>('[data-tour="create"]')).find(isVisible) ?? null
+      )
       const chatPanel = document.querySelector('[data-tour="chat-panel"]') as HTMLElement | null
       const buddy = document.querySelector('[data-tour="pixel-buddy"]') as HTMLElement | null
 
@@ -91,7 +100,7 @@ export function OnboardingTour() {
         },
       ].filter(Boolean) as {
         element: string | HTMLElement
-        popover: { title: string; description: string; side: 'top' | 'bottom' | 'left' | 'right'; align: string }
+        popover: { title: string; description: string; side: 'top' | 'bottom' | 'left' | 'right'; align: 'start' | 'center' | 'end' }
       }[]
 
       const drv = driver({

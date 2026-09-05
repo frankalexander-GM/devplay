@@ -3,12 +3,13 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { mailEnabled, sendMail, deletionCodeEmail } from '@/lib/mailer'
 
 /**
  * Flujo de eliminación de cuenta en 3 pasos:
  *  1. request-code  → genera un código de 6 dígitos, lo guarda hasheado (10 min)
- *     y lo "envía" al correo. En este entorno demo no hay SMTP configurado,
- *     así que el código se devuelve como devCode (y se loguea en servidor).
+ *     y lo envía al correo real si hay SMTP configurado. Sin SMTP se devuelve
+ *     como devCode (y se loguea en servidor) para poder probar en demo.
  *  2. verify-code   → valida el código sin consumirlo (feedback inmediato en UI)
  *  3. confirm       → valida código + contraseña y elimina la cuenta (cascada)
  */
@@ -63,16 +64,22 @@ export async function POST(req: NextRequest) {
     })
 
     // ==== Envío de correo ====
-    // Este entorno no tiene SMTP configurado. Cuando haya credenciales
-    // (p. ej. SMTP_HOST/SMTP_USER/SMTP_PASS) aquí se enviaría el correo real.
-    // Por ahora se registra en el log del servidor y se devuelve como devCode.
-    console.log(`[DEVPLAY] Código de eliminación para ${user.email}: ${code} (válido 10 min)`)
+    // Con SMTP (SMTP_HOST/SMTP_USER/SMTP_PASS en .env) llega el correo real;
+    // sin SMTP se registra en el log y se devuelve como devCode (modo demo).
+    let sent = false
+    if (mailEnabled()) {
+      const tpl = deletionCodeEmail(user.username, code)
+      sent = await sendMail({ to: user.email, subject: tpl.subject, html: tpl.html })
+    }
+    if (!sent) {
+      console.log(`[DEVPLAY] Código de eliminación para ${user.email}: ${code} (válido 10 min)`)
+    }
 
     return NextResponse.json({
       ok: true,
       email: maskEmail(user.email),
       expiresAt: expiresAt.toISOString(),
-      devCode: code, // Solo en modo demo (sin SMTP)
+      devCode: sent ? undefined : code, // Solo en modo demo (sin SMTP)
     })
   }
 

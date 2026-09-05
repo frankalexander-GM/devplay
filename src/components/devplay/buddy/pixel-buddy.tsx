@@ -8,8 +8,6 @@ import {
 } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import { userService } from '@/services/devplay-service'
-import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import type { ViewId } from '@/types/devplay'
 
@@ -59,99 +57,14 @@ function timeGreeting(): string {
   return '¿De noche? Yo también brillo más en la oscuridad 🌙'
 }
 
-function tipsForView(
-  currentView: string,
-  ctx: { isOwnProfile: boolean; noPostsYet: boolean; canChat: boolean }
-): string[] {
-  const { isOwnProfile, noPostsYet, canChat } = ctx
-  const tips: string[] = []
-  if (noPostsYet) {
-    tips.push('¡Aún no has publicado nada! 🚀 Anímate: cuéntale a la comunidad qué estás creando')
-  }
-  switch (currentView) {
-    case 'explore':
-      tips.push(
-        '¡Bienvenido a la plaza! 👀 Aquí la comunidad luce sus creaciones',
-        'Tip: guarda lo que te guste con ⭐ para verlo luego',
-        'Yo me leo TODO lo que publican... por eso sé tanto chisme jaja 🤖'
-      )
-      break
-    case 'discover':
-      tips.push(
-        'Dale Seguir a los perfiles con estilo 🤝',
-        'Aquí puede estar tu futuro mejor amigo 💡',
-        'Un seguimiento al día... alegra el DevPlay'
-      )
-      break
-    case 'betas':
-      tips.push(
-        '¿Buscas que prueben tu juego? Sube tu beta y que llueva feedback 🎮',
-        'Prueba las betas de otros y deja tus opiniones con cariño ☕',
-        'Las betas con imágenes dan 3x más descargas (fuente: yo) 🤖'
-      )
-      break
-    case 'chat':
-      tips.push(
-        'En el Chat Mundial hay 5 segundos entre mensajes: ¡así nadie se pasa de listo! ⏱️',
-        'Saluda sin miedo, nadie muerde... yo sí, pero soy de goma 😬',
-        '¿Viste algo raro? Reporta. Los que cuidan la plaza estamos al tanto 👀'
-      )
-      break
-    case 'videos':
-      tips.push(
-        'Videos de la comunidad 📺 con palomitas saben mejor',
-        '¿Tu juego en video? Publica uno y hazte famoso 🎬'
-      )
-      break
-    case 'store':
-      tips.push(
-        'La Tienda está en preparación 🛒 ¡Muy pronto podrás usar tus DevCoins!',
-        'Vi lo que se viene para la Tienda... no puedo contar nada, pero está buenísimo ✨'
-      )
-      break
-    case 'about':
-      tips.push(
-        'Aquí está la letra clarita: privacidad, términos y reglas 📜',
-        'Tus datos son tuyos. Aquí explicamos cómo los cuidamos 🔒'
-      )
-      break
-    case 'reportes':
-      tips.push('Tus números en privado 📊 como un diario secreto, pero con gráficas bonitas')
-      break
-    case 'profile':
-      if (isOwnProfile) {
-        tips.push(
-          '¡Tu perfil! 👋 Publica algo, que la comunidad quiere conocerte',
-          noPostsYet ? '' : 'Las pestañas Logros y Estadísticas son solo tuyas 🤫',
-          'La rueda ⚙️ del menú configura todo: privacidad, cookies...'
-        )
-      } else {
-        tips.push(
-          '¿Le das a Seguir? Sus novedades no llegan solas 🚀',
-          'Comparte su perfil con el botón Compartir 📤'
-        )
-      }
-      break
-  }
-  if (!canChat) {
-    tips.unshift('Psst: solo los devs registrados pueden hablar conmigo 🤖 ¡Crea tu cuenta!')
-  }
-  if (tips.filter(Boolean).length === 0) {
-    tips.push(
-      '¿Dudas? Tócame y pregúntame lo que quieras 🤖',
-      'Doble clic en mí y me minimizo... es mi modo de guardar energía 👾',
-      'Funciono con café y electricidad ⚡☕',
-      'Arrástrame a donde quieras, me encanta el paseo 🤏',
-      'Escríbeme en el chat y te explico lo que quieras 🤖',
-    )
-  }
-  return tips.filter(Boolean)
-}
+// Altura del suelo según dispositivo: en móvil Pixel vive MÁS ARRIBA para que
+// las teclas de navegación / teclado del celular no lo tapen 📱⬆️
+const FLOOR_Y_MOBILE = 88
+const FLOOR_Y_DESKTOP = 12
 
 export function PixelBuddy() {
   const { user, isAuthed, isGuest } = useCurrentUser()
   const currentView = useUIStore((s) => s.currentView)
-  const profileUserId = useUIStore((s) => s.profileUserId)
   const openAuth = useUIStore((s) => s.openAuth)
   const setView = useUIStore((s) => s.setView)
   const openProfile = useUIStore((s) => s.openProfile)
@@ -161,7 +74,7 @@ export function PixelBuddy() {
   const [registerOpen, setRegisterOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [muted, setMuted] = useState(false)
-  const [bubbleVisible, setBubbleVisible] = useState(true)
+  const [bubbleVisible, setBubbleVisible] = useState(false)
   const [tip, setTip] = useState('¡Hola! Soy Pixel, tu ayudante de DevPlay 🤖')
   const [pos, setPos] = useState({ x: 40, y: 24 })
   const [facing, setFacing] = useState(1)
@@ -170,6 +83,9 @@ export function PixelBuddy() {
   const [mood, setMood] = useState<Mood>('idle')
   const [emote, setEmote] = useState<{ kind: Emote; key: number }>({ kind: 'none', key: 0 })
   const [particles, setParticles] = useState<{ id: number; emoji: string; dx: number }[]>([])
+  // Altura VISIBLE real (visual viewport): cuando el teclado del celu abre,
+  // el viewport visible se encoge y Pixel flota encima del teclado 📱⌨️
+  const [vvH, setVvH] = useState(0)
 
   // Caminata 🚶, arrastre 🤏 y caiditas 🍂
   const [walking, setWalking] = useState(false)
@@ -191,7 +107,10 @@ export function PixelBuddy() {
 
   const menuRef = useRef<HTMLDivElement>(null)
   const isMobile = vp.w < 1024
-  const mascotSize = isMobile ? 46 : 54
+  // Pixel MÁS GRANDE 🤖✨ (pidió agrandarlo) y con suelo elevado en móvil
+  const mascotSize = isMobile ? 64 : 68
+  const floorY = isMobile ? FLOOR_Y_MOBILE : FLOOR_Y_DESKTOP
+  const visibleH = vvH || vp.h
   const canChat = isAuthed // solo devs registrados; invitados/anónimos solo ven tips
 
   const clamp = useCallback((v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max)), [])
@@ -212,14 +131,14 @@ export function PixelBuddy() {
     const h = window.innerHeight
     setVp({ w, h })
     // Posición guardada (solo X: Pixel siempre vive en el suelo)
-    let initial = { x: 40, y: FLOOR_Y }
+    let initial = { x: 40, y: window.innerWidth < 1024 ? FLOOR_Y_MOBILE : FLOOR_Y_DESKTOP }
     try {
       const raw = localStorage.getItem('pixel-pos')
       if (raw) {
         const saved = JSON.parse(raw)
         const { minX, maxX } = limits(w)
         if (saved && typeof saved.x === 'number' && saved.x >= minX - 10 && saved.x <= maxX + 10) {
-          initial = { x: saved.x, y: FLOOR_Y }
+          initial = { x: saved.x, y: window.innerWidth < 1024 ? FLOOR_Y_MOBILE : FLOOR_Y_DESKTOP }
         }
       }
     } catch {}
@@ -227,7 +146,21 @@ export function PixelBuddy() {
     try { setMuted(localStorage.getItem('pixel-tips-muted') === '1') } catch {}
     const onR = () => setVp({ w: window.innerWidth, h: window.innerHeight })
     window.addEventListener('resize', onR)
-    return () => window.removeEventListener('resize', onR)
+    // Visual viewport: Pixel siempre encima del teclado del móvil 📱
+    const vv = window.visualViewport
+    const onVV = () => { if (vv) setVvH(vv.height) }
+    if (vv) {
+      onVV()
+      vv.addEventListener('resize', onVV)
+      vv.addEventListener('scroll', onVV)
+    }
+    return () => {
+      window.removeEventListener('resize', onR)
+      if (vv) {
+        vv.removeEventListener('resize', onVV)
+        vv.removeEventListener('scroll', onVV)
+      }
+    }
   }, [])
 
   // Mantener dentro de la pantalla al redimensionar
@@ -260,7 +193,7 @@ export function PixelBuddy() {
         setFacing(x > prev.x ? 1 : -1)
         setWalkDur(Math.min(Math.max(Math.abs(x - prev.x) / WALK_SPEED, 0.8), 9))
         setWalking(true)
-        return { x, y: FLOOR_Y }
+        return { x, y: floorY }
       })
     }, 15000)
     return () => clearInterval(interval)
@@ -316,41 +249,31 @@ export function PixelBuddy() {
     return () => { if (idleTimer.current) clearTimeout(idleTimer.current) }
   }, [mounted, collapsed, resetIdle])
 
-  // ===== Tips contextuales =====
-  const isOwnProfile = currentView === 'profile' && profileUserId && user?.id === profileUserId
-  const profileTarget = isOwnProfile ? user?.id : currentView === 'profile' ? profileUserId : null
-
-  const { data: profileData } = useQuery({
-    queryKey: ['user-profile', profileTarget],
-    queryFn: () => userService.get(profileTarget!),
-    enabled: currentView === 'profile' && !!profileTarget,
-    staleTime: 30_000,
-  })
-
-  useEffect(() => {
-    if (collapsed || muted) {
-      setBubbleVisible(false)
-      return
+  // ===== Burbujas de eventos (sin chips de recomendación) =====
+  // Pixel ya NO suelta tips en bucle: solo habla cuando tiene algo que decir de verdad 💬
+  const showBubble = useCallback((msg: string, ms = 4200) => {
+    setTip(msg)
+    setBubbleVisible(!muted)
+    if (!muted) {
+      setTimeout(() => setBubbleVisible(false), ms)
     }
-    const noPostsYet = Boolean(isOwnProfile) && (profileData?.posts?.length ?? 0) === 0
-    const tips =
-      mood === 'sleepy'
-        ? ['Zzz... 💤 (tócame para despertarme)']
-        : tipsForView(currentView, { isOwnProfile: !!isOwnProfile, noPostsYet, canChat })
-    if (!isAuthed) tips.push('Truco: crea una cuenta gratis para dar like, seguir devs y publicar 😉')
-    let i = 0
-    setBubbleVisible(true)
-    setTip(tips[0])
-    const rotate = setInterval(() => {
-      i = (i + 1) % tips.length
-      setBubbleVisible(false)
-      setTimeout(() => {
-        setTip(tips[i])
+  }, [muted])
+
+  // Saludo de bienvenida una sola vez por sesión
+  useEffect(() => {
+    if (!mounted) return
+    let greeted = false
+    try { greeted = sessionStorage.getItem('pixel-greeted') === '1' } catch {}
+    if (!greeted) {
+      try { sessionStorage.setItem('pixel-greeted', '1') } catch {}
+      if (!muted) {
+        setTip(timeGreeting())
         setBubbleVisible(true)
-      }, 350)
-    }, 12000)
-    return () => clearInterval(rotate)
-  }, [currentView, isOwnProfile, profileData, isAuthed, collapsed, muted, mood, canChat])
+        const t = setTimeout(() => setBubbleVisible(false), 6500)
+        return () => clearTimeout(t)
+      }
+    }
+  }, [mounted, muted])
 
   // ===== Ojos autónomos 👀: Pixel mira para donde ÉL quiere, no donde está el cursor =====
   const pupilX = useSpring(useMotionValue(0), { stiffness: 300, damping: 22 })
@@ -396,10 +319,10 @@ export function PixelBuddy() {
     const p = actualPos()
     const { minX, maxX } = limits()
     const x = clamp(p.x, minX - 2, maxX + 2)
-    const h = Math.max(0, p.y - FLOOR_Y)
+    const h = Math.max(0, p.y - floorY)
     if (h < 4) {
       // Ya estaba en el suelo: solo un plop de aterrizaje
-      setPos((pp) => { savePos({ x: pp.x, y: FLOOR_Y }); return { x: pp.x, y: FLOOR_Y } })
+      setPos((pp) => { savePos({ x: pp.x, y: floorY }); return { x: pp.x, y: floorY } })
       doEmote('land')
       spawnParticles(2)
       setMood('dizzy')
@@ -410,12 +333,12 @@ export function PixelBuddy() {
     setFallDur(Math.min(Math.max(Math.sqrt(h / 2400), 0.16), 0.75))
     setMood('shocked')
     setFalling(true)
-    setPos({ x, y: FLOOR_Y })
+    setPos({ x, y: floorY })
   }
 
   function landIt() {
     setFalling(false)
-    setPos((p) => { savePos({ x: p.x, y: FLOOR_Y }); return p })
+    setPos((p) => { savePos({ x: p.x, y: floorY }); return p })
     doEmote('land')
     spawnParticles(2)
     setMood('dizzy')
@@ -430,9 +353,7 @@ export function PixelBuddy() {
       setMood('excited')
       setTimeout(() => setMood('idle'), 1500)
       spawnParticles(2)
-      setTip('¡Aaah! Me quedé dormido 😴 ¿En qué andamos?')
-      setBubbleVisible(true)
-      setTimeout(() => setBubbleVisible(false), 4200)
+      showBubble('¡Aaah! Me quedé dormido 😴 ¿En qué andamos?')
       return
     }
     doEmote('jump', 'happy')
@@ -475,7 +396,7 @@ export function PixelBuddy() {
     setFacing(dx >= 0 ? 1 : -1)
     setPos({
       x: clamp(e.clientX - d.offX, minX - 6, maxX + 10),
-      y: clamp((window.innerHeight - e.clientY) - d.offY, FLOOR_Y, Math.max(FLOOR_Y, vp.h - mascotSize - 14)),
+      y: clamp((window.innerHeight - e.clientY) - d.offY, floorY, Math.max(floorY, visibleH - mascotSize - 14)),
     })
   }
 
@@ -663,9 +584,7 @@ export function PixelBuddy() {
     if (storageKey) { try { localStorage.removeItem(storageKey) } catch {} }
     setMenuOpen(false)
     setChatOpen(false)
-    setTip('¡Puf! Todo limpiecito y como nuevo ✨')
-    setBubbleVisible(true)
-    setTimeout(() => setBubbleVisible(false), 4000)
+    showBubble('¡Puf! Todo limpiecito y como nuevo ✨')
   }
   function copyChat() {
     if (messages.length === 0) return
@@ -692,12 +611,13 @@ export function PixelBuddy() {
   if (!mounted) return null
 
   // ===== Geometría responsive (todo dentro de la pantalla) =====
-  const bubbleW = isMobile ? 180 : 208
+  const bubbleW = isMobile ? 196 : 216
   const bubbleLeft = clamp(pos.x + mascotSize / 2 - bubbleW / 2, 8, vp.w - bubbleW - 8)
   const arrowLeft = clamp(pos.x + mascotSize / 2 - bubbleLeft - 7, 14, bubbleW - 28)
   const panelW = Math.min(300, vp.w - 16)
   const panelLeft = isMobile ? 8 : clamp(pos.x + mascotSize / 2 - panelW / 2, 10, vp.w - panelW - 10)
-  const panelBottom = isMobile ? 10 : pos.y + mascotSize + 10
+  // El panel flota SIEMPRE por encima de Pixel (en móvil también, bien arribita)
+  const panelBottom = pos.y + mascotSize + (isMobile ? 8 : 10)
 
   if (collapsed) {
     return (
@@ -715,7 +635,11 @@ export function PixelBuddy() {
   }
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-40" data-tour="pixel-buddy">
+    <div
+      className="pointer-events-none fixed inset-0 z-40"
+      style={vvH ? { height: vvH } : undefined}
+      data-tour="pixel-buddy"
+    >
       {/* ===== Partículas emoji ===== */}
       <AnimatePresence>
         {particles.map((p) => (
@@ -974,7 +898,7 @@ export function PixelBuddy() {
           }
           setWalking((w) => {
             if (w) {
-              savePos({ x: pos.x, y: FLOOR_Y })
+              savePos({ x: pos.x, y: floorY })
               // Llegó de su caminata: a veces celebra con un saltito 🤖
               if (Math.random() < 0.35) setTimeout(() => doEmote('jump', 'excited'), 200)
             }

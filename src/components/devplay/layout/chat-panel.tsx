@@ -18,6 +18,7 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { useWorldChat, type ChatMessage } from '@/hooks/use-socket'
 import { UserAvatar, TimeAgo } from '@/components/devplay/shared/shared'
 import { filterProfanity } from '@/lib/profanity'
+import { AdSlot } from '@/components/devplay/shared/ad-slot'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -40,7 +41,7 @@ interface ChatPanelProps {
 export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   const { user, isGuest } = useCurrentUser()
   const { chatOpen, toggleChat, openAuth, setView } = useUIStore()
-  const { messages, onlineCount, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected } = useWorldChat(user?.id, user?.username)
+  const { messages, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected } = useWorldChat(user?.id, user?.username)
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -211,9 +212,9 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
             <div>
               <h3 className="font-display font-bold text-base leading-tight">Chat Mundial</h3>
               <div className="flex items-center gap-1.5">
-                <span className={cn('h-1.5 w-1.5 rounded-full', onlineCount > 0 ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
+                <span className={cn('h-1.5 w-1.5 rounded-full', isConnected ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
                 <span className="label-caps !text-[9px] !tracking-[0.12em]">
-                  En vivo · {onlineCount} conectados
+                  En vivo · nadie ve quién está aquí 🤫
                 </span>
               </div>
             </div>
@@ -260,9 +261,7 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
             <span className="text-[9px] leading-none">◆</span>
           </div>
           <p className="text-meta italic mt-2.5">
-            {onlineCount > 0
-              ? `${onlineCount} ${onlineCount === 1 ? 'dev conectado' : 'devs conectados'} ahora mismo — la conversación es en tiempo real`
-              : 'La conversación es en tiempo real — pasa la voz a tus devs favoritos'}
+            La conversación es en tiempo real y 100% privada — nadie sabe quién está conectado, pasa la voz a tus devs favoritos
           </p>
         </header>
 
@@ -272,9 +271,9 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
             {/* Barra superior fina de la sala */}
             <div className="glass-strong border-b border-border/50 px-4 py-2.5 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <span className={cn('h-2 w-2 rounded-full shrink-0', onlineCount > 0 ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
+                <span className={cn('h-2 w-2 rounded-full shrink-0', isConnected ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
                 <span className="label-caps !text-[10px] truncate">
-                  En vivo · {onlineCount} conectados
+                  En vivo · sala privada 🤫
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -325,6 +324,9 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
                 <span className="text-[8px] text-muted-foreground italic mt-0.5">desde 2025</span>
               </div>
             </div>
+
+            {/* Espacio de patrocinador 📢 */}
+            <AdSlot />
 
             <p className="text-center text-xs text-muted-foreground italic leading-relaxed px-2">
               “La plaza nunca duerme —<br />conecta con devs de todo el mundo.”

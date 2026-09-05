@@ -188,18 +188,13 @@ export function Header() {
 
       <div className="flex-1 md:hidden" />
 
-      {/* Create menu */}
+      {/* Create menu — SOLO desktop (lg+); en móvil/tablet vive en el dock de abajo 📍 */}
       {canCreate && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="btn-gradient-primary hidden sm:flex gap-1.5 rounded-sm" data-tour="create">
+            <Button size="sm" className="btn-gradient-primary hidden lg:flex gap-1.5 rounded-sm" data-tour="create">
               <Plus className="h-4 w-4" />
               Crear
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuTrigger asChild>
-            <Button size="icon" className="btn-gradient-primary sm:hidden rounded-sm" data-tour="create">
-              <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52 rounded-md">

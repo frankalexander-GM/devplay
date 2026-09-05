@@ -5,6 +5,7 @@ import { useUIStore } from '@/lib/stores'
 import { Header } from '@/components/devplay/layout/header'
 import { Sidebar } from '@/components/devplay/layout/sidebar'
 import { ChatPanel } from '@/components/devplay/layout/chat-panel'
+import { CreateDock } from '@/components/devplay/layout/create-dock'
 import { ExploreView } from '@/components/devplay/views/explore-view'
 import { DiscoverView } from '@/components/devplay/views/discover-view'
 import { VideosView } from '@/components/devplay/views/videos-view'
@@ -138,6 +139,7 @@ export default function Home() {
       <CreatePollModal />
       <PostDetailModal />
       <ProfileSettingsModal />
+      <CreateDock />
       <PixelBuddy />
 
       {resetToken && (

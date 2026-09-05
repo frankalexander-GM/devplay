@@ -145,9 +145,8 @@ function readBody(req: IncomingMessage): Promise<string> {
   })
 }
 
-function updateOnlineCount() {
-  io.emit('chat:online-count', userSockets.size)
-}
+// Privacidad total 🤫: NO se emiten conteos ni listas de conectados.
+// El mapa userSockets solo se usa internamente para notificaciones en vivo.
 
 io.on('connection', (socket: Socket) => {
   console.log(`[realtime] connected: ${socket.id}`)
@@ -156,7 +155,7 @@ io.on('connection', (socket: Socket) => {
   socket.on('chat:join', (data: { userId: string; username: string }) => {
     if (!data?.userId || !data?.username) return
     userSockets.set(socket.id, { userId: data.userId, username: data.username })
-    updateOnlineCount()
+    // 🤫 Sin emisión de presencia: nadie puede saber quién está en la sala
   })
 
   // World chat message — persist + broadcast (con filtro anti-groserías 🧼)
@@ -194,7 +193,6 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('disconnect', () => {
     userSockets.delete(socket.id)
-    updateOnlineCount()
     console.log(`[realtime] disconnected: ${socket.id}`)
   })
 
