@@ -104,6 +104,7 @@ export interface CurrentUser {
   banner: string | null
   role: UserRole
   isGuest: boolean
+  isPrivate?: boolean
   tags?: string[] | null
   fullName?: string | null
   location?: string | null
@@ -283,7 +284,7 @@ export interface ChatMessage {
 }
 
 // ===== Tipos de Vista (navegación) =====
-export type ViewId = 'explore' | 'discover' | 'chat' | 'videos' | 'profile' | 'betas' | 'store' | 'about'
+export type ViewId = 'explore' | 'discover' | 'chat' | 'videos' | 'profile' | 'betas' | 'store' | 'about' | 'reportes'
 
 // ===== Tienda =====
 export type StoreCategory = 'powerup' | 'avatar' | 'premium' | 'bundle'

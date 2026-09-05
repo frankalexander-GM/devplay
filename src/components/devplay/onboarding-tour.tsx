@@ -26,6 +26,7 @@ export function OnboardingTour() {
       const sidebar = document.querySelector('aside nav') as HTMLElement | null
       const createBtn = document.querySelector('[data-tour="create"]') as HTMLElement | null
       const chatPanel = document.querySelector('[data-tour="chat-panel"]') as HTMLElement | null
+      const buddy = document.querySelector('[data-tour="pixel-buddy"]') as HTMLElement | null
 
       const steps = [
         header && {
@@ -43,7 +44,7 @@ export function OnboardingTour() {
           popover: {
             title: 'Todo el universo DevPlay',
             description:
-              'Navega con el menú principal: Inicio, Descubrir, Betas, Videos, Chat Mundial y Tienda (con DevCoins). En "Comunidad" tienes atajos a Trending, Betas y Devs, y con el botón ⋮ puedes personalizar este sidebar.',
+              'Navega con el menú principal: Inicio, Descubrir, Betas, Videos, Chat Mundial y Tienda (con DevCoins). En "Comunidad" tienes atajos a Trending, Betas y Devs, en "Mi biblioteca" tus guardados, betas, logros y Reportes, y con el botón ⋮ personalizas este sidebar.',
             side: 'right' as const,
             align: 'start' as const,
           },
@@ -66,6 +67,16 @@ export function OnboardingTour() {
               'Publica devlogs con imágenes y videos, sube tus betas para que las prueben, lanza encuestas o anuncia tus streams. ¡La comunidad quiere ver lo que haces!',
             side: 'bottom' as const,
             align: 'end' as const,
+          },
+        },
+        buddy && {
+          element: buddy,
+          popover: {
+            title: 'Pixel, tu asistente de IA 🤖',
+            description:
+              'Este botoncito se pasea por la pantalla y te da tips según dónde estés. Tócalo y pregúntale lo que quieras: cómo subir una beta, ideas para tu juego, cómo ganar nivel...',
+            side: 'left' as const,
+            align: 'start' as const,
           },
         },
         {

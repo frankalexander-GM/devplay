@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       banner: true,
       role: true,
       isGuest: true,
+      isPrivate: true,
       tags: true,
       fullName: true,
       location: true,

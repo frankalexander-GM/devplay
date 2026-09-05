@@ -56,6 +56,11 @@ interface UIState {
   tourNonce: number
   startTour: () => void
 
+  // Rueda de configuración del perfil (global)
+  settingsOpen: boolean
+  openSettings: () => void
+  closeSettings: () => void
+
   // Preferencias del sidebar izquierdo (persistidas)
   sidebarCompact: boolean
   hideCommunity: boolean
@@ -114,6 +119,11 @@ export const useUIStore = create<UIState>()(
       setOnboardingDone: (v) => set({ onboardingDone: v }),
       tourNonce: 0,
       startTour: () => set((s) => ({ tourNonce: s.tourNonce + 1 })),
+
+      // Rueda de configuración del perfil
+      settingsOpen: false,
+      openSettings: () => set({ settingsOpen: true }),
+      closeSettings: () => set({ settingsOpen: false }),
 
       // Preferencias del sidebar izquierdo
       sidebarCompact: false,

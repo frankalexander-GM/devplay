@@ -42,10 +42,22 @@ export const securityService = {
       body: JSON.stringify(data),
     }),
 
-  deleteAccount: (password: string, confirm: string) =>
+  requestDeleteCode: () =>
+    fetchJson<{ ok: boolean; email: string; expiresAt: string; devCode?: string }>('/api/devplay/security/account', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'request-code' }),
+    }),
+
+  verifyDeleteCode: (code: string) =>
     fetchJson('/api/devplay/security/account', {
       method: 'POST',
-      body: JSON.stringify({ password, confirm }),
+      body: JSON.stringify({ action: 'verify-code', code }),
+    }),
+
+  confirmDeleteAccount: (code: string, password: string, confirm: string) =>
+    fetchJson('/api/devplay/security/account', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'confirm', code, password, confirm }),
     }),
 
   setPrivacy: (isPrivate: boolean) =>

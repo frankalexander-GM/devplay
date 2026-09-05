@@ -12,6 +12,7 @@ import { BetasView } from '@/components/devplay/views/betas-view'
 import { ProfileView } from '@/components/devplay/views/profile-view'
 import { StoreView } from '@/components/devplay/views/store-view'
 import { AboutView } from '@/components/devplay/views/about-view'
+import { ReportsView } from '@/components/devplay/views/reports-view'
 import { AuthModal } from '@/components/devplay/auth-modal'
 import { CreatePostModal } from '@/components/devplay/create-post-modal'
 import { CreateBetaModal } from '@/components/devplay/create-beta-modal'
@@ -19,6 +20,9 @@ import { CreatePollModal } from '@/components/devplay/create-poll-modal'
 import { PostDetailModal } from '@/components/devplay/post-detail-modal'
 import { ResetPasswordModal } from '@/components/devplay/forgot-password-modal'
 import { OnboardingTour } from '@/components/devplay/onboarding-tour'
+import { PixelBuddy } from '@/components/devplay/buddy/pixel-buddy'
+import { ProfileSettingsModal } from '@/components/devplay/modals/profile-settings-modal'
+import { userService } from '@/services/devplay-service'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ViewId } from '@/types/devplay'
@@ -32,10 +36,11 @@ const VIEW_TITLES: Record<ViewId, string> = {
   betas: 'Betas',
   store: 'Tienda',
   about: 'Acerca de',
+  reportes: 'Reportes',
 }
 
 export default function Home() {
-  const { currentView, profileUserId, openAuth, postDetailId, openPostDetail } = useUIStore()
+  const { currentView, profileUserId, openAuth, postDetailId, openPostDetail, openProfile } = useUIStore()
   const { user, loading } = useCurrentUser()
   const autoOpenTried = useRef(false)
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -52,7 +57,19 @@ export default function Home() {
         window.history.replaceState({}, '', window.location.pathname)
       })
     }
-  }, [openPostDetail])
+
+    // Enlace compartido de perfil: /?user=username
+    const sharedUser = params.get('user')
+    if (sharedUser) {
+      window.history.replaceState({}, '', window.location.pathname)
+      userService
+        .getByUsername(sharedUser)
+        .then((res) => {
+          if (res.user) openProfile(res.user.id)
+        })
+        .catch(() => {})
+    }
+  }, [openPostDetail, openProfile])
 
   useEffect(() => {
     if (autoOpenTried.current) return
@@ -102,6 +119,8 @@ export default function Home() {
                   <StoreView />
                 ) : currentView === 'about' ? (
                   <AboutView />
+                ) : currentView === 'reportes' ? (
+                  <ReportsView />
                 ) : (
                   <ExploreView />
                 )}
@@ -113,24 +132,13 @@ export default function Home() {
         {!isChatView && <ChatPanel variant="sidebar" />}
       </div>
 
-      <footer className="glass-strong border-t-[3px] border-double border-border mt-auto">
-        <div className="mx-auto max-w-7xl px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="label-caps">© 2025 DevPlay — Gaceta de devs indie</p>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-olive-400 live-pulse" />
-              Servicio en línea
-            </span>
-            <span className="label-caps">MVP v1.0</span>
-          </div>
-        </div>
-      </footer>
-
       <AuthModal />
       <CreatePostModal />
       <CreateBetaModal />
       <CreatePollModal />
       <PostDetailModal />
+      <ProfileSettingsModal />
+      <PixelBuddy />
 
       {resetToken && (
         <ResetPasswordModal

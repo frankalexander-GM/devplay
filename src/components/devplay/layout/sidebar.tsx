@@ -25,6 +25,8 @@ import {
   ShoppingBag,
   Settings2,
   RotateCcw,
+  ClipboardList,
+  Settings,
 } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
@@ -81,6 +83,7 @@ export function Sidebar() {
     setOnboardingDone,
     setCommunityTab,
     startTour,
+    openSettings,
   } = useUIStore()
   const { user, isAuthed, isGuest } = useCurrentUser()
 
@@ -198,6 +201,7 @@ export function Sidebar() {
               <CreateButton icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'favoritos')} />
               <CreateButton icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'publicaciones')} />
               <CreateButton icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'logros')} />
+              <CreateButton icon={ClipboardList} label="Reportes" gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={() => setView('reportes')} />
             </div>
           </div>
         )}
@@ -238,12 +242,12 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Usuario abajo */}
+      {/* Usuario abajo (+ rueda de configuración) */}
       {user && (
-        <div className="border-t border-border/50 p-3">
+        <div className="border-t border-border/50 p-3 flex items-center gap-1">
           <button
             onClick={() => openProfile(user.id)}
-            className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-secondary/60 transition"
+            className="flex flex-1 min-w-0 items-center gap-3 rounded-md p-2 text-left hover:bg-secondary/60 transition"
           >
             <UserAvatar username={user.username} avatar={user.avatar} size="md" />
             <div className="min-w-0 flex-1">
@@ -256,6 +260,14 @@ export function Sidebar() {
                 </p>
               )}
             </div>
+          </button>
+          <button
+            onClick={openSettings}
+            title="Configuración del perfil"
+            aria-label="Configuración del perfil"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary/60 hover:text-foreground transition"
+          >
+            <Settings className="h-[18px] w-[18px]" />
           </button>
         </div>
       )}
@@ -302,7 +314,7 @@ interface MobileDrawerProps {
   activeFilter: string | null
   setView: (v: ViewId) => void
   setActiveFilter: (s: string | null) => void
-  openProfile: (id: string) => void
+  openProfile: (id: string, tab?: string) => void
   openCreatePost: () => void
   openCreateBeta: () => void
   openCreatePoll: () => void
@@ -492,10 +504,11 @@ function MobileDrawer({
               {canCreate && (
                 <div>
                   <SectionTitle>Mi biblioteca</SectionTitle>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     <LibraryMini icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'favoritos'); onClose() } }} />
                     <LibraryMini icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" onClick={() => { if (user) { openProfile(user.id, 'publicaciones'); onClose() } }} />
                     <LibraryMini icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'logros'); onClose() } }} />
+                    <LibraryMini icon={ClipboardList} label="Reportes" gradient="from-olive-400 to-sepia-500" onClick={() => { setView('reportes'); onClose() }} />
                   </div>
                 </div>
               )}

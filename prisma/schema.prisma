@@ -65,6 +65,7 @@ model User {
   reportsMade        Report[]     @relation("Reporter")
   loginEvents        LoginEvent[]
   pollVotes          PollVote[] @relation("UserPollVotes")
+  deletionCodes      AccountDeletionCode[] @relation("AccountDeletionCodes")
   // ===== Tienda =====
   devCoins           Int      @default(100) // Monedas virtuales iniciales
   storePurchases     StorePurchase[] @relation("UserStorePurchases")
@@ -287,6 +288,19 @@ model LoginEvent {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+// Códigos de verificación por correo para eliminar la cuenta
+model AccountDeletionCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("AccountDeletionCodes", fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String   // bcrypt del código de 6 dígitos
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // ===== Encuestas =====

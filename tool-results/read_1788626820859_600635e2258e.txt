@@ -1,0 +1,1248 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect } from 'react'
+     4→import { useQuery } from '@tanstack/react-query'
+     5→import { motion, AnimatePresence } from 'framer-motion'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Skeleton } from '@/components/ui/skeleton'
+     8→import { userService, followService, uploadService, postService } from '@/services/devplay-service'
+     9→import { useCurrentUser } from '@/hooks/use-current-user'
+    10→import { useUIStore } from '@/lib/stores'
+    11→import { toast } from 'sonner'
+    12→import {
+    13→  UserAvatar, TimeAgo, UserTags,
+    14→} from '@/components/devplay/shared/shared'
+    15→import { PostCard } from '@/components/devplay/post/post-card'
+    16→import {
+    17→  Settings, ArrowLeft, Loader2, Camera, Check,
+    18→  Users, Heart, Gamepad2, FileText, Download, Award, TrendingUp,
+    19→  Calendar, Sparkles, Bookmark, BarChart3, Home, Activity,
+    20→  Share2, Star, MapPin, Globe, Briefcase, Cake,
+    21→  Image as ImageIcon, Video, Info, Shield, Ban,
+    22→} from 'lucide-react'
+    23→import { cn } from '@/lib/utils'
+    24→import { PREDEFINED_TAGS, SOCIAL_PLATFORMS } from '@/types/devplay'
+    25→import type { SocialLinks } from '@/types/devplay'
+    26→import { ThemeSwitcher } from '@/components/devplay/layout/theme-switcher'
+    27→import { SecurityPanel } from '@/components/devplay/views/security-panel'
+    28→import { BlockConfirmDialog, UnblockConfirmDialog } from '@/components/devplay/modals/block-confirm-dialog'
+    29→import { securityService } from '@/services/security-service'
+    30→
+    31→type ProfileTab = 'inicio' | 'informacion' | 'publicaciones' | 'fotos' | 'favoritos' | 'compartidos' | 'logros' | 'estadisticas' | 'seguridad'
+    32→
+    33→export function ProfileView({ userId }: { userId: string }) {
+    34→  const { user: me, isAuthed, isGuest, refresh } = useCurrentUser()
+    35→  const { setView, openAuth, openPostDetail, profileTab } = useUIStore()
+    36→  const [editing, setEditing] = useState(false)
+    37→  const [followLoading, setFollowLoading] = useState(false)
+    38→  const [activeTab, setActiveTab] = useState<ProfileTab>(
+    39→    (profileTab as ProfileTab) || 'inicio'
+    40→  )
+    41→  const [showBlockDialog, setShowBlockDialog] = useState(false)
+    42→  const [showUnblockDialog, setShowUnblockDialog] = useState(false)
+    43→
+    44→  // Si cambia profileTab desde el store, actualizar
+    45→  useEffect(() => {
+    46→    if (profileTab) {
+    47→      setActiveTab(profileTab as ProfileTab)
+    48→    }
+    49→  }, [profileTab])
+    50→
+    51→  const { data, isLoading, refetch } = useQuery({
+    52→    queryKey: ['user-profile', userId],
+    53→    queryFn: () => userService.get(userId),
+    54→    enabled: !!userId,
+    55→  })
+    56→
+    57→  const isMe = me?.id === userId
+    58→  const canFollow = isAuthed && !isGuest && !isMe
+    59→
+    60→  async function handleFollow() {
+    61→    if (!canFollow) { openAuth('login'); return }
+    62→    setFollowLoading(true)
+    63→    try {
+    64→      if (data!.user.isFollowing) await followService.unfollow(userId)
+    65→      else await followService.follow(userId)
+    66→      refetch()
+    67→    } catch (err: any) {
+    68→      toast.error(err.message || 'Error')
+    69→    } finally {
+    70→      setFollowLoading(false)
+    71→    }
+    72→  }
+    73→
+    74→  async function handleShare() {
+    75→    const url = `${window.location.origin}/?post=${userId}`
+    76→    await navigator.clipboard?.writeText(url)
+    77→    toast.success('Enlace del perfil copiado')
+    78→  }
+    79→
+    80→  if (isLoading || !data) return <ProfileSkeleton />
+    81→
+    82→  const { user, posts } = data
+    83→  const betaPosts = posts.filter((p) => p.type === 'BETA')
+    84→  const normalPosts = posts.filter((p) => p.type !== 'BETA')
+    85→  const photoPosts = posts.filter((p) => p.mediaUrls.some(m => m.kind === 'image'))
+    86→  const videoPosts = posts.filter((p) => p.mediaUrls.some(m => m.kind === 'video'))
+    87→
+    88→  const availableTabs: { id: ProfileTab; label: string; icon: any }[] = [
+    89→    { id: 'inicio', label: 'Inicio', icon: Home },
+    90→    { id: 'informacion', label: 'Información', icon: Info },
+    91→    { id: 'publicaciones', label: 'Publicaciones', icon: FileText },
+    92→    { id: 'fotos', label: 'Fotos', icon: ImageIcon },
+    93→    { id: 'favoritos', label: 'Favoritos', icon: Bookmark },
+    94→    { id: 'compartidos', label: 'Compartidos', icon: Share2 },
+    95→    { id: 'logros', label: 'Logros', icon: Award },
+    96→    { id: 'estadisticas', label: 'Estadísticas', icon: BarChart3 },
+    97→  ]
+    98→  if (isMe) {
+    99→    availableTabs.push({ id: 'seguridad', label: 'Seguridad', icon: Shield })
+   100→  }
+   101→
+   102→  // Redes sociales del usuario
+   103→  const socialLinks = user.socialLinks || {}
+   104→  const activeSocials = SOCIAL_PLATFORMS.filter(p => socialLinks[p.key])
+   105→
+   106→  return (
+   107→    <div className="space-y-4 pb-8">
+   108→      <Button variant="ghost" size="sm" onClick={() => setView('explore')} className="gap-1 rounded-full">
+   109→        <ArrowLeft className="h-4 w-4" />
+   110→        Volver
+   111→      </Button>
+   112→
+   113→      {/* ===== HEADER (25-35% del screen) ===== */}
+   114→      <motion.div
+   115→        initial={{ opacity: 0, y: 10 }}
+   116→        animate={{ opacity: 1, y: 0 }}
+   117→        className="glass-card overflow-hidden"
+   118→      >
+   119→        {/* Banner editable */}
+   120→        <div className="h-32 sm:h-44 md:h-52 relative overflow-hidden group">
+   121→          <div className="absolute inset-0 banner-gradient" />
+   122→          <img
+   123→            src={user.banner || '/uploads/default-banner.png'}
+   124→            alt=""
+   125→            className="absolute inset-0 w-full h-full object-cover"
+   126→          />
+   127→          {isMe && (
+   128→            <button
+   129→              onClick={() => setEditing(true)}
+   130→              className="absolute top-2 right-2 z-20 rounded-full bg-black/50 backdrop-blur p-2 text-white opacity-0 group-hover:opacity-100 transition hover:bg-black/70"
+   131→              aria-label="Cambiar portada"
+   132→            >
+   133→              <Camera className="h-4 w-4" />
+   134→            </button>
+   135→          )}
+   136→        </div>
+   137→
+   138→        <div className="px-4 sm:px-6 pb-4 -mt-12 sm:-mt-16 relative z-10">
+   139→          <div className="flex items-end justify-between gap-3">
+   140→            <div className="relative group">
+   141→              <UserAvatar
+   142→                username={user.username}
+   143→                avatar={user.avatar}
+   144→                size="xl"
+   145→                className="ring-4 ring-background shrink-0"
+   146→              />
+   147→              {isMe && (
+   148→                <button
+   149→                  onClick={() => setEditing(true)}
+   150→                  className="absolute -bottom-1 -right-1 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition"
+   151→                  aria-label="Cambiar foto"
+   152→                >
+   153→                  <Camera className="h-3.5 w-3.5" />
+   154→                </button>
+   155→              )}
+   156→            </div>
+   157→            <div className="flex gap-2 mb-1">
+   158→              <Button variant="outline" size="sm" onClick={handleShare} className="gap-1.5 rounded-full">
+   159→                <Share2 className="h-3.5 w-3.5" />
+   160→                <span className="hidden sm:inline">Compartir</span>
+   161→              </Button>
+   162→              {isMe && (
+   163→                <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1.5 rounded-full">
+   164→                  <Settings className="h-3.5 w-3.5" />
+   165→                  <span className="hidden sm:inline">Editar</span>
+   166→                </Button>
+   167→              )}
+   168→              {canFollow && (
+   169→                <Button
+   170→                  size="sm"
+   171→                  onClick={handleFollow}
+   172→                  disabled={followLoading || user.isBlocked}
+   173→                  variant={user.isFollowing ? 'outline' : 'default'}
+   174→                  className={cn('gap-1.5 rounded-sm', !user.isFollowing && 'btn-gradient-primary')}
+   175→                >
+   176→                  {user.isFollowing ? 'Siguiendo' : 'Seguir'}
+   177→                </Button>
+   178→              )}
+   179→              {canFollow && !user.isBlocked && (
+   180→                <Button
+   181→                  variant="ghost"
+   182→                  size="sm"
+   183→                  onClick={() => setShowBlockDialog(true)}
+   184→                  className="gap-1.5 rounded-full text-muted-foreground hover:text-red-500"
+   185→                  title="Bloquear usuario"
+   186→                >
+   187→                  <Ban className="h-3.5 w-3.5" />
+   188→                </Button>
+   189→              )}
+   190→              {canFollow && user.isBlocked && (
+   191→                <Button
+   192→                  variant="outline"
+   193→                  size="sm"
+   194→                  onClick={() => setShowUnblockDialog(true)}
+   195→                  className="gap-1.5 rounded-full text-red-500 border-red-500/30"
+   196→                >
+   197→                  <Ban className="h-3.5 w-3.5" />
+   198→                  <span className="hidden sm:inline">Desbloquear</span>
+   199→                </Button>
+   200→              )}
+   201→            </div>
+   202→          </div>
+   203→
+   204→          {/* Info */}
+   205→          <div className="mt-3">
+   206→            <div className="flex items-center gap-2 flex-wrap">
+   207→              <h1 className="text-2xl font-bold">{user.fullName || user.username}</h1>
+   208→              {user.isGuest && (
+   209→                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium">Invitado</span>
+   210→              )}
+   211→            </div>
+   212→            <p className="text-sm text-muted-foreground">@{user.username}</p>
+   213→
+   214→            {/* Tags */}
+   215→            {user.tags && user.tags.length > 0 && (
+   216→              <UserTags tags={user.tags} size="sm" max={8} className="mt-2" />
+   217→            )}
+   218→
+   219→            {/* Bio */}
+   220→            {user.bio && (
+   221→              <p className="text-sm text-foreground/80 mt-2 leading-relaxed whitespace-pre-wrap">{user.bio}</p>
+   222→            )}
+   223→
+   224→            {/* Metadata: ubicación, web, profesión, fecha registro */}
+   225→            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+   226→              {user.location && (
+   227→                <span className="flex items-center gap-1">
+   228→                  <MapPin className="h-3 w-3" />
+   229→                  {user.location}
+   230→                </span>
+   231→              )}
+   232→              {user.profession && (
+   233→                <span className="flex items-center gap-1">
+   234→                  <Briefcase className="h-3 w-3" />
+   235→                  {user.profession}
+   236→                </span>
+   237→              )}
+   238→              {user.website && (
+   239→                <a
+   240→                  href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
+   241→                  target="_blank"
+   242→                  rel="noopener noreferrer"
+   243→                  className="flex items-center gap-1 text-primary hover:underline"
+   244→                >
+   245→                  <Globe className="h-3 w-3" />
+   246→                  {user.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+   247→                </a>
+   248→              )}
+   249→              <span className="flex items-center gap-1">
+   250→                <Calendar className="h-3 w-3" />
+   251→                Se unió <TimeAgo date={user.createdAt} />
+   252→              </span>
+   253→            </div>
+   254→
+   255→            {/* Redes sociales */}
+   256→            {activeSocials.length > 0 && (
+   257→              <div className="flex flex-wrap items-center gap-1.5 mt-3">
+   258→                {activeSocials.map((p) => (
+   259→                  <a
+   260→                    key={p.key}
+   261→                    href={socialLinks[p.key]}
+   262→                    target="_blank"
+   263→                    rel="noopener noreferrer"
+   264→                    title={p.label}
+   265→                    className={cn(
+   266→                      'flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br text-white text-sm transition shadow-sm',
+   267→                      p.color
+   268→                    )}
+   269→                  >
+   270→                    {p.emoji}
+   271→                  </a>
+   272→                ))}
+   273→              </div>
+   274→            )}
+   275→          </div>
+   276→        </div>
+   277→      </motion.div>
+   278→
+   279→      {/* ===== STATS CARDS ===== */}
+   280→      <ProfileStats userId={userId} />
+   281→
+   282→      {/* ===== TABS ===== */}
+   283→      <div className="glass-card p-1.5 flex gap-1 overflow-x-auto custom-scroll rounded-full">
+   284→        {availableTabs.map((tab) => {
+   285→          const Icon = tab.icon
+   286→          const active = activeTab === tab.id
+   287→          return (
+   288→            <button
+   289→              key={tab.id}
+   290→              onClick={() => setActiveTab(tab.id)}
+   291→              className={cn(
+   292→                'flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap',
+   293→                active ? 'btn-gradient-primary shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+   294→              )}
+   295→            >
+   296→              <Icon className="h-3.5 w-3.5" />
+   297→              {tab.label}
+   298→            </button>
+   299→          )
+   300→        })}
+   301→      </div>
+   302→
+   303→      {/* ===== CONTENIDO ===== */}
+   304→      <AnimatePresence mode="wait">
+   305→        <motion.div
+   306→          key={activeTab}
+   307→          initial={{ opacity: 0, y: 10 }}
+   308→          animate={{ opacity: 1, y: 0 }}
+   309→          exit={{ opacity: 0, y: -10 }}
+   310→          transition={{ duration: 0.2 }}
+   311→        >
+   312→          {activeTab === 'inicio' && (
+   313→            <ProfileInicio betaPosts={betaPosts} normalPosts={normalPosts} isMe={isMe} onPostClick={openPostDetail} />
+   314→          )}
+   315→          {activeTab === 'informacion' && (
+   316→            <ProfileInformacion user={user} isMe={isMe} />
+   317→          )}
+   318→          {activeTab === 'publicaciones' && (
+   319→            <ProfilePublicaciones posts={posts} isMe={isMe} />
+   320→          )}
+   321→          {activeTab === 'fotos' && (
+   322→            <ProfileFotos posts={photoPosts} videoPosts={videoPosts} onPostClick={openPostDetail} />
+   323→          )}
+   324→          {activeTab === 'favoritos' && isMe && <ProfileFavoritos />}
+   325→          {activeTab === 'compartidos' && <ProfileCompartidos posts={posts} isMe={isMe} />}
+   326→          {activeTab === 'logros' && <ProfileLogros userId={userId} />}
+   327→          {activeTab === 'estadisticas' && <ProfileEstadisticas userId={userId} />}
+   328→          {activeTab === 'seguridad' && isMe && <SecurityPanel />}
+   329→        </motion.div>
+   330→      </AnimatePresence>
+   331→
+   332→      {/* ===== MODAL EDITAR ===== */}
+   333→      {editing && isMe && (
+   334→        <EditProfileDialog
+   335→          open={editing}
+   336→          onClose={() => setEditing(false)}
+   337→          user={user}
+   338→          onSaved={async () => {
+   339→            await refresh()
+   340→            refetch()
+   341→            setEditing(false)
+   342→          }}
+   343→        />
+   344→      )}
+   345→
+   346→      {/* ===== MODAL BLOQUEAR ===== */}
+   347→      <BlockConfirmDialog
+   348→        open={showBlockDialog}
+   349→        onClose={() => setShowBlockDialog(false)}
+   350→        userId={user.id}
+   351→        username={user.username}
+   352→        avatar={user.avatar}
+   353→        onBlocked={() => refetch()}
+   354→      />
+   355→
+   356→      {/* ===== MODAL DESBLOQUEAR ===== */}
+   357→      <UnblockConfirmDialog
+   358→        open={showUnblockDialog}
+   359→        onClose={() => setShowUnblockDialog(false)}
+   360→        userId={user.id}
+   361→        username={user.username}
+   362→        avatar={user.avatar}
+   363→        onUnblocked={() => refetch()}
+   364→      />
+   365→    </div>
+   366→  )
+   367→}
+   368→
+   369→// ===== STATS =====
+   370→function ProfileStats({ userId }: { userId: string }) {
+   371→  const isMe = useCurrentUser().user?.id === userId
+   372→  const { data, isLoading } = useQuery({
+   373→    queryKey: ['user-stats', userId],
+   374→    queryFn: () => isMe ? postService.getStats() : null,
+   375→    enabled: isMe,
+   376→  })
+   377→
+   378→  const { data: profileData } = useQuery({
+   379→    queryKey: ['user-profile', userId],
+   380→    queryFn: () => userService.get(userId),
+   381→    enabled: !isMe,
+   382→  })
+   383→
+   384→  const stats = isMe ? data?.stats : null
+   385→  const u = profileData?.user
+   386→
+   387→  const cards = isMe && stats ? [
+   388→    { icon: FileText, label: 'Posts', value: stats.posts, gradient: 'from-wine-400 to-wine-500' },
+   389→    { icon: Users, label: 'Seguidores', value: stats.followers, gradient: 'from-wine-400 to-wine-500' },
+   390→    { icon: Download, label: 'Descargas', value: stats.totalDownloads, gradient: 'from-amber-400 to-bronze-500' },
+   391→    { icon: Heart, label: 'Likes', value: stats.totalLikesReceived, gradient: 'from-wine-500 to-wine-700' },
+   392→    { icon: Gamepad2, label: 'Betas', value: stats.betas, gradient: 'from-olive-400 to-sepia-500' },
+   393→    { icon: Star, label: 'Nivel', value: stats.level, gradient: 'from-bronze-400 to-wine-500' },
+   394→  ] : u ? [
+   395→    { icon: FileText, label: 'Posts', value: u.postsCount, gradient: 'from-wine-400 to-wine-500' },
+   396→    { icon: Users, label: 'Seguidores', value: u.followersCount, gradient: 'from-wine-400 to-wine-500' },
+   397→    { icon: Users, label: 'Siguiendo', value: u.followingCount, gradient: 'from-olive-400 to-sepia-500' },
+   398→    { icon: Gamepad2, label: 'Betas', value: 0, gradient: 'from-amber-400 to-bronze-500' },
+   399→  ] : []
+   400→
+   401→  if (isLoading) {
+   402→    return (
+   403→      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+   404→        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 rounded-md" />)}
+   405→      </div>
+   406→    )
+   407→  }
+   408→
+   409→  return (
+   410→    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+   411→      {cards.map((card, i) => {
+   412→        const Icon = card.icon
+   413→        return (
+   414→          <motion.div
+   415→            key={i}
+   416→            initial={{ opacity: 0, scale: 0.9 }}
+   417→            animate={{ opacity: 1, scale: 1 }}
+   418→            transition={{ delay: i * 0.05 }}
+   419→            className="glass-card flex flex-col items-center gap-1 p-3 text-center"
+   420→          >
+   421→            <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm', card.gradient)}>
+   422→              <Icon className="h-4 w-4" />
+   423→            </div>
+   424→            <AnimatedCounter value={card.value} />
+   425→            <div className="text-[10px] text-muted-foreground">{card.label}</div>
+   426→          </motion.div>
+   427→        )
+   428→      })}
+   429→    </div>
+   430→  )
+   431→}
+   432→
+   433→function AnimatedCounter({ value }: { value: number }) {
+   434→  const [display, setDisplay] = useState(0)
+   435→  useEffect(() => {
+   436→    const duration = 800
+   437→    const start = Date.now()
+   438→    const interval = setInterval(() => {
+   439→      const elapsed = Date.now() - start
+   440→      const progress = Math.min(elapsed / duration, 1)
+   441→      setDisplay(Math.floor(value * progress))
+   442→      if (progress >= 1) clearInterval(interval)
+   443→    }, 16)
+   444→    return () => clearInterval(interval)
+   445→  }, [value])
+   446→  return <div className="text-lg font-bold">{display}</div>
+   447→}
+   448→
+   449→// ===== TAB: INICIO =====
+   450→function ProfileInicio({ betaPosts, normalPosts, isMe, onPostClick }: any) {
+   451→  const totalDownloads = betaPosts.reduce((sum: number, p: any) => sum + (p.beta?.downloads ?? 0), 0)
+   452→  const totalLikes = betaPosts.reduce((sum: number, p: any) => sum + p.likesCount, 0)
+   453→
+   454→  return (
+   455→    <div className="space-y-4">
+   456→      <div className="grid grid-cols-2 gap-3">
+   457→        <div className="glass-card card-peach p-4">
+   458→          <div className="flex items-center gap-2 mb-2">
+   459→            <Gamepad2 className="h-4 w-4 text-amber-500" />
+   460→            <span className="text-sm font-semibold">Juegos</span>
+   461→          </div>
+   462→          <p className="text-2xl font-bold">{betaPosts.length}</p>
+   463→          <p className="text-xs text-muted-foreground">{totalDownloads} descargas totales</p>
+   464→        </div>
+   465→        <div className="glass-card card-lavender p-4">
+   466→          <div className="flex items-center gap-2 mb-2">
+   467→            <FileText className="h-4 w-4 text-wine-500" />
+   468→            <span className="text-sm font-semibold">Publicaciones</span>
+   469→          </div>
+   470→          <p className="text-2xl font-bold">{normalPosts.length}</p>
+   471→          <p className="text-xs text-muted-foreground">{totalLikes} likes totales</p>
+   472→        </div>
+   473→      </div>
+   474→
+   475→      {betaPosts.length > 0 && (
+   476→        <div>
+   477→          <h3 className="font-bold text-sm mb-2 px-1">Juegos recientes</h3>
+   478→          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+   479→            {betaPosts.slice(0, 6).map((post: any) => (
+   480→              <button
+   481→                key={post.id}
+   482→                onClick={() => onPostClick(post.id)}
+   483→                className="glass-card text-left overflow-hidden transition"
+   484→              >
+   485→                <div className="aspect-video bg-gradient-to-br from-amber-300 to-bronze-400 relative">
+   486→                  {post.beta?.coverImage && (
+   487→                    <img src={post.beta.coverImage} alt="" className="w-full h-full object-cover" />
+   488→                  )}
+   489→                  <div className="absolute bottom-1 right-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white font-bold">
+   490→                    {post.beta?.downloads ?? 0} ⬇
+   491→                  </div>
+   492→                </div>
+   493→                <div className="p-2">
+   494→                  <p className="text-xs font-bold truncate">{post.beta?.title}</p>
+   495→                  <p className="text-[10px] text-muted-foreground truncate">@{post.author.username}</p>
+   496→                </div>
+   497→              </button>
+   498→            ))}
+   499→          </div>
+   500→        </div>
+   501→      )}
+   502→
+   503→      {normalPosts.length > 0 && (
+   504→        <div>
+   505→          <h3 className="font-bold text-sm mb-2 px-1">📝 Publicaciones recientes</h3>
+   506→          <div className="space-y-3">
+   507→            {normalPosts.slice(0, 3).map((post: any) => (
+   508→              <PostCard key={post.id} post={post} />
+   509→            ))}
+   510→          </div>
+   511→        </div>
+   512→      )}
+   513→
+   514→      {betaPosts.length === 0 && normalPosts.length === 0 && (
+   515→        <div className="glass-card p-8 text-center">
+   516→          <Sparkles className="mx-auto mb-2 h-10 w-10 text-muted-foreground/40" />
+   517→          <p className="font-semibold">{isMe ? '¡Empieza a crear contenido!' : 'Sin contenido aún'}</p>
+   518→          <p className="text-sm text-muted-foreground mt-1">
+   519→            {isMe ? 'Sube tu primera beta o publica algo para la comunidad' : 'Cuando este usuario publique algo, aparecerá aquí'}
+   520→          </p>
+   521→        </div>
+   522→      )}
+   523→    </div>
+   524→  )
+   525→}
+   526→
+   527→// ===== TAB: INFORMACIÓN =====
+   528→function ProfileInformacion({ user, isMe }: { user: any; isMe: boolean }) {
+   529→  const socialLinks = user.socialLinks || {}
+   530→  const activeSocials = SOCIAL_PLATFORMS.filter(p => socialLinks[p.key])
+   531→
+   532→  const infoItems = [
+   533→    user.fullName && { icon: UserIcon, label: 'Nombre completo', value: user.fullName },
+   534→    user.profession && { icon: Briefcase, label: 'Profesión', value: user.profession },
+   535→    user.location && { icon: MapPin, label: 'Ubicación', value: user.location },
+   536→    user.birthDate && { icon: Cake, label: 'Cumpleaños', value: new Date(user.birthDate).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) },
+   537→    user.createdAt && { icon: Calendar, label: 'Fecha de registro', value: new Date(user.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) },
+   538→    user.lastSeen && { icon: Globe, label: 'Última conexión', value: <TimeAgo date={user.lastSeen} /> },
+   539→  ].filter(Boolean) as { icon: any; label: string; value: any }[]
+   540→
+   541→  return (
+   542→    <div className="space-y-4">
+   543→      {/* Información personal */}
+   544→      <div className="glass-card p-4">
+   545→        <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5">
+   546→          <Info className="h-4 w-4 text-primary" />
+   547→          Información personal
+   548→        </h3>
+   549→        {infoItems.length === 0 ? (
+   550→          <p className="text-sm text-muted-foreground text-center py-4">Sin información personal</p>
+   551→        ) : (
+   552→          <div className="space-y-2.5">
+   553→            {infoItems.map((item: any, i) => (
+   554→              <div key={i} className="flex items-center gap-3">
+   555→                <item.icon className="h-4 w-4 text-muted-foreground" />
+   556→                <div className="min-w-0 flex-1">
+   557→                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{item.label}</p>
+   558→                  <p className="text-sm font-medium">{item.value}</p>
+   559→                </div>
+   560→              </div>
+   561→            ))}
+   562→          </div>
+   563→        )}
+   564→      </div>
+   565→
+   566→      {/* Biografía */}
+   567→      {user.bio && (
+   568→        <div className="glass-card p-4">
+   569→          <h3 className="font-bold text-sm mb-2 flex items-center gap-1.5">
+   570→            <FileText className="h-4 w-4 text-primary" />
+   571→            Biografía
+   572→          </h3>
+   573→          <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">{user.bio}</p>
+   574→        </div>
+   575→      )}
+   576→
+   577→      {/* Redes sociales */}
+   578→      {activeSocials.length > 0 && (
+   579→        <div className="glass-card p-4">
+   580→          <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5">
+   581→            <Globe className="h-4 w-4 text-primary" />
+   582→            Redes sociales
+   583→          </h3>
+   584→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+   585→            {activeSocials.map((p) => (
+   586→              <a
+   587→                key={p.key}
+   588→                href={socialLinks[p.key]}
+   589→                target="_blank"
+   590→                rel="noopener noreferrer"
+   591→                className="flex items-center gap-3 rounded-md glass p-2.5 transition"
+   592→              >
+   593→                <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-white text-sm', p.color)}>
+   594→                  {p.emoji}
+   595→                </span>
+   596→                <div className="min-w-0 flex-1">
+   597→                  <p className="text-sm font-semibold">{p.label}</p>
+   598→                  <p className="text-[10px] text-muted-foreground truncate">{socialLinks[p.key]}</p>
+   599→                </div>
+   600→              </a>
+   601→            ))}
+   602→          </div>
+   603→        </div>
+   604→      )}
+   605→
+   606→      {/* Tags */}
+   607→      {user.tags && user.tags.length > 0 && (
+   608→        <div className="glass-card p-4">
+   609→          <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5">
+   610→            <Sparkles className="h-4 w-4 text-primary" />
+   611→            Intereses / Tags
+   612→          </h3>
+   613→          <UserTags tags={user.tags} size="sm" max={30} />
+   614→        </div>
+   615→      )}
+   616→
+   617→      {/* Apariencia (solo propio usuario) */}
+   618→      {isMe && <ThemeSwitcher />}
+   619→    </div>
+   620→  )
+   621→}
+   622→
+   623→// ===== TAB: PUBLICACIONES =====
+   624→function ProfilePublicaciones({ posts, isMe }: any) {
+   625→  if (posts.length === 0) {
+   626→    return <EmptyState icon={FileText} title="Sin publicaciones" desc={isMe ? 'Publica algo para la comunidad' : 'Aún no ha publicado nada'} />
+   627→  }
+   628→  return (
+   629→    <div className="space-y-3">
+   630→      {posts.map((post: any) => (
+   631→        <PostCard key={post.id} post={post} />
+   632→      ))}
+   633→    </div>
+   634→  )
+   635→}
+   636→
+   637→// ===== TAB: FOTOS =====
+   638→function ProfileFotos({ posts, videoPosts, onPostClick }: any) {
+   639→  const allMedia: { url: string; kind: 'image' | 'video'; postId: string }[] = []
+   640→  posts.forEach((p: any) => {
+   641→    p.mediaUrls.forEach((m: any) => {
+   642→      allMedia.push({ url: m.url, kind: m.kind, postId: p.id })
+   643→    })
+   644→  })
+   645→
+   646→  if (allMedia.length === 0 && videoPosts.length === 0) {
+   647→    return <EmptyState icon={ImageIcon} title="Sin fotos" desc="Las imágenes compartidas aparecerán aquí" />
+   648→  }
+   649→
+   650→  return (
+   651→    <div className="space-y-4">
+   652→      {allMedia.length > 0 && (
+   653→        <div>
+   654→          <h3 className="font-bold text-sm mb-2 px-1">📸 Fotos ({allMedia.length})</h3>
+   655→          <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+   656→            {allMedia.map((m, i) => (
+   657→              <button
+   658→                key={i}
+   659→                onClick={() => onPostClick(m.postId)}
+   660→                className="aspect-square rounded-lg overflow-hidden glass transition"
+   661→              >
+   662→                <img src={m.url} alt="" className="w-full h-full object-cover" />
+   663→              </button>
+   664→            ))}
+   665→          </div>
+   666→        </div>
+   667→      )}
+   668→    </div>
+   669→  )
+   670→}
+   671→
+   672→// ===== TAB: COMPARTIDOS (reposts) =====
+   673→function ProfileCompartidos({ posts, isMe }: { posts: any[]; isMe: boolean }) {
+   674→  // Filtrar solo los reposts (posts que tienen repostOf)
+   675→  const reposts = posts.filter((p) => p.repostOf)
+   676→
+   677→  if (reposts.length === 0) {
+   678→    return (
+   679→      <EmptyState
+   680→        icon={Share2}
+   681→        title="Sin compartidos"
+   682→        desc={isMe ? 'Repostea publicaciones para verlas aquí' : 'Aún no ha compartido nada'}
+   683→      />
+   684→    )
+   685→  }
+   686→
+   687→  return (
+   688→    <div className="space-y-3">
+   689→      {reposts.map((post) => (
+   690→        <PostCard key={post.id} post={post} />
+   691→      ))}
+   692→    </div>
+   693→  )
+   694→}
+   695→
+   696→// ===== TAB: FAVORITOS =====
+   697→function ProfileFavoritos() {
+   698→  const { data, isLoading } = useQuery({
+   699→    queryKey: ['bookmarks'],
+   700→    queryFn: () => postService.getBookmarks(),
+   701→  })
+   702→
+   703→  if (isLoading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-md" />)}</div>
+   704→
+   705→  const posts = data?.posts ?? []
+   706→  if (posts.length === 0) {
+   707→    return <EmptyState icon={Bookmark} title="Sin favoritos" desc="Guarda publicaciones para verlas aquí" />
+   708→  }
+   709→
+   710→  return (
+   711→    <div className="space-y-3">
+   712→      {posts.map((post) => (
+   713→        <PostCard key={post.id} post={post} onChange={() => {}} />
+   714→      ))}
+   715→    </div>
+   716→  )
+   717→}
+   718→
+   719→// ===== TAB: LOGROS =====
+   720→function ProfileLogros({ userId }: { userId: string }) {
+   721→  const isMe = useCurrentUser().user?.id === userId
+   722→  const { data, isLoading } = useQuery({
+   723→    queryKey: ['achievements'],
+   724→    queryFn: () => isMe ? postService.getAchievements() : null,
+   725→    enabled: isMe,
+   726→  })
+   727→
+   728→  if (!isMe) return <EmptyState icon={Award} title="Logros privados" desc="Los logros detallados solo son visibles para el propio usuario" />
+   729→  if (isLoading) return <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-28 rounded-md" />)}</div>
+   730→
+   731→  const achievements = data?.achievements ?? []
+   732→  const unlocked = data?.totalUnlocked ?? 0
+   733→  const total = data?.total ?? 0
+   734→
+   735→  const tierColors: Record<string, string> = {
+   736→    bronze: 'from-bronze-300 to-amber-500',
+   737→    silver: 'from-gray-300 to-gray-500',
+   738→    gold: 'from-yellow-300 to-amber-500',
+   739→    platinum: 'from-bronze-300 to-wine-500',
+   740→  }
+   741→
+   742→  return (
+   743→    <div className="space-y-4">
+   744→      <div className="glass-card p-4 flex items-center gap-3">
+   745→        <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-bronze-500 text-white">
+   746→          <Award className="h-6 w-6" />
+   747→        </div>
+   748→        <div className="flex-1">
+   749→          <p className="text-sm font-semibold">{unlocked} de {total} logros desbloqueados</p>
+   750→          <div className="h-2 w-full bg-secondary rounded-full mt-1 overflow-hidden">
+   751→            <div className="h-full bg-gradient-to-r from-amber-400 to-bronze-500 transition-all" style={{ width: `${(unlocked / total) * 100}%` }} />
+   752→          </div>
+   753→        </div>
+   754→      </div>
+   755→
+   756→      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+   757→        {achievements.map((a: any, i: number) => (
+   758→          <motion.div
+   759→            key={a.id}
+   760→            initial={{ opacity: 0, scale: 0.9 }}
+   761→            animate={{ opacity: 1, scale: 1 }}
+   762→            transition={{ delay: i * 0.03 }}
+   763→            className={cn('glass-card p-3 text-center relative', !a.unlocked && 'opacity-50 grayscale')}
+   764→          >
+   765→            {a.unlocked && (
+   766→              <div className="absolute top-1 right-1">
+   767→                <Check className="h-3.5 w-3.5 text-olive-500" />
+   768→              </div>
+   769→            )}
+   770→            <div className={cn('mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full text-2xl', a.unlocked ? `bg-gradient-to-br ${tierColors[a.tier]}` : 'bg-secondary')}>
+   771→              {a.emoji}
+   772→            </div>
+   773→            <p className="text-xs font-bold truncate">{a.label}</p>
+   774→            <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{a.description}</p>
+   775→            {!a.unlocked && (
+   776→              <div className="mt-1.5">
+   777→                <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
+   778→                  <div className="h-full bg-primary/60" style={{ width: `${(a.progress / a.target) * 100}%` }} />
+   779→                </div>
+   780→                <p className="text-[9px] text-muted-foreground mt-0.5">{a.progress}/{a.target}</p>
+   781→              </div>
+   782→            )}
+   783→          </motion.div>
+   784→        ))}
+   785→      </div>
+   786→    </div>
+   787→  )
+   788→}
+   789→
+   790→// ===== TAB: ESTADÍSTICAS =====
+   791→function ProfileEstadisticas({ userId }: { userId: string }) {
+   792→  const isMe = useCurrentUser().user?.id === userId
+   793→  const { data, isLoading } = useQuery({
+   794→    queryKey: ['user-stats-view', userId],
+   795→    queryFn: () => isMe ? postService.getStats() : null,
+   796→    enabled: isMe,
+   797→  })
+   798→
+   799→  if (!isMe) return <EmptyState icon={BarChart3} title="Estadísticas privadas" desc="Las estadísticas detalladas solo son visibles para el propio usuario" />
+   800→  if (isLoading) return <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-md" />)}</div>
+   801→
+   802→  const stats = data?.stats
+   803→  if (!stats) return null
+   804→
+   805→  const maxActivity = Math.max(...stats.activityByDay.map((d: any) => d.count), 1)
+   806→  const weekTotal = stats.activityByDay.reduce((sum: number, d: any) => sum + d.count, 0)
+   807→
+   808→  // Indicadores inteligentes
+   809→  const insights: { icon: any; text: string; color: string }[] = []
+   810→  if (stats.totalDownloads > 0) {
+   811→    insights.push({ icon: Download, text: `Tus betas han sido descargadas ${stats.totalDownloads} veces en total`, color: 'from-amber-400 to-bronze-500' })
+   812→  }
+   813→  if (stats.totalLikesReceived > 0) {
+   814→    insights.push({ icon: Heart, text: `Has recibido ${stats.totalLikesReceived} likes en todas tus publicaciones`, color: 'from-wine-500 to-wine-700' })
+   815→  }
+   816→  if (stats.followers > 0) {
+   817→    insights.push({ icon: Users, text: `Tienes ${stats.followers} seguidores que reciben tus actualizaciones`, color: 'from-wine-400 to-wine-500' })
+   818→  }
+   819→  if (stats.betas > 0) {
+   820→    insights.push({ icon: Gamepad2, text: `Has publicado ${stats.betas} beta(s) para la comunidad`, color: 'from-olive-400 to-sepia-500' })
+   821→  }
+   822→  if (weekTotal > 0) {
+   823→    insights.push({ icon: TrendingUp, text: `Has publicado ${weekTotal} veces esta semana`, color: 'from-wine-400 to-wine-500' })
+   824→  }
+   825→
+   826→  return (
+   827→    <div className="space-y-4">
+   828→      {/* ===== Resumen visual (Estado de la cuenta) ===== */}
+   829→      <div className="glass-card p-4">
+   830→        <div className="flex items-center gap-2 mb-3">
+   831→          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-wine-400 to-wine-500 text-white">
+   832→            <BarChart3 className="h-4 w-4" />
+   833→          </div>
+   834→          <h3 className="text-sm font-bold">Estado de la cuenta</h3>
+   835→        </div>
+   836→
+   837→        {/* Nivel + progreso */}
+   838→        <div className="flex items-center justify-between mb-2">
+   839→          <div className="flex items-center gap-2">
+   840→            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-bronze-400 to-wine-500 text-white">
+   841→              <Star className="h-5 w-5" />
+   842→            </div>
+   843→            <div>
+   844→              <p className="text-sm font-bold">Nivel {stats.level}</p>
+   845→              <p className="text-[10px] text-muted-foreground">{stats.points} puntos</p>
+   846→            </div>
+   847→          </div>
+   848→          <div className="text-right">
+   849→            <p className="text-[10px] text-muted-foreground">Siguiente nivel</p>
+   850→            <p className="text-xs font-semibold">{stats.pointsForNextLevel - stats.points} pts</p>
+   851→          </div>
+   852→        </div>
+   853→        <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
+   854→          <motion.div
+   855→            initial={{ width: 0 }}
+   856→            animate={{ width: `${stats.progressToNext}%` }}
+   857→            transition={{ duration: 1, ease: 'easeOut' }}
+   858→            className="h-full bg-gradient-to-r from-bronze-400 to-wine-500"
+   859→          />
+   860→        </div>
+   861→
+   862→        {/* Resumen rápido */}
+   863→        <div className="grid grid-cols-3 gap-2 mt-3">
+   864→          <div className="text-center glass rounded-lg p-2">
+   865→            <Users className="h-4 w-4 mx-auto text-wine-500" />
+   866→            <p className="text-lg font-bold mt-0.5">{stats.followers}</p>
+   867→            <p className="text-[9px] text-muted-foreground">Seguidores</p>
+   868→          </div>
+   869→          <div className="text-center glass rounded-lg p-2">
+   870→            <Download className="h-4 w-4 mx-auto text-amber-500" />
+   871→            <p className="text-lg font-bold mt-0.5">{stats.totalDownloads}</p>
+   872→            <p className="text-[9px] text-muted-foreground">Descargas</p>
+   873→          </div>
+   874→          <div className="text-center glass rounded-lg p-2">
+   875→            <Heart className="h-4 w-4 mx-auto text-wine-500" />
+   876→            <p className="text-lg font-bold mt-0.5">{stats.totalLikesReceived}</p>
+   877→            <p className="text-[9px] text-muted-foreground">Likes</p>
+   878→          </div>
+   879→        </div>
+   880→      </div>
+   881→
+   882→      {/* ===== Indicadores inteligentes ===== */}
+   883→      {insights.length > 0 && (
+   884→        <div className="glass-card p-4">
+   885→          <h3 className="text-sm font-bold mb-3 flex items-center gap-1.5">
+   886→            <Sparkles className="h-4 w-4 text-primary" />
+   887→            Resumen de tu actividad
+   888→          </h3>
+   889→          <div className="space-y-2">
+   890→            {insights.map((insight, i) => {
+   891→              const Icon = insight.icon
+   892→              return (
+   893→                <motion.div
+   894→                  key={i}
+   895→                  initial={{ opacity: 0, x: -10 }}
+   896→                  animate={{ opacity: 1, x: 0 }}
+   897→                  transition={{ delay: i * 0.1 }}
+   898→                  className="flex items-center gap-3 glass rounded-lg p-2.5"
+   899→                >
+   900→                  <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-white', insight.color)}>
+   901→                    <Icon className="h-3.5 w-3.5" />
+   902→                  </div>
+   903→                  <p className="text-xs text-foreground/80">{insight.text}</p>
+   904→                </motion.div>
+   905→              )
+   906→            })}
+   907→          </div>
+   908→        </div>
+   909→      )}
+   910→
+   911→      {/* ===== Grid de stats detalladas ===== */}
+   912→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+   913→        <StatBox icon={FileText} label="Publicaciones" value={stats.posts} color="from-wine-400 to-wine-500" />
+   914→        <StatBox icon={Gamepad2} label="Betas" value={stats.betas} color="from-amber-400 to-bronze-500" />
+   915→        <StatBox icon={Download} label="Descargas" value={stats.totalDownloads} color="from-olive-400 to-sepia-500" />
+   916→        <StatBox icon={Heart} label="Likes recibidos" value={stats.totalLikesReceived} color="from-wine-500 to-wine-700" />
+   917→        <StatBox icon={Users} label="Seguidores" value={stats.followers} color="from-wine-400 to-wine-500" />
+   918→        <StatBox icon={Users} label="Siguiendo" value={stats.following} color="from-olive-400 to-sepia-500" />
+   919→        <StatBox icon={FileText} label="Comentarios" value={stats.comments} color="from-wine-400 to-wine-500" />
+   920→        <StatBox icon={Bookmark} label="Guardados" value={stats.bookmarks} color="from-amber-400 to-bronze-500" />
+   921→      </div>
+   922→
+   923→      {/* ===== Gráfica de actividad ===== */}
+   924→      <div className="glass-card p-4">
+   925→        <h3 className="text-sm font-bold mb-3 flex items-center gap-1.5">
+   926→          <TrendingUp className="h-4 w-4 text-primary" />
+   927→          Actividad (últimos 7 días)
+   928→        </h3>
+   929→        <div className="flex items-end justify-between gap-1.5 h-32">
+   930→          {stats.activityByDay.map((day: any, i: number) => (
+   931→            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+   932→              <div className="w-full flex-1 flex items-end">
+   933→                <motion.div
+   934→                  initial={{ height: 0 }}
+   935→                  animate={{ height: `${(day.count / maxActivity) * 100}%` }}
+   936→                  transition={{ delay: i * 0.1, duration: 0.5 }}
+   937→                  className={cn('w-full rounded-t-md', day.count > 0 ? 'bg-gradient-to-t from-primary to-primary/60' : 'bg-secondary')}
+   938→                  style={{ minHeight: '4px' }}
+   939→                />
+   940→              </div>
+   941→              <span className="text-[9px] text-muted-foreground">
+   942→                {new Date(day.date).toLocaleDateString('es', { weekday: 'short' }).charAt(0)}
+   943→              </span>
+   944→              <span className="text-[9px] font-bold">{day.count}</span>
+   945→            </div>
+   946→          ))}
+   947→        </div>
+   948→      </div>
+   949→    </div>
+   950→  )
+   951→}
+   952→
+   953→function StatBox({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
+   954→  return (
+   955→    <div className="glass-card p-3 flex items-center gap-2">
+   956→      <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-white', color)}>
+   957→        <Icon className="h-4 w-4" />
+   958→      </div>
+   959→      <div className="min-w-0">
+   960→        <p className="text-lg font-bold leading-none">{value}</p>
+   961→        <p className="text-[10px] text-muted-foreground truncate">{label}</p>
+   962→      </div>
+   963→    </div>
+   964→  )
+   965→}
+   966→
+   967→// ===== EMPTY STATE =====
+   968→function EmptyState({ icon: Icon, title, desc }: { icon: any; title: string; desc: string }) {
+   969→  return (
+   970→    <div className="glass-card p-8 text-center">
+   971→      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-secondary">
+   972→        <Icon className="h-7 w-7 text-muted-foreground" />
+   973→      </div>
+   974→      <p className="font-semibold">{title}</p>
+   975→      <p className="text-sm text-muted-foreground mt-1">{desc}</p>
+   976→    </div>
+   977→  )
+   978→}
+   979→
+   980→// ===== SKELETON =====
+   981→function ProfileSkeleton() {
+   982→  return (
+   983→    <div className="space-y-4">
+   984→      <Skeleton className="h-9 w-24 rounded-full" />
+   985→      <Skeleton className="h-56 w-full rounded-lg" />
+   986→      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+   987→        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 rounded-md" />)}
+   988→      </div>
+   989→      <Skeleton className="h-10 w-full rounded-full" />
+   990→      <div className="space-y-3">
+   991→        <Skeleton className="h-48 w-full rounded-lg" />
+   992→        <Skeleton className="h-48 w-full rounded-lg" />
+   993→      </div>
+   994→    </div>
+   995→  )
+   996→}
+   997→
+   998→// ===== EDIT PROFILE DIALOG (completo) =====
+   999→function EditProfileDialog({ open, onClose, user, onSaved }: any) {
+  1000→  const { refresh } = useCurrentUser()
+  1001→  const [bio, setBio] = useState(user.bio ?? '')
+  1002→  const [avatar, setAvatar] = useState(user.avatar ?? '')
+  1003→  const [banner, setBanner] = useState(user.banner ?? '/uploads/default-banner.png')
+  1004→  const [fullName, setFullName] = useState(user.fullName ?? '')
+  1005→  const [location, setLocation] = useState(user.location ?? '')
+  1006→  const [website, setWebsite] = useState(user.website ?? '')
+  1007→  const [profession, setProfession] = useState(user.profession ?? '')
+  1008→  const [birthDate, setBirthDate] = useState(user.birthDate ? user.birthDate.split('T')[0] : '')
+  1009→  const [socialLinks, setSocialLinks] = useState<SocialLinks>(user.socialLinks || {})
+  1010→  const [selectedTags, setSelectedTags] = useState<string[]>(user.tags ?? [])
+  1011→  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  1012→  const [uploadingBanner, setUploadingBanner] = useState(false)
+  1013→  const [saving, setSaving] = useState(false)
+  1014→
+  1015→  function toggleTag(id: string) {
+  1016→    setSelectedTags((prev) =>
+  1017→      prev.includes(id) ? prev.filter(t => t !== id) : prev.length < 8 ? [...prev, id] : prev
+  1018→    )
+  1019→  }
+  1020→
+  1021→  function updateSocial(key: keyof SocialLinks, value: string) {
+  1022→    setSocialLinks((prev) => ({ ...prev, [key]: value || undefined }))
+  1023→  }
+  1024→
+  1025→  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') {
+  1026→    const f = e.target.files?.[0]
+  1027→    if (!f) return
+  1028→    if (type === 'avatar') setUploadingAvatar(true)
+  1029→    else setUploadingBanner(true)
+  1030→    try {
+  1031→      const res = await uploadService.upload(f, 'avatar')
+  1032→      if (type === 'avatar') setAvatar(res.url)
+  1033→      else setBanner(res.url)
+  1034→      toast.success(type === 'avatar' ? 'Foto de perfil actualizada' : 'Portada actualizada')
+  1035→    } catch (err: any) {
+  1036→      toast.error(err.message || 'Error')
+  1037→    } finally {
+  1038→      if (type === 'avatar') setUploadingAvatar(false)
+  1039→      else setUploadingBanner(false)
+  1040→      e.target.value = ''
+  1041→    }
+  1042→  }
+  1043→
+  1044→  async function handleSave() {
+  1045→    setSaving(true)
+  1046→    try {
+  1047→      await userService.updateProfile({
+  1048→        bio: bio.trim() || null,
+  1049→        avatar: avatar || null,
+  1050→        banner: banner || null,
+  1051→        fullName: fullName.trim() || null,
+  1052→        location: location.trim() || null,
+  1053→        website: website.trim() || null,
+  1054→        profession: profession.trim() || null,
+  1055→        birthDate: birthDate || null,
+  1056→        socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null,
+  1057→        tags: selectedTags,
+  1058→      })
+  1059→      await refresh()
+  1060→      toast.success('Perfil actualizado')
+  1061→      onSaved()
+  1062→    } catch (err: any) {
+  1063→      toast.error(err.message || 'Error')
+  1064→    } finally {
+  1065→      setSaving(false)
+  1066→    }
+  1067→  }
+  1068→
+  1069→  if (!open) return null
+  1070→
+  1071→  return (
+  1072→    <motion.div
+  1073→      initial={{ opacity: 0 }}
+  1074→      animate={{ opacity: 1 }}
+  1075→      exit={{ opacity: 0 }}
+  1076→      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+  1077→      onClick={onClose}
+  1078→    >
+  1079→      <motion.div
+  1080→        initial={{ scale: 0.95 }}
+  1081→        animate={{ scale: 1 }}
+  1082→        exit={{ scale: 0.95 }}
+  1083→        className="glass-strong w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scroll rounded-lg"
+  1084→        onClick={(e) => e.stopPropagation()}
+  1085→      >
+  1086→        {/* Header con preview de portada + avatar */}
+  1087→        <div className="relative">
+  1088→          {/* Banner */}
+  1089→          <div className="h-28 relative group overflow-hidden rounded-t-2xl">
+  1090→            {banner ? (
+  1091→              <img src={banner} alt="" className="absolute inset-0 w-full h-full object-cover" />
+  1092→            ) : (
+  1093→              <div className="absolute inset-0 w-full h-full banner-gradient" />
+  1094→            )}
+  1095→            <label className="absolute top-2 right-2 z-20 cursor-pointer rounded-full bg-black/50 backdrop-blur p-2 text-white hover:bg-black/70 transition">
+  1096→              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e, 'banner')} />
+  1097→              {uploadingBanner ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+  1098→            </label>
+  1099→          </div>
+  1100→          {/* Avatar */}
+  1101→          <div className="px-5 -mt-10 relative z-10 flex items-end justify-between">
+  1102→            <div className="relative">
+  1103→              <UserAvatar username={user.username} avatar={avatar} size="lg" className="ring-4 ring-background" />
+  1104→              <label className="absolute -bottom-1 -right-1 cursor-pointer flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition">
+  1105→                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e, 'avatar')} />
+  1106→                {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+  1107→              </label>
+  1108→            </div>
+  1109→          </div>
+  1110→        </div>
+  1111→
+  1112→        <div className="p-5 space-y-4">
+  1113→          <h2 className="text-lg font-bold">Editar perfil</h2>
+  1114→
+  1115→          {/* Información básica */}
+  1116→          <div className="space-y-3">
+  1117→            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Información básica</p>
+  1118→            <div className="grid grid-cols-2 gap-2">
+  1119→              <div>
+  1120→                <label className="text-xs font-medium">Nombre completo</label>
+  1121→                <input
+  1122→                  value={fullName}
+  1123→                  onChange={(e) => setFullName(e.target.value)}
+  1124→                  placeholder="Tu nombre"
+  1125→                  maxLength={100}
+  1126→                  className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+  1127→                />
+  1128→              </div>
+  1129→              <div>
+  1130→                <label className="text-xs font-medium">Profesión</label>
+  1131→                <input
+  1132→                  value={profession}
+  1133→                  onChange={(e) => setProfession(e.target.value)}
+  1134→                  placeholder="Ej: Game Designer"
+  1135→                  maxLength={100}
+  1136→                  className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+  1137→                />
+  1138→              </div>
+  1139→            </div>
+  1140→            <div className="grid grid-cols-2 gap-2">
+  1141→              <div>
+  1142→                <label className="text-xs font-medium">Ubicación</label>
+  1143→                <input
+  1144→                  value={location}
+  1145→                  onChange={(e) => setLocation(e.target.value)}
+  1146→                  placeholder="Ciudad, País"
+  1147→                  maxLength={100}
+  1148→                  className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+  1149→                />
+  1150→              </div>
+  1151→              <div>
+  1152→                <label className="text-xs font-medium">Cumpleaños</label>
+  1153→                <input
+  1154→                  type="date"
+  1155→                  value={birthDate}
+  1156→                  onChange={(e) => setBirthDate(e.target.value)}
+  1157→                  className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+  1158→                />
+  1159→              </div>
+  1160→            </div>
+  1161→            <div>
+  1162→              <label className="text-xs font-medium">Sitio web</label>
+  1163→              <input
+  1164→                value={website}
+  1165→                onChange={(e) => setWebsite(e.target.value)}
+  1166→                placeholder="https://tusitio.com"
+  1167→                maxLength={200}
+  1168→                className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+  1169→              />
+  1170→            </div>
+  1171→          </div>
+  1172→
+  1173→          {/* Biografía */}
+  1174→          <div className="space-y-1.5">
+  1175→            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Biografía</label>
+  1176→            <textarea
+  1177→              value={bio}
+  1178→              onChange={(e) => setBio(e.target.value)}
+  1179→              placeholder="Cuéntanos sobre ti, soy...&#10;&#10;...&#10;&#10;..."
+  1180→              maxLength={500}
+  1181→              rows={4}
+  1182→              className="w-full resize-none rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+  1183→            />
+  1184→            <p className="text-[11px] text-muted-foreground text-right">{bio.length}/500</p>
+  1185→          </div>
+  1186→
+  1187→          {/* Redes sociales */}
+  1188→          <div className="space-y-2">
+  1189→            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Redes sociales</label>
+  1190→            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+  1191→              {SOCIAL_PLATFORMS.map((p) => (
+  1192→                <div key={p.key} className="flex items-center gap-2">
+  1193→                  <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-white text-sm', p.color)}>
+  1194→                    {p.emoji}
+  1195→                  </span>
+  1196→                  <input
+  1197→                    value={socialLinks[p.key] || ''}
+  1198→                    onChange={(e) => updateSocial(p.key, e.target.value)}
+  1199→                    placeholder={p.label}
+  1200→                    className="flex-1 min-w-0 rounded-lg border border-input bg-transparent px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+  1201→                  />
+  1202→                </div>
+  1203→              ))}
+  1204→            </div>
+  1205→          </div>
+  1206→
+  1207→          {/* Tags */}
+  1208→          <div className="space-y-2">
+  1209→            <div className="flex items-center justify-between">
+  1210→              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">🏷️ Mis tags</label>
+  1211→              <span className="text-[11px] text-muted-foreground">{selectedTags.length}/8</span>
+  1212→            </div>
+  1213→            <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto custom-scroll p-1">
+  1214→              {PREDEFINED_TAGS.map((tag) => {
+  1215→                const active = selectedTags.includes(tag.id)
+  1216→                return (
+  1217→                  <button
+  1218→                    key={tag.id}
+  1219→                    type="button"
+  1220→                    onClick={() => toggleTag(tag.id)}
+  1221→                    className={cn(
+  1222→                      'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
+  1223→                      active
+  1224→                        ? 'border-primary bg-primary/15 text-primary'
+  1225→                        : 'border-border bg-secondary/60 text-secondary-foreground hover:border-primary/40'
+  1226→                    )}
+  1227→                  >
+  1228→                    <span>{tag.label}</span>
+  1229→                    {active && <Check className="h-3 w-3" />}
+  1230→                  </button>
+  1231→                )
+  1232→              })}
+  1233→            </div>
+  1234→          </div>
+  1235→        </div>
+  1236→
+  1237→        {/* Footer */}
+  1238→        <div className="sticky bottom-0 flex gap-2 p-4 border-t border-border/50 bg-background/80 backdrop-blur">
+  1239→          <Button variant="outline" onClick={onClose} className="rounded-full flex-1">Cancelar</Button>
+  1240→          <Button onClick={handleSave} disabled={saving} className="btn-gradient-primary rounded-sm flex-1">
+  1241→            {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</> : 'Guardar cambios'}
+  1242→          </Button>
+  1243→        </div>
+  1244→      </motion.div>
+  1245→    </motion.div>
+  1246→  )
+  1247→}
+  1248→

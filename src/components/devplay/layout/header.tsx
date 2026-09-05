@@ -28,6 +28,7 @@ import {
   LogOut,
   User as UserIcon,
   Menu,
+  Settings,
 } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
@@ -52,6 +53,7 @@ export function Header() {
     setView,
     toggleMobileSidebar,
     mobileSidebarOpen,
+    openSettings,
   } = useUIStore()
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -312,6 +314,13 @@ export function Header() {
                 >
                   <UserIcon className="h-4 w-4" />
                   Mi perfil
+                </button>
+                <button
+                  onClick={() => { openSettings(); setUserMenuOpen(false) }}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-secondary/60 transition"
+                >
+                  <Settings className="h-4 w-4" />
+                  Configuración
                 </button>
                 <div className="border-t border-border/50" />
                 <button

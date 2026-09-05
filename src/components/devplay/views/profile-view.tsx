@@ -19,6 +19,7 @@ import {
   Calendar, Sparkles, Bookmark, BarChart3, Home, Activity,
   Share2, Star, MapPin, Globe, Briefcase, Cake,
   Image as ImageIcon, Video, Info, Shield, Ban,
+  User as UserIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PREDEFINED_TAGS, SOCIAL_PLATFORMS } from '@/types/devplay'
@@ -27,6 +28,7 @@ import { ThemeSwitcher } from '@/components/devplay/layout/theme-switcher'
 import { SecurityPanel } from '@/components/devplay/views/security-panel'
 import { BlockConfirmDialog, UnblockConfirmDialog } from '@/components/devplay/modals/block-confirm-dialog'
 import { securityService } from '@/services/security-service'
+import { ShareProfileModal } from '@/components/devplay/modals/share-profile-modal'
 
 type ProfileTab = 'inicio' | 'informacion' | 'publicaciones' | 'fotos' | 'favoritos' | 'compartidos' | 'logros' | 'estadisticas' | 'seguridad'
 
@@ -40,6 +42,7 @@ export function ProfileView({ userId }: { userId: string }) {
   )
   const [showBlockDialog, setShowBlockDialog] = useState(false)
   const [showUnblockDialog, setShowUnblockDialog] = useState(false)
+  const [showShare, setShowShare] = useState(false)
 
   // Si cambia profileTab desde el store, actualizar
   useEffect(() => {
@@ -72,9 +75,7 @@ export function ProfileView({ userId }: { userId: string }) {
   }
 
   async function handleShare() {
-    const url = `${window.location.origin}/?post=${userId}`
-    await navigator.clipboard?.writeText(url)
-    toast.success('Enlace del perfil copiado')
+    setShowShare(true)
   }
 
   if (isLoading || !data) return <ProfileSkeleton />
@@ -90,13 +91,16 @@ export function ProfileView({ userId }: { userId: string }) {
     { id: 'informacion', label: 'Información', icon: Info },
     { id: 'publicaciones', label: 'Publicaciones', icon: FileText },
     { id: 'fotos', label: 'Fotos', icon: ImageIcon },
-    { id: 'favoritos', label: 'Favoritos', icon: Bookmark },
     { id: 'compartidos', label: 'Compartidos', icon: Share2 },
-    { id: 'logros', label: 'Logros', icon: Award },
-    { id: 'estadisticas', label: 'Estadísticas', icon: BarChart3 },
   ]
+  // Privacidad: favoritos, logros y estadísticas solo para el propio usuario
   if (isMe) {
-    availableTabs.push({ id: 'seguridad', label: 'Seguridad', icon: Shield })
+    availableTabs.push(
+      { id: 'favoritos', label: 'Favoritos', icon: Bookmark },
+      { id: 'logros', label: 'Logros', icon: Award },
+      { id: 'estadisticas', label: 'Estadísticas', icon: BarChart3 },
+      { id: 'seguridad', label: 'Seguridad', icon: Shield }
+    )
   }
 
   // Redes sociales del usuario
@@ -276,9 +280,6 @@ export function ProfileView({ userId }: { userId: string }) {
         </div>
       </motion.div>
 
-      {/* ===== STATS CARDS ===== */}
-      <ProfileStats userId={userId} />
-
       {/* ===== TABS ===== */}
       <div className="glass-card p-1.5 flex gap-1 overflow-x-auto custom-scroll rounded-full">
         {availableTabs.map((tab) => {
@@ -343,6 +344,13 @@ export function ProfileView({ userId }: { userId: string }) {
         />
       )}
 
+      {/* ===== MODAL COMPARTIR (múltiples opciones) ===== */}
+      <ShareProfileModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        username={user.username}
+      />
+
       {/* ===== MODAL BLOQUEAR ===== */}
       <BlockConfirmDialog
         open={showBlockDialog}
@@ -366,7 +374,7 @@ export function ProfileView({ userId }: { userId: string }) {
   )
 }
 
-// ===== STATS =====
+// ===== STATS (dentro de la pestaña Información) =====
 function ProfileStats({ userId }: { userId: string }) {
   const isMe = useCurrentUser().user?.id === userId
   const { data, isLoading } = useQuery({
@@ -384,48 +392,53 @@ function ProfileStats({ userId }: { userId: string }) {
   const stats = isMe ? data?.stats : null
   const u = profileData?.user
 
-  const cards = isMe && stats ? [
+  const rows = isMe && stats ? [
     { icon: FileText, label: 'Posts', value: stats.posts, gradient: 'from-wine-400 to-wine-500' },
-    { icon: Users, label: 'Seguidores', value: stats.followers, gradient: 'from-wine-400 to-wine-500' },
-    { icon: Download, label: 'Descargas', value: stats.totalDownloads, gradient: 'from-amber-400 to-bronze-500' },
-    { icon: Heart, label: 'Likes', value: stats.totalLikesReceived, gradient: 'from-wine-500 to-wine-700' },
-    { icon: Gamepad2, label: 'Betas', value: stats.betas, gradient: 'from-olive-400 to-sepia-500' },
-    { icon: Star, label: 'Nivel', value: stats.level, gradient: 'from-bronze-400 to-wine-500' },
+    { icon: Users, label: 'Seguidores', value: stats.followers, gradient: 'from-wine-500 to-wine-700' },
+    { icon: Users, label: 'Siguiendo', value: stats.following, gradient: 'from-olive-400 to-sepia-500' },
+    { icon: Gamepad2, label: 'Betas', value: stats.betas, gradient: 'from-amber-400 to-bronze-500' },
+    { icon: Download, label: 'Descargas', value: stats.totalDownloads, gradient: 'from-bronze-400 to-bronze-600' },
+    { icon: Heart, label: 'Likes recibidos', value: stats.totalLikesReceived, gradient: 'from-wine-400 to-sepia-500' },
   ] : u ? [
     { icon: FileText, label: 'Posts', value: u.postsCount, gradient: 'from-wine-400 to-wine-500' },
-    { icon: Users, label: 'Seguidores', value: u.followersCount, gradient: 'from-wine-400 to-wine-500' },
+    { icon: Users, label: 'Seguidores', value: u.followersCount, gradient: 'from-wine-500 to-wine-700' },
     { icon: Users, label: 'Siguiendo', value: u.followingCount, gradient: 'from-olive-400 to-sepia-500' },
-    { icon: Gamepad2, label: 'Betas', value: 0, gradient: 'from-amber-400 to-bronze-500' },
   ] : []
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 rounded-md" />)}
+      <div className="glass-card p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-12 rounded-md" />)}
+        </div>
       </div>
     )
   }
 
+  if (rows.length === 0) return null
+
   return (
-    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-      {cards.map((card, i) => {
-        const Icon = card.icon
-        return (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.05 }}
-            className="glass-card flex flex-col items-center gap-1 p-3 text-center"
-          >
-            <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm', card.gradient)}>
-              <Icon className="h-4 w-4" />
+    <div className="glass-card p-4">
+      <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5">
+        <Activity className="h-4 w-4 text-primary" />
+        Actividad en números
+      </h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {rows.map((row, i) => {
+          const Icon = row.icon
+          return (
+            <div key={row.label} className="flex items-center gap-2 rounded-md glass p-2">
+              <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm', row.gradient)}>
+                <Icon className="h-3.5 w-3.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold leading-none">{row.value}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{row.label}</p>
+              </div>
             </div>
-            <AnimatedCounter value={card.value} />
-            <div className="text-[10px] text-muted-foreground">{card.label}</div>
-          </motion.div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -528,7 +541,6 @@ function ProfileInicio({ betaPosts, normalPosts, isMe, onPostClick }: any) {
 function ProfileInformacion({ user, isMe }: { user: any; isMe: boolean }) {
   const socialLinks = user.socialLinks || {}
   const activeSocials = SOCIAL_PLATFORMS.filter(p => socialLinks[p.key])
-
   const infoItems = [
     user.fullName && { icon: UserIcon, label: 'Nombre completo', value: user.fullName },
     user.profession && { icon: Briefcase, label: 'Profesión', value: user.profession },
@@ -540,6 +552,9 @@ function ProfileInformacion({ user, isMe }: { user: any; isMe: boolean }) {
 
   return (
     <div className="space-y-4">
+      {/* Actividad en números (antes estaba en la cabecera del perfil) */}
+      <ProfileStats userId={user.id} />
+
       {/* Información personal */}
       <div className="glass-card p-4">
         <h3 className="font-bold text-sm mb-3 flex items-center gap-1.5">

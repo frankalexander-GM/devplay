@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { UserAvatar } from '@/components/devplay/shared/shared'
 import { useUIStore } from '@/lib/stores'
 import { UnblockConfirmDialog } from '@/components/devplay/modals/block-confirm-dialog'
+import { DeleteAccountModal } from '@/components/devplay/modals/delete-account-modal'
 
 export function SecurityPanel() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -446,92 +447,6 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
           <Button variant="outline" onClick={onClose} className="rounded-full flex-1">Cancelar</Button>
           <Button onClick={handleSubmit} disabled={loading} className="btn-gradient-primary rounded-sm flex-1">
             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Cambiando...</> : 'Cambiar contraseña'}
-          </Button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
-
-// ===== Modal: Eliminar cuenta =====
-function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDeleted: () => void }) {
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleDelete() {
-    if (!password || !confirm) {
-      toast.error('Completa todos los campos')
-      return
-    }
-    setLoading(true)
-    try {
-      await securityService.deleteAccount(password, confirm)
-      toast.success('Cuenta eliminada. Lamentamos verte partir ')
-      onDeleted()
-      onClose()
-      setTimeout(() => window.location.reload(), 1000)
-    } catch (err: any) {
-      toast.error(err.message || 'Error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.95 }}
-        className="glass-strong w-full max-w-md rounded-lg p-5 border-2 border-red-500/30"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-bold mb-1 flex items-center gap-2 text-red-500">
-          <AlertTriangle className="h-5 w-5" />
-          Eliminar cuenta
-        </h2>
-        <p className="text-xs text-muted-foreground mb-4">
-          Esta acción es <strong>irreversible</strong>. Se eliminarán todos tus posts, betas, comentarios, seguidores y datos personales.
-        </p>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium">Tu contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              placeholder="••••••••"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium">Escribe "ELIMINAR MI CUENTA" para confirmar</label>
-            <input
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              placeholder="ELIMINAR MI CUENTA"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 mt-5">
-          <Button variant="outline" onClick={onClose} className="rounded-full flex-1">Cancelar</Button>
-          <Button
-            onClick={handleDelete}
-            disabled={loading || confirm !== 'ELIMINAR MI CUENTA'}
-            className="rounded-full flex-1 bg-red-500 hover:bg-red-600 text-white"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-            Eliminar definitivamente
           </Button>
         </div>
       </motion.div>
