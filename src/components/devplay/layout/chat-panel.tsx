@@ -44,6 +44,16 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // ===== Antiflood: 5 segundos entre mensajes =====
+  const [cooldown, setCooldown] = useState(0)
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setInterval(() => {
+      setCooldown((s) => (s <= 1 ? 0 : s - 1))
+    }, 1000)
+    return () => clearInterval(t)
+  }, [cooldown])
+
   // Usuarios presentes en la sala (últimos participantes únicos)
   const roomUsers = useMemo(() => {
     const seen = new Map<string, { userId: string; username: string; avatar?: string | null }>()
@@ -65,8 +75,19 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
     e.preventDefault()
     if (!input.trim()) return
     if (!user || isGuest) return
+    if (cooldown > 0) {
+      toast.info(`Tranqui, espera ${cooldown}s para enviar otro mensaje`)
+      return
+    }
     sendMessage(input)
     setInput('')
+    setCooldown(5)
+  }
+
+  const handleQuickEmoji = (emoji: string) => {
+    if (!user || isGuest || cooldown > 0) return
+    sendMessage(emoji)
+    setCooldown(5)
   }
 
   const canChat = user && !isGuest
@@ -123,13 +144,19 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
       {QUICK_EMOJIS.map((emoji) => (
         <button
           key={emoji}
-          onClick={() => sendMessage(emoji)}
-          className="flex h-6 w-6 items-center justify-center rounded-sm text-sm transition hover:bg-accent hover:scale-110 active:scale-95"
-          title={`Enviar ${emoji}`}
+          onClick={() => handleQuickEmoji(emoji)}
+          disabled={cooldown > 0}
+          className="flex h-6 w-6 items-center justify-center rounded-sm text-sm transition hover:bg-accent hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
+          title={cooldown > 0 ? `Espera ${cooldown}s` : `Enviar ${emoji}`}
         >
           {emoji}
         </button>
       ))}
+      {cooldown > 0 && (
+        <span className="ml-auto label-caps !text-[8px] text-muted-foreground tabular-nums">
+          · {cooldown}s
+        </span>
+      )}
     </div>
   ) : null
 
@@ -141,12 +168,22 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Escribe un mensaje..."
+            placeholder={cooldown > 0 ? `Espera ${cooldown}s para escribir de nuevo...` : 'Escribe un mensaje...'}
             maxLength={500}
             className="rounded-sm glass h-9"
           />
-          <Button type="submit" size="icon" disabled={!input.trim()} className="btn-gradient-primary shrink-0 rounded-sm h-9 w-9">
-            <Send className="h-4 w-4" />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!input.trim() || cooldown > 0}
+            title={cooldown > 0 ? `Antiflood: espera ${cooldown}s` : 'Enviar'}
+            className="btn-gradient-primary shrink-0 rounded-sm h-9 w-9"
+          >
+            {cooldown > 0 ? (
+              <span className="text-[10px] font-bold tabular-nums">{cooldown}</span>
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </form>
       ) : (
@@ -395,7 +432,10 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
      ============================================================ */
   return (
     <>
-      <aside className="hidden lg:flex w-80 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-l border-border/50">
+      <aside
+        data-tour="chat-panel"
+        className="hidden lg:flex w-80 shrink-0 flex-col sticky top-16 h-[calc(100vh-4rem)] glass border-l border-border/50"
+      >
         {chatContent}
       </aside>
 

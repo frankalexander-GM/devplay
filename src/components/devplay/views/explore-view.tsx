@@ -17,18 +17,25 @@ import {
 import { UserAvatar } from '@/components/devplay/shared/shared'
 import { cn } from '@/lib/utils'
 
-type FeedFilter = 'foryou' | 'following' | 'all' | 'devlogs' | 'news'
+type FeedFilter = 'foryou' | 'following' | 'all' | 'trending' | 'devlogs' | 'news'
 
 export function ExploreView() {
   const qc = useQueryClient()
-  const { openAuth, openCreatePost, openCreateBeta, openCreatePoll } = useUIStore()
+  const { openAuth, openCreatePost, openCreateBeta, openCreatePoll, communityTab, communitySignal, setCommunityTab } = useUIStore()
   const { user, isGuest } = useCurrentUser()
-  const [filter, setFilter] = useState<FeedFilter>('foryou')
+  const [filter, setFilter] = useState<FeedFilter>(communityTab === 'trending' ? 'trending' : 'foryou')
+  const [prevSignal, setPrevSignal] = useState(communitySignal)
+  // Sincroniza la pestaña cuando se llega desde "Trending" del sidebar,
+  // ajustando el estado durante el render (patrón recomendado, sin effects)
+  if (communitySignal !== prevSignal) {
+    setPrevSignal(communitySignal)
+    if (communityTab === 'trending') setFilter('trending')
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['posts', filter],
     queryFn: async () => {
-      if (filter === 'all') return postService.list()
+      if (filter === 'all' || filter === 'trending') return postService.list()
       if (filter === 'devlogs') return postService.list({ type: 'BETA' })
       if (filter === 'following') return postService.list({ feed: 'following' })
       if (filter === 'news') return postService.list({ feed: 'news' })
@@ -45,7 +52,12 @@ export function ExploreView() {
   const refresh = () => qc.invalidateQueries({ queryKey: ['posts'] })
 
   const posts = data?.posts ?? []
+  const engagement = (p: (typeof posts)[number]) =>
+    p.likesCount + p.commentsCount * 2 + p.repostsCount * 3
   const sorted = [...posts].sort((a, b) => {
+    if (filter === 'trending') {
+      return engagement(b) - engagement(a)
+    }
     const aLive = a.type === 'STREAM' && a.stream?.isLive
     const bLive = b.type === 'STREAM' && b.stream?.isLive
     if (aLive && !bLive) return -1
@@ -57,6 +69,7 @@ export function ExploreView() {
 
   const filters: { id: FeedFilter; label: string }[] = [
     { id: 'foryou', label: 'Para ti' },
+    { id: 'trending', label: 'Trending' },
     { id: 'following', label: 'Siguiendo' },
     { id: 'all', label: 'Todos' },
     { id: 'devlogs', label: 'Devlogs' },
@@ -214,7 +227,11 @@ export function ExploreView() {
           return (
             <button
               key={f.id}
-              onClick={() => setFilter(f.id)}
+              onClick={() => {
+                setFilter(f.id)
+                // Al elegir manualmente, se limpia el filtro procedente del sidebar
+                if (communityTab) setCommunityTab(null)
+              }}
               className={cn(
                 'px-3 py-2 text-xs font-medium transition relative',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'

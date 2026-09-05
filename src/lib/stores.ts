@@ -14,6 +14,11 @@ interface UIState {
   setView: (v: ViewId) => void
   openProfile: (userId: string, tab?: string) => void
 
+  // Filtro de comunidad (Trending / Betas / Devs del sidebar)
+  communityTab: 'trending' | null
+  communitySignal: number
+  setCommunityTab: (t: 'trending' | null) => void
+
   // Modals
   authModalOpen: boolean
   authMode: 'login' | 'register'
@@ -48,6 +53,8 @@ interface UIState {
   // Onboarding
   onboardingDone: boolean
   setOnboardingDone: (v: boolean) => void
+  tourNonce: number
+  startTour: () => void
 
   // Preferencias del sidebar izquierdo (persistidas)
   sidebarCompact: boolean
@@ -70,6 +77,10 @@ export const useUIStore = create<UIState>()(
       profileUserId: null,
       setView: (v) => set({ currentView: v, mobileSidebarOpen: false }),
       openProfile: (userId, tab) => set({ currentView: 'profile', profileUserId: userId, profileTab: tab ?? null, mobileSidebarOpen: false }),
+
+      communityTab: null,
+      communitySignal: 0,
+      setCommunityTab: (t) => set((s) => ({ communityTab: t, communitySignal: s.communitySignal + 1 })),
 
       authModalOpen: false,
       authMode: 'login',
@@ -101,6 +112,8 @@ export const useUIStore = create<UIState>()(
 
       onboardingDone: false,
       setOnboardingDone: (v) => set({ onboardingDone: v }),
+      tourNonce: 0,
+      startTour: () => set((s) => ({ tourNonce: s.tourNonce + 1 })),
 
       // Preferencias del sidebar izquierdo
       sidebarCompact: false,

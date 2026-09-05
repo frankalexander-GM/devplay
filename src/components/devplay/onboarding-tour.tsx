@@ -6,51 +6,64 @@ import 'driver.js/dist/driver.css'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
 
+/**
+ * Tour guiado de DevPlay — actualizado al diseño "Terracota & Crema".
+ * - Arranca solo la primera vez (onboardingDone persistido).
+ * - Se puede relanzar al instante desde el sidebar (Ayuda → Tour guiado)
+ *   sin recargar la página, gracias a tourNonce.
+ */
 export function OnboardingTour() {
-  const { onboardingDone, setOnboardingDone } = useUIStore()
+  const { onboardingDone, setOnboardingDone, tourNonce } = useUIStore()
   const { user } = useCurrentUser()
   const driverRef = useRef<Driver | null>(null)
   const startedRef = useRef(false)
 
   useEffect(() => {
-    if (onboardingDone || startedRef.current) return
     if (!user) return
 
-    const startTour = () => {
-      if (startedRef.current) return
-      startedRef.current = true
-
+    const buildAndDrive = () => {
       const header = document.getElementById('devplay-header')
       const sidebar = document.querySelector('aside nav') as HTMLElement | null
       const createBtn = document.querySelector('[data-tour="create"]') as HTMLElement | null
+      const chatPanel = document.querySelector('[data-tour="chat-panel"]') as HTMLElement | null
 
       const steps = [
-        {
-          element: header ?? '#devplay-header',
+        header && {
+          element: header,
           popover: {
-            title: 'Bienvenido a DevPlay',
+            title: '¡Bienvenido a DevPlay! 🎮',
             description:
-              'Aqui puedes buscar juegos, devs y betas. Tambien puedes cambiar entre modo claro y oscuro con el boton de sol/luna.',
+              'Tu plaza retro para devs indie. Aquí puedes buscar juegos, devs y betas, entrar a tu cuenta y cambiar entre modo claro y oscuro (sol/luna).',
             side: 'bottom' as const,
             align: 'start' as const,
           },
         },
-        {
-          element: sidebar ?? 'aside',
+        sidebar && {
+          element: sidebar,
           popover: {
-            title: 'Navegacion',
+            title: 'Todo el universo DevPlay',
             description:
-              'Explora el Inicio, Descubre nuevos devs, mira Betas de juegos, Videos de la comunidad, chatea en el Chat Mundial, visita la Tienda con DevCoins o conoce mas en Acerca de.',
+              'Navega con el menú principal: Inicio, Descubrir, Betas, Videos, Chat Mundial y Tienda (con DevCoins). En "Comunidad" tienes atajos a Trending, Betas y Devs, y con el botón ⋮ puedes personalizar este sidebar.',
             side: 'right' as const,
             align: 'start' as const,
           },
         },
-        {
-          element: createBtn ?? '#devplay-header',
+        chatPanel && {
+          element: chatPanel,
           popover: {
-            title: 'Crear contenido',
+            title: 'Chat Mundial en vivo',
             description:
-              'Sube publicaciones, betas de juegos, videos o crea encuestas. ¡Comparte tus proyectos con la comunidad!',
+              'La plaza pública: chatea con devs de todo el mundo en tiempo real. Con el botón ⋮ puedes limpiar la conversación, eliminar tus mensajes o reportar problemas. Ojo: hay 5 segundos de espera entre mensajes para evitar spam.',
+            side: 'left' as const,
+            align: 'start' as const,
+          },
+        },
+        createBtn && {
+          element: createBtn,
+          popover: {
+            title: 'Crea y comparte',
+            description:
+              'Publica devlogs con imágenes y videos, sube tus betas para que las prueben, lanza encuestas o anuncia tus streams. ¡La comunidad quiere ver lo que haces!',
             side: 'bottom' as const,
             align: 'end' as const,
           },
@@ -58,25 +71,29 @@ export function OnboardingTour() {
         {
           element: 'body',
           popover: {
-            title: 'Consejo',
+            title: 'Un consejo antes de empezar',
             description:
-              'Usa el boton de sol/luna arriba a la derecha para cambiar entre modo claro y oscuro. ¡Disfruta el nuevo diseno violeta!',
+              'Da feedback con cariño, celebra los logros de otros devs y cuéntanos tu devlog de la semana. Bienvenido a la plaza ☕',
             side: 'top' as const,
             align: 'center' as const,
           },
         },
-      ]
+      ].filter(Boolean) as {
+        element: string | HTMLElement
+        popover: { title: string; description: string; side: 'top' | 'bottom' | 'left' | 'right'; align: string }
+      }[]
 
       const drv = driver({
         showProgress: true,
         allowClose: true,
         progressText: '{{current}} de {{total}}',
         nextBtnText: 'Siguiente',
-        prevBtnText: 'Atras',
-        doneBtnText: 'Entendido',
+        prevBtnText: 'Atrás',
+        doneBtnText: '¡A jugar!',
         steps,
         onDestroyed: () => {
           setOnboardingDone(true)
+          driverRef.current = null
         },
       })
 
@@ -84,11 +101,18 @@ export function OnboardingTour() {
       drv.drive()
     }
 
-    const timer = setTimeout(startTour, 1000)
-    return () => {
-      clearTimeout(timer)
+    // Modo manual: tourNonce > 0 → lanzar al instante (botón "Tour guiado")
+    if (tourNonce > 0) {
+      buildAndDrive()
+      return
     }
-  }, [onboardingDone, user, setOnboardingDone])
+
+    // Modo automático: solo la primera vez
+    if (onboardingDone || startedRef.current) return
+    startedRef.current = true
+    const timer = setTimeout(buildAndDrive, 1200)
+    return () => clearTimeout(timer)
+  }, [onboardingDone, user, setOnboardingDone, tourNonce])
 
   return null
 }

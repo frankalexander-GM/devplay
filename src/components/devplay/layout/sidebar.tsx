@@ -79,6 +79,8 @@ export function Sidebar() {
     closeMobileSidebar,
     onboardingDone,
     setOnboardingDone,
+    setCommunityTab,
+    startTour,
   } = useUIStore()
   const { user, isAuthed, isGuest } = useCurrentUser()
 
@@ -88,10 +90,24 @@ export function Sidebar() {
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
 
-  // Al hacer clic en un filtro de comunidad, vamos a explore y mostramos toast
+  // Filtros de comunidad con destino real:
+  // - trending → feed de Inicio con pestaña "Trending" (orden por interacciones)
+  // - betas    → vista Betas (centro de betas)
+  // - devs     → vista Descubrir ( devs a seguir + follow )
   function handleCommunityClick(id: string) {
-    setActiveFilter(id)
-    setView('explore')
+    if (id === 'trending') {
+      setCommunityTab('trending')
+      setView('explore')
+    } else if (id === 'betas') {
+      setActiveFilter(null)
+      setView('betas')
+    } else if (id === 'devs') {
+      setActiveFilter(null)
+      setView('discover')
+    } else {
+      setActiveFilter(id)
+      setView('explore')
+    }
   }
 
   const sidebarContent = (
@@ -196,11 +212,7 @@ export function Sidebar() {
               label="Tour guiado"
               gradient="from-wine-400 to-bronze-500"
               compact={sidebarCompact}
-              onClick={() => {
-                setOnboardingDone(false)
-                toast.success('Recargando para mostrar el tour...')
-                setTimeout(() => window.location.reload(), 800)
-              }}
+              onClick={() => startTour()}
             />
             <CreateButton
               icon={Info}
@@ -247,17 +259,6 @@ export function Sidebar() {
           </button>
         </div>
       )}
-
-      {/* Footer — sello de la gaceta */}
-      <div className="border-t border-border/50 px-4 py-4 text-center">
-        <div className="rule-ornate opacity-50 mb-2.5">
-          <span className="text-[8px]">◆</span>
-        </div>
-        <p className="label-caps !text-[9px] mb-1">Gaceta DevPlay</p>
-        <p className="text-[10px] text-muted-foreground">
-          Est. 2025 · Hecho con 💗
-        </p>
-      </div>
     </div>
   )
 
@@ -321,8 +322,19 @@ function MobileDrawer({
   }
 
   function handleCommunity(id: string) {
-    setActiveFilter(id)
-    setView('explore')
+    if (id === 'trending') {
+      useUIStore.getState().setCommunityTab('trending')
+      setView('explore')
+    } else if (id === 'betas') {
+      setActiveFilter(null)
+      setView('betas')
+    } else if (id === 'devs') {
+      setActiveFilter(null)
+      setView('discover')
+    } else {
+      setActiveFilter(id)
+      setView('explore')
+    }
     onClose()
   }
 
@@ -495,9 +507,8 @@ function MobileDrawer({
                 <div className="space-y-1">
                   <button
                     onClick={() => {
-                      setOnboardingDone(false)
-                      toast.success('Recargando para mostrar el tour...')
-                      setTimeout(() => window.location.reload(), 800)
+                      onClose()
+                      useUIStore.getState().startTour()
                     }}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-secondary/60 transition"
                   >
