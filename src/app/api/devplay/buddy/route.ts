@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import ZAI from 'z-ai-web-dev-sdk'
+import { chatComplete } from '@/lib/ai'
 
 /**
  * POST /api/devplay/buddy
@@ -147,16 +147,11 @@ export async function POST(req: NextRequest) {
     .slice(-10)
 
   try {
-    const zai = await ZAI.create()
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: SYSTEM_PROMPT },
-        ...history.map((m) => ({ role: m.role, content: m.content.slice(0, 1000) })),
-      ],
-      thinking: { type: 'disabled' },
-    })
+    const replyRaw = await chatComplete([
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...history.map((m) => ({ role: m.role, content: m.content.slice(0, 1000) })),
+    ])
 
-    const replyRaw = completion.choices[0]?.message?.content?.trim()
     if (!replyRaw) {
       return NextResponse.json({ error: 'Pixel se quedó sin pilas, inténtalo otra vez 🤖' }, { status: 502 })
     }
