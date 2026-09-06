@@ -1,7 +1,8 @@
-// DevPlay - Prisma Schema · VERSIÓN SUPABASE (PostgreSQL) 🐘
-// Actívalo con:  bash scripts/use-supabase.sh
-// Vuelve a SQLite con:  bash scripts/use-sqlite.sh
-// DATABASE_URL debe apuntar al pooler de Supabase (puerto 6543).
+// DevPlay - Prisma Schema
+// Compatible con SQLite (desarrollo) y PostgreSQL (producción)
+// Para cambiar a PostgreSQL: solo cambia DATABASE_URL en .env
+//   SQLite:      DATABASE_URL=file:/ruta/a/db.sqlite
+//   PostgreSQL:  DATABASE_URL=postgresql://user:pass@localhost:5432/devplay
 //
 // Note: SQLite no soporta enums nativos, usamos String con constantes en app.
 // Note: No usamos tipos primitivos list (mediaUrls se guarda como JSON string).
@@ -11,9 +12,9 @@ generator client {
 }
 
 datasource db {
-  // SCHEMA PARA SUPABASE (PostgreSQL) — se activa con: bash scripts/use-supabase.sh
-  // Vuelve a SQLite con: bash scripts/use-sqlite.sh
-  provider = "postgresql"
+  // Detecta automáticamente el provider según el DATABASE_URL
+  // Si empieza con "file:" usa SQLite, si empieza con "postgresql:" usa PostgreSQL
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 

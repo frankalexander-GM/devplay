@@ -67,6 +67,18 @@ function toPrismaDelegate(table) {
   return db[name]
 }
 
+// Campos Boolean por modelo (DMMF) — SQLite guarda 0/1, PostgreSQL quiere true/false
+const BOOLEAN_FIELDS = {}
+for (const model of (await import('@prisma/client')).Prisma.dmmf.datamodel.models) {
+  BOOLEAN_FIELDS[model.name] = model.fields.filter(f => f.type === 'Boolean').map(f => f.name)
+}
+
+// Campos DateTime por modelo (por si el DATE_HINT por nombre se queda corto)
+const DATETIME_FIELDS = {}
+for (const model of (await import('@prisma/client')).Prisma.dmmf.datamodel.models) {
+  DATETIME_FIELDS[model.name] = model.fields.filter(f => f.type === 'DateTime').map(f => f.name)
+}
+
 let totalRows = 0
 for (const table of TABLES) {
   let rows
@@ -81,11 +93,15 @@ for (const table of TABLES) {
     continue
   }
 
+  const bools = BOOLEAN_FIELDS[table] || []
+  const dates = DATETIME_FIELDS[table] || []
+
   const data = rows.map((row) => {
     const out = {}
     for (const [k, v] of Object.entries(row)) {
       if (v === null) { out[k] = null; continue }
-      if (typeof v === 'string' && DATE_HINT.test(k)) {
+      if (bools.includes(k)) { out[k] = v === 1 || v === '1' || v === true; continue }
+      if (dates.includes(k) || (typeof v === 'string' && DATE_HINT.test(k))) {
         const d = new Date(v)
         out[k] = isNaN(d.getTime()) ? v : d
       } else {
@@ -101,7 +117,8 @@ for (const table of TABLES) {
     totalRows += res.count
     console.log(`✅ ${table}: ${res.count}/${rows.length} filas copiadas`)
   } catch (e) {
-    console.error(`❌ ${table}: ${e.message?.slice(0, 200)}`)
+    const msg = (e.message || String(e)).replace(/\s+/g, ' ').slice(0, 260)
+    console.error(`❌ ${table}: ${msg}`)
   }
 }
 
