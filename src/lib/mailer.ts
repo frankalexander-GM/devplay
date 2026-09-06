@@ -36,6 +36,11 @@ function getTransport(): ReturnType<typeof nodemailer.createTransport> {
       port: SMTP_PORT,
       secure: SMTP_PORT === 465, // 465 = SSL implícito; 587 usa STARTTLS
       auth: { user: SMTP_USER!, pass: SMTP_PASS! },
+      // Gmail conecta en <1s; con estos topes, si el correo no responde
+      // la web no se queda colgada esperando (máx ~10s y sigue).
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
     })
   }
   return transporter
