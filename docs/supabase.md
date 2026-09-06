@@ -96,3 +96,37 @@ bienvenida** salen de verdad al correo (ver `src/lib/mailer.ts`).
 Para crecer MÁS allá de ~5k conectados simultáneos, el siguiente paso sería
 `@socket.io/redis-adapter` con varias instancias — con 1k estás sobrado con
 una sola instancia.
+
+---
+
+## ⚠️ La pausa del plan gratuito (importante)
+
+En el plan **gratuito** de Supabase, el proyecto se **pausa tras 7 días seguidos
+sin actividad** (no es cada día — son 7 días sin que nadie toque la base de datos).
+
+Qué significa eso:
+
+- **No se borra nada**: el proyecto se "duerme". Desde el panel (dashboard) lo
+  restauras con un clic y en unos minutos vuelve todo (Supabase permite
+  restaurar hasta ~1 año después de la pausa).
+- Mientras esté pausada, la web no puede leer ni escribir (se vería caída).
+- **Toda actividad resetea el contador**: cada visita a DevPlay que cargue el
+  feed, un login, un mensaje del chat… con usuarios reales de vez en cuando,
+  nunca se pausa.
+
+### El antídoto: latido automático 💓
+
+DevPlay ya trae un endpoint de salud: **`/api/health`** (responde en milisegundos
+y hace una consulta mínima a la base de datos).
+
+Configura UN monitor gratuito para que lo visite solo:
+
+1. Crea cuenta gratis en [cron-job.org](https://cron-job.org) (o UptimeRobot)
+2. Crea un "cron job" con esta URL: `https://tudominio.com/api/health`
+3. Frecuencia: **cada 2 o 3 días** (sobrado dentro de los 7 días)
+
+Con eso la base de datos nunca duerme y, de regalo, el monitor te avisa si tu
+web algún día deja de responder (devuelve error si la BD está caída).
+
+> Cuando la comunidad crezca y quieras cero preocupaciones: el plan Pro
+> ($25/mes) nunca pausa proyectos e incluye respaldos diarios.
