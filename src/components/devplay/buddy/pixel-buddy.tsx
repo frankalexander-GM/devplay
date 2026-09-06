@@ -57,9 +57,9 @@ function timeGreeting(): string {
   return '¿De noche? Yo también brillo más en la oscuridad 🌙'
 }
 
-// Altura del suelo según dispositivo: en móvil Pixel vive MÁS ARRIBA para que
-// las teclas de navegación / teclado del celular no lo tapen 📱⬆️
-const FLOOR_Y_MOBILE = 88
+// Altura del suelo según dispositivo: bajo en ambos (36px deja aire para la
+// sombra y la barrita de gestos del celular sin que parezca que flota) 📱🖥️
+const FLOOR_Y_MOBILE = 36 // suelo bajo también en móvil (pedido del dueño: flotaba muy alto)
 const FLOOR_Y_DESKTOP = 12
 
 export function PixelBuddy() {
@@ -163,15 +163,21 @@ export function PixelBuddy() {
     }
   }, [])
 
-  // Mantener dentro de la pantalla al redimensionar
+  // Mantener dentro de la pantalla al redimensionar + ajustar el suelo si
+  // cambia el modo (ventana que cruza 1024px, rotar el celular, etc.)
+  const lastFloorRef = useRef(floorY)
   useEffect(() => {
     if (!mounted) return
     setPos((p) => {
       const { maxX } = limits()
-      if (p.x > maxX) return { ...p, x: maxX }
+      const floorChanged = lastFloorRef.current !== floorY
+      lastFloorRef.current = floorY
+      const x = p.x > maxX ? maxX : p.x
+      if (floorChanged && p.y !== floorY) return { x, y: floorY }
+      if (x !== p.x) return { ...p, x }
       return p
     })
-  }, [vp.w, mascotSize, mounted, limits])
+  }, [vp.w, mascotSize, mounted, limits, floorY])
 
   const savePos = useCallback((p: { x: number; y: number }) => {
     try { localStorage.setItem('pixel-pos', JSON.stringify(p)) } catch {}
