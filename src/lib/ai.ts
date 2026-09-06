@@ -82,18 +82,47 @@ async function sdkComplete(messages: AiMessage[]): Promise<string> {
 /* ---------- API pública del módulo ---------- */
 
 /**
+ * Interruptor térmico 🔌: si la clave propia falla varias seguidas
+ * (p. ej. servidor sin salida a internet o clave inválida), se desactiva
+ * un rato para no frenar cada respuesta, y Pixel sigue con el SDK del entorno.
+ */
+let ownKeyFailures = 0
+let ownKeyDisabledUntil = 0
+const OWN_KEY_MAX_FAILURES = 2
+const OWN_KEY_COOLDOWN_MS = 10 * 60 * 1000
+
+/**
  * Pide una respuesta al cerebro y devuelve el texto.
- * Lanza Error si falla — el llamador decide cómo responder al usuario.
+ * Prioridad: clave propia (ZAI_API_KEY) → SDK del entorno.
+ * Lanza Error si ambos fallan — el llamador decide cómo responder.
  */
 export async function chatComplete(
   messages: AiMessage[],
   opts: { temperature?: number; maxTokens?: number; timeoutMs?: number } = {}
 ): Promise<string> {
   const { timeoutMs = 30_000 } = opts
-  const signal = AbortSignal.timeout(timeoutMs)
 
-  if (ENV_KEY) {
-    return ownKeyComplete(messages, { ...opts, signal })
+  if (ENV_KEY && Date.now() > ownKeyDisabledUntil) {
+    try {
+      const text = await ownKeyComplete(messages, {
+        ...opts,
+        // La clave propia usa un presupuesto más corto para no frenar el fallback
+        signal: AbortSignal.timeout(Math.min(timeoutMs, 15_000)),
+      })
+      ownKeyFailures = 0
+      return text
+    } catch (err) {
+      ownKeyFailures++
+      const msg = err instanceof Error ? err.message : String(err)
+      console.warn(`[ai] clave propia falló (${ownKeyFailures}): ${msg.slice(0, 180)}`)
+      if (ownKeyFailures >= OWN_KEY_MAX_FAILURES) {
+        ownKeyDisabledUntil = Date.now() + OWN_KEY_COOLDOWN_MS
+        ownKeyFailures = 0
+        console.warn('[ai] desactivo la clave propia 10 min y sigo con la conexión del entorno')
+      }
+      // cae al SDK ↓
+    }
   }
+
   return sdkComplete(messages)
 }
