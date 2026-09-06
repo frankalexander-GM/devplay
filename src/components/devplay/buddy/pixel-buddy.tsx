@@ -336,7 +336,9 @@ export function PixelBuddy() {
       setTimeout(() => setMood('idle'), 2400)
       return
     }
-    setFallDur(Math.min(Math.max(Math.sqrt(h / 2400), 0.16), 0.75))
+    // Gravedad suavecita (pedido del dueño: caía muy rápido) 🪂
+    // √(h/1100) ≈ 1.5x más lento que antes; tope 1.25s para caídas largas
+    setFallDur(Math.min(Math.max(Math.sqrt(h / 1100), 0.3), 1.25))
     setMood('shocked')
     setFalling(true)
     setPos({ x, y: floorY })
