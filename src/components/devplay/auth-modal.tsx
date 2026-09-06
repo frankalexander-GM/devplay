@@ -33,6 +33,10 @@ export function AuthModal() {
   const [loading, setLoading] = useState(false)
   const [guestLoading, setGuestLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  // Botón de Google SOLO cuando las llaves OAuth estén configuradas en el
+  // servidor real (NEXT_PUBLIC_GOOGLE_ENABLED=1). Mientras tanto, oculto para
+  // no mostrar un botón roto.
+  const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === '1'
   const [errors, setErrors] = useState<FieldError[]>([])
   const [showForgot, setShowForgot] = useState(false)
 
@@ -489,32 +493,34 @@ export function AuthModal() {
             )}
           </AnimatePresence>
 
-          {/* ===== Divider ===== */}
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border/50" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="glass-strong px-3 text-muted-foreground rounded-sm label-caps">o continúa con</span>
-            </div>
-          </div>
-
-          {/* ===== Social login ===== */}
-          <div>
-            <SocialButton
-              provider="google"
-              loading={googleLoading}
-              onClick={async () => {
-                setGoogleLoading(true)
-                try {
-                  await signIn('google', { callbackUrl: '/' })
-                } catch {
-                  toast.error('Error al conectar con Google')
-                  setGoogleLoading(false)
-                }
-              }}
-            />
-          </div>
+          {/* ===== Divider + Social login (solo con OAuth configurado) ===== */}
+          {googleEnabled && (
+            <>
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/50" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="glass-strong px-3 text-muted-foreground rounded-sm label-caps">o continúa con</span>
+                </div>
+              </div>
+              <div>
+                <SocialButton
+                  provider="google"
+                  loading={googleLoading}
+                  onClick={async () => {
+                    setGoogleLoading(true)
+                    try {
+                      await signIn('google', { callbackUrl: '/' })
+                    } catch {
+                      toast.error('Error al conectar con Google')
+                      setGoogleLoading(false)
+                    }
+                  }}
+                />
+              </div>
+            </>
+          )}
 
           {/* ===== Guest ===== */}
           <Button
