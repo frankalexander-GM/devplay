@@ -34,7 +34,7 @@ export function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void
       setEmail(res.email)
       setDevCode(res.devCode ?? null)
       setStep(2)
-      toast.success('Código enviado a tu correo')
+      toast.success(res.devCode ? 'Modo demo: tu código está aquí abajo 👇' : 'Código enviado a tu correo')
     } catch (err: any) {
       toast.error(err.message || 'Error')
     } finally {
