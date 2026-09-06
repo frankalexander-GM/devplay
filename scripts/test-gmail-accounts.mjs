@@ -11,6 +11,7 @@ const pass = env.match(/^SMTP_PASS=(.+)$/m)?.[1]?.trim()
 if (!pass) { console.error('no hay SMTP_PASS en .env'); process.exit(1) }
 
 const candidates = [
+  'frankalexander064@gmail.com',
   'frankaguilar2837@gmail.com',
   'frankqq@gmail.com',
   'frankalexander0646@gmail.com',
