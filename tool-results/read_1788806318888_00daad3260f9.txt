@@ -1,0 +1,694 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect } from 'react'
+     4→import { signIn } from 'next-auth/react'
+     5→import { motion, AnimatePresence } from 'framer-motion'
+     6→import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+     7→import { Button } from '@/components/ui/button'
+     8→import { Input } from '@/components/ui/input'
+     9→import { Label } from '@/components/ui/label'
+    10→import { Checkbox } from '@/components/ui/checkbox'
+    11→import { useUIStore } from '@/lib/stores'
+    12→import { useCurrentUser } from '@/hooks/use-current-user'
+    13→import { authService, userService } from '@/services/devplay-service'
+    14→import { toast } from 'sonner'
+    15→import {
+    16→  Eye, EyeOff, Loader2, Mail, Lock, AtSign, Shield,
+    17→  Check, AlertCircle, Users, ArrowRight, ArrowBigUp,
+    18→} from 'lucide-react'
+    19→import { cn } from '@/lib/utils'
+    20→import { ForgotPasswordModal } from '@/components/devplay/forgot-password-modal'
+    21→
+    22→type FieldError = { field: string; message: string }
+    23→
+    24→export function AuthModal() {
+    25→  const { authModalOpen, authMode, closeAuth, setView } = useUIStore()
+    26→  const { refreshAfterLogin, loginAsGuest } = useCurrentUser()
+    27→  const [activeTab, setActiveTab] = useState<'login' | 'register'>(authMode)
+    28→
+    29→  useEffect(() => {
+    30→    if (authModalOpen) setActiveTab(authMode)
+    31→  }, [authModalOpen, authMode])
+    32→
+    33→  const [loading, setLoading] = useState(false)
+    34→  const [guestLoading, setGuestLoading] = useState(false)
+    35→  const [errors, setErrors] = useState<FieldError[]>([])
+    36→  const [showForgot, setShowForgot] = useState(false)
+    37→
+    38→  // login state
+    39→  const [loginEmail, setLoginEmail] = useState('')
+    40→  const [loginPassword, setLoginPassword] = useState('')
+    41→  const [showLoginPass, setShowLoginPass] = useState(false)
+    42→  const [rememberMe, setRememberMe] = useState(true)
+    43→  const [capsLockOn, setCapsLockOn] = useState(false)
+    44→
+    45→  // Paso 2 del login: código de acceso enviado por correo 🔐
+    46→  const [codeStep, setCodeStep] = useState(false)
+    47→  const [loginCode, setLoginCode] = useState('')
+    48→  const [sentTo, setSentTo] = useState('')
+    49→  const [resendLoading, setResendLoading] = useState(false)
+    50→
+    51→  // register state
+    52→  const [regEmail, setRegEmail] = useState('')
+    53→  const [regUsername, setRegUsername] = useState('')
+    54→  const [regPassword, setRegPassword] = useState('')
+    55→  const [showRegPass, setShowRegPass] = useState(false)
+    56→  const [agreeTerms, setAgreeTerms] = useState(false)
+    57→  const [usernameTaken, setUsernameTaken] = useState(false)
+    58→  const [checkingUsername, setCheckingUsername] = useState(false)
+    59→
+    60→  // ===== Validaciones en tiempo real =====
+    61→  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail || regEmail)
+    62→  const usernameValid = /^[a-zA-Z0-9_]{3,20}$/.test(regUsername)
+    63→  const usernameFree = usernameValid && !checkingUsername && !usernameTaken // disponible de verdad
+    64→  const passwordStrength = getPasswordStrength(regPassword)
+    65→
+    66→  // ===== Disponibilidad real del nombre de usuario (con espera) =====
+    67→  useEffect(() => {
+    68→    setUsernameTaken(false)
+    69→    if (!usernameValid) {
+    70→      setCheckingUsername(false)
+    71→      return
+    72→    }
+    73→    setCheckingUsername(true)
+    74→    const t = setTimeout(async () => {
+    75→      try {
+    76→        const res = await userService.getByUsername(regUsername)
+    77→        setUsernameTaken(!!res?.user)
+    78→      } catch {
+    79→        setUsernameTaken(false)
+    80→      } finally {
+    81→        setCheckingUsername(false)
+    82→      }
+    83→    }, 500)
+    84→    return () => clearTimeout(t)
+    85→  }, [regUsername, usernameValid])
+    86→
+    87→  // Sugerencia amable: proponer usuario a partir del correo
+    88→  function suggestUsername() {
+    89→    if (!regUsername && regEmail.includes('@')) {
+    90→      const base = regEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 16)
+    91→      if (base.length >= 3) setRegUsername(base)
+    92→    }
+    93→  }
+    94→
+    95→  // (validaciones definidas arriba)
+    96→
+    97→  function getPasswordStrength(pwd: string): { score: number; label: string; color: string } {
+    98→    let score = 0
+    99→    if (pwd.length >= 6) score++
+   100→    if (pwd.length >= 10) score++
+   101→    if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++
+   102→    if (/[0-9]/.test(pwd)) score++
+   103→    if (/[^A-Za-z0-9]/.test(pwd)) score++
+   104→    const labels = ['Muy débil', 'Débil', 'Regular', 'Buena', 'Fuerte', 'Muy fuerte']
+   105→    const colors = ['bg-red-500', 'bg-bronze-500', 'bg-amber-500', 'bg-lime-500', 'bg-olive-500', 'bg-olive-600']
+   106→    return { score, label: labels[score] || 'Muy débil', color: colors[score] || 'bg-red-500' }
+   107→  }
+   108→
+   109→  function getFieldError(field: string): string | undefined {
+   110→    return errors.find(e => e.field === field)?.message
+   111→  }
+   112→
+   113→  function clearFieldError(field: string) {
+   114→    setErrors(prev => prev.filter(e => e.field !== field))
+   115→  }
+   116→
+   117→  function detectCapsLock(e: React.KeyboardEvent) {
+   118→    setCapsLockOn(!!e.getModifierState('CapsLock'))
+   119→  }
+   120→
+   121→  async function handleLogin(e: React.FormEvent) {
+   122→    e.preventDefault()
+   123→    const newErrors: FieldError[] = []
+   124→    if (!emailValid) newErrors.push({ field: 'loginEmail', message: 'Email inválido' })
+   125→    if (loginPassword.length < 1) newErrors.push({ field: 'loginPassword', message: 'Contraseña requerida' })
+   126→    if (newErrors.length) { setErrors(newErrors); return }
+   127→
+   128→    setLoading(true)
+   129→    setErrors([])
+   130→    try {
+   131→      // Paso 1: validar credenciales y enviar código al correo 🔐
+   132→      const res = await fetch('/api/devplay/auth/login-challenge', {
+   133→        method: 'POST',
+   134→        headers: { 'Content-Type': 'application/json' },
+   135→        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+   136→      })
+   137→      const data = await res.json().catch(() => ({}))
+   138→      if (!res.ok) {
+   139→        setErrors([{ field: 'loginPassword', message: data.error || 'Email o contraseña incorrectos' }])
+   140→        return
+   141→      }
+   142→      setSentTo(data.sentTo || 'tu correo')
+   143→      setCodeStep(true)
+   144→      if (data.demoCode) {
+   145→        toast.info(`Modo demo (sin correo): tu código es ${data.demoCode}`)
+   146→      } else {
+   147→        toast.success(`Código enviado a ${data.sentTo} 📬`)
+   148→      }
+   149→    } catch {
+   150→      setErrors([{ field: 'loginEmail', message: 'Error de conexión. Intenta de nuevo.' }])
+   151→    } finally {
+   152→      setLoading(false)
+   153→    }
+   154→  }
+   155→
+   156→  async function handleVerifyCode(e: React.FormEvent) {
+   157→    e.preventDefault()
+   158→    if (loginCode.replace(/\D/g, '').length !== 6) {
+   159→      setErrors([{ field: 'loginCode', message: 'Escribe los 6 dígitos del código' }])
+   160→      return
+   161→    }
+   162→    setLoading(true)
+   163→    setErrors([])
+   164→    try {
+   165→      const res = await signIn('credentials', {
+   166→        email: loginEmail,
+   167→        code: loginCode.replace(/\D/g, ''),
+   168→        redirect: false,
+   169→      })
+   170→      if (res?.error) {
+   171→        setErrors([{ field: 'loginCode', message: 'Código incorrecto o expirado. Revisa tu correo.' }])
+   172→        return
+   173→      }
+   174→      toast.success('¡Bienvenido de vuelta! 🔓')
+   175→      setLoginEmail(''); setLoginPassword(''); setLoginCode(''); setCodeStep(false)
+   176→      await refreshAfterLogin()
+   177→      closeAuth()
+   178→    } catch {
+   179→      setErrors([{ field: 'loginCode', message: 'Error de conexión. Intenta de nuevo.' }])
+   180→    } finally {
+   181→      setLoading(false)
+   182→    }
+   183→  }
+   184→
+   185→  async function handleResendCode() {
+   186→    setResendLoading(true)
+   187→    try {
+   188→      const res = await fetch('/api/devplay/auth/login-challenge', {
+   189→        method: 'POST',
+   190→        headers: { 'Content-Type': 'application/json' },
+   191→        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+   192→      })
+   193→      const data = await res.json().catch(() => ({}))
+   194→      if (!res.ok) {
+   195→        toast.error(data.error || 'No se pudo reenviar el código')
+   196→        return
+   197→      }
+   198→      setSentTo(data.sentTo || sentTo)
+   199→      setLoginCode('')
+   200→      setErrors([])
+   201→      if (data.demoCode) toast.info(`Modo demo: tu nuevo código es ${data.demoCode}`)
+   202→      else toast.success('Código reenviado 📬')
+   203→    } catch {
+   204→      toast.error('Error de conexión')
+   205→    } finally {
+   206→      setResendLoading(false)
+   207→    }
+   208→  }
+   209→
+   210→  function backToPassword() {
+   211→    setCodeStep(false)
+   212→    setLoginCode('')
+   213→    setErrors([])
+   214→  }
+   215→
+   216→  async function handleRegister(e: React.FormEvent) {
+   217→    e.preventDefault()
+   218→    const newErrors: FieldError[] = []
+   219→    if (!emailValid) newErrors.push({ field: 'regEmail', message: 'Email inválido' })
+   220→    if (!usernameValid) newErrors.push({ field: 'regUsername', message: '3-20 caracteres: letras, números y _' })
+   221→    else if (usernameTaken) newErrors.push({ field: 'regUsername', message: 'Ese nombre ya está en uso, prueba otro' })
+   222→    if (regPassword.length < 6) newErrors.push({ field: 'regPassword', message: 'Mínimo 6 caracteres' })
+   223→    if (!agreeTerms) newErrors.push({ field: 'terms', message: 'Debes aceptar los términos' })
+   224→    if (newErrors.length) { setErrors(newErrors); return }
+   225→
+   226→    setLoading(true)
+   227→    setErrors([])
+   228→    try {
+   229→      await authService.register({ email: regEmail, username: regUsername, password: regPassword })
+   230→      await signIn('credentials', { email: regEmail, password: regPassword, redirect: false })
+   231→      toast.success('¡Cuenta creada! Bienvenido a DevPlay')
+   232→      setRegEmail(''); setRegUsername(''); setRegPassword(''); setAgreeTerms(false)
+   233→      await refreshAfterLogin()
+   234→      closeAuth()
+   235→    } catch (err: any) {
+   236→      setErrors([{ field: 'regEmail', message: err.message || 'Error al registrarse' }])
+   237→    } finally {
+   238→      setLoading(false)
+   239→    }
+   240→  }
+   241→
+   242→  async function handleGuest() {
+   243→    setGuestLoading(true)
+   244→    try {
+   245→      await loginAsGuest()
+   246→      toast.success('Explorando como invitado')
+   247→      closeAuth()
+   248→    } catch {
+   249→      toast.error('Error al entrar como invitado')
+   250→    } finally {
+   251→      setGuestLoading(false)
+   252→    }
+   253→  }
+   254→
+   255→  return (
+   256→    <Dialog open={authModalOpen} onOpenChange={(o) => !o && closeAuth()}>
+   257→      <DialogContent className="glass-strong max-w-md rounded-lg p-0 overflow-hidden border-border/60">
+   258→        {/* Título oculto: solo para lectores de pantalla */}
+   259→        <DialogTitle className="sr-only">{activeTab === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</DialogTitle>
+   260→        {/* ===== Header con branding ===== */}
+   261→        <div className="relative px-6 pt-6 pb-4 text-center border-b border-border/40">
+   262→          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent" />
+   263→          <div className="relative">
+   264→            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+   265→              <img src="/logo-devplay.png" alt="DevPlay" className="h-10 w-10 rounded-md object-cover" />
+   266→            </div>
+   267→            <h2 className="font-display text-3xl font-black tracking-tight text-foreground">DevPlay</h2>
+   268→            <p className="label-caps mt-1">
+   269→              Comunidad para devs de videojuegos indie
+   270→            </p>
+   271→          </div>
+   272→        </div>
+   273→
+   274→        {/* ===== Tab switcher ===== */}
+   275→        <div className="px-6 pt-4">
+   276→          <div className="grid w-full grid-cols-2 gap-1 rounded-lg bg-secondary/50 p-1">
+   277→            <button
+   278→              type="button"
+   279→              onClick={() => { setActiveTab('login'); setErrors([]); setCodeStep(false) }}
+   280→              className={cn(
+   281→                'rounded-md py-2 text-sm font-semibold transition-all',
+   282→                activeTab === 'login'
+   283→                  ? 'btn-gradient-primary shadow-sm'
+   284→                  : 'text-muted-foreground hover:text-foreground'
+   285→              )}
+   286→            >
+   287→              Iniciar sesión
+   288→            </button>
+   289→            <button
+   290→              type="button"
+   291→              onClick={() => { setActiveTab('register'); setErrors([]); setCodeStep(false) }}
+   292→              className={cn(
+   293→                'rounded-md py-2 text-sm font-semibold transition-all',
+   294→                activeTab === 'register'
+   295→                  ? 'btn-gradient-primary shadow-sm'
+   296→                  : 'text-muted-foreground hover:text-foreground'
+   297→              )}
+   298→            >
+   299→              Crear cuenta
+   300→            </button>
+   301→          </div>
+   302→        </div>
+   303→
+   304→        {/* ===== Formularios ===== */}
+   305→        <div className="px-6 pb-6 pt-4">
+   306→          <AnimatePresence mode="wait">
+   307→            {activeTab === 'login' ? (
+   308→              codeStep ? (
+   309→                /* ===== Paso 2: código de acceso enviado por correo 🔐 ===== */
+   310→                <motion.form
+   311→                  key="code"
+   312→                  initial={{ opacity: 0, x: 10 }}
+   313→                  animate={{ opacity: 1, x: 0 }}
+   314→                  exit={{ opacity: 0, x: -10 }}
+   315→                  transition={{ duration: 0.2 }}
+   316→                  onSubmit={handleVerifyCode}
+   317→                  className="space-y-4"
+   318→                >
+   319→                  <div className="text-center">
+   320→                    <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-sm frame-double bg-secondary">
+   321→                      <Shield className="h-6 w-6 text-primary" />
+   322→                    </div>
+   323→                    <h3 className="font-display font-bold text-lg">Escribe tu código</h3>
+   324→                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+   325→                      Enviamos un código de 6 dígitos a<br /><b className="text-foreground">{sentTo}</b>
+   326→                    </p>
+   327→                  </div>
+   328→
+   329→                  <FormField label="Código de acceso" icon={Shield} error={getFieldError('loginCode')}>
+   330→                    <Input
+   331→                      value={loginCode}
+   332→                      onChange={(e) => { setLoginCode(e.target.value.replace(/\D/g, '').slice(0, 6)); clearFieldError('loginCode') }}
+   333→                      placeholder="000000"
+   334→                      inputMode="numeric"
+   335→                      autoComplete="one-time-code"
+   336→                      required
+   337→                      className="rounded-md pl-10 pr-4 h-12 text-center text-xl font-bold tracking-[0.4em] font-mono"
+   338→                    />
+   339→                  </FormField>
+   340→
+   341→                  <Button
+   342→                    type="submit"
+   343→                    disabled={loading}
+   344→                    className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
+   345→                  >
+   346→                    {loading ? (
+   347→                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando...</>
+   348→                    ) : (
+   349→                      <>Verificar y entrar <ArrowRight className="ml-2 h-4 w-4" /></>
+   350→                    )}
+   351→                  </Button>
+   352→
+   353→                  <div className="flex items-center justify-between text-xs">
+   354→                    <button
+   355→                      type="button"
+   356→                      onClick={backToPassword}
+   357→                      className="text-muted-foreground hover:text-foreground font-medium"
+   358→                    >
+   359→                      ← Volver
+   360→                    </button>
+   361→                    <button
+   362→                      type="button"
+   363→                      onClick={handleResendCode}
+   364→                      disabled={resendLoading}
+   365→                      className="text-primary hover:underline font-medium disabled:opacity-50"
+   366→                    >
+   367→                      {resendLoading ? 'Reenviando…' : 'Reenviar código'}
+   368→                    </button>
+   369→                  </div>
+   370→                </motion.form>
+   371→              ) : (
+   372→              <motion.form
+   373→                key="login"
+   374→                initial={{ opacity: 0, x: -10 }}
+   375→                animate={{ opacity: 1, x: 0 }}
+   376→                exit={{ opacity: 0, x: 10 }}
+   377→                transition={{ duration: 0.2 }}
+   378→                onSubmit={handleLogin}
+   379→                className="space-y-4"
+   380→              >
+   381→                {/* Email */}
+   382→                <FormField
+   383→                  label="Email"
+   384→                  icon={Mail}
+   385→                  error={getFieldError('loginEmail')}
+   386→                >
+   387→                  <Input
+   388→                    type="email"
+   389→                    value={loginEmail}
+   390→                    onChange={(e) => { setLoginEmail(e.target.value); clearFieldError('loginEmail') }}
+   391→                    placeholder="tu@email.com"
+   392→                    required
+   393→                    autoComplete="email"
+   394→                    className={cn(
+   395→                      'rounded-md pl-10 pr-4 h-11',
+   396→                      getFieldError('loginEmail') && 'border-red-500/50 focus-visible:ring-red-500/30'
+   397→                    )}
+   398→                  />
+   399→                </FormField>
+   400→
+   401→                {/* Password */}
+   402→                <FormField
+   403→                  label="Contraseña"
+   404→                  icon={Lock}
+   405→                  error={getFieldError('loginPassword')}
+   406→                  trailing={
+   407→                    <button
+   408→                      type="button"
+   409→                      onClick={() => setShowLoginPass(!showLoginPass)}
+   410→                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+   411→                    >
+   412→                      {showLoginPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   413→                    </button>
+   414→                  }
+   415→                >
+   416→                  <Input
+   417→                    type={showLoginPass ? 'text' : 'password'}
+   418→                    value={loginPassword}
+   419→                    onChange={(e) => { setLoginPassword(e.target.value); clearFieldError('loginPassword') }}
+   420→                    onKeyDown={detectCapsLock}
+   421→                    placeholder="••••••••"
+   422→                    required
+   423→                    autoComplete="current-password"
+   424→                    className={cn(
+   425→                      'rounded-md pl-10 pr-10 h-11',
+   426→                      getFieldError('loginPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
+   427→                    )}
+   428→                  />
+   429→                  {capsLockOn && (
+   430→                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
+   431→                      <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
+   432→                    </p>
+   433→                  )}
+   434→                </FormField>
+   435→
+   436→                {/* Remember + Forgot */}
+   437→                <div className="flex items-center justify-between text-xs">
+   438→                  <label className="flex items-center gap-2 cursor-pointer">
+   439→                    <Checkbox checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
+   440→                    <span className="text-muted-foreground">Recuérdame</span>
+   441→                  </label>
+   442→                  <button
+   443→                    type="button"
+   444→                    onClick={() => setShowForgot(true)}
+   445→                    className="text-primary hover:underline font-medium"
+   446→                  >
+   447→                    ¿Olvidaste tu contraseña?
+   448→                  </button>
+   449→                </div>
+   450→
+   451→                {/* Submit */}
+   452→                <Button
+   453→                  type="submit"
+   454→                  disabled={loading}
+   455→                  className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
+   456→                >
+   457→                  {loading ? (
+   458→                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</>
+   459→                  ) : (
+   460→                    <>Entrar <ArrowRight className="ml-2 h-4 w-4" /></>
+   461→                  )}
+   462→                </Button>
+   463→              </motion.form>
+   464→              )
+   465→            ) : (
+   466→              <motion.form
+   467→                key="register"
+   468→                initial={{ opacity: 0, x: 10 }}
+   469→                animate={{ opacity: 1, x: 0 }}
+   470→                exit={{ opacity: 0, x: -10 }}
+   471→                transition={{ duration: 0.2 }}
+   472→                onSubmit={handleRegister}
+   473→                className="space-y-4"
+   474→              >
+   475→                {/* Beneficios */}
+   476→                <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-muted-foreground bg-secondary/40 rounded-md py-2 px-3">
+   477→                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Gratis</span>
+   478→                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Publica y comparte</span>
+   479→                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Habla con Pixel 🤖</span>
+   480→                </div>
+   481→
+   482→                {/* Email */}
+   483→                <FormField
+   484→                  label="Email"
+   485→                  icon={Mail}
+   486→                  error={getFieldError('regEmail')}
+   487→                  success={emailValid && regEmail.length > 0 ? 'Email válido' : undefined}
+   488→                >
+   489→                  <Input
+   490→                    type="email"
+   491→                    value={regEmail}
+   492→                    onChange={(e) => { setRegEmail(e.target.value); clearFieldError('regEmail') }}
+   493→                    placeholder="tu@email.com"
+   494→                    required
+   495→                    autoComplete="email"
+   496→                    className={cn(
+   497→                      'rounded-md pl-10 pr-10 h-11',
+   498→                      getFieldError('regEmail') && 'border-red-500/50 focus-visible:ring-red-500/30',
+   499→                      emailValid && regEmail.length > 0 && 'border-olive-500/50 focus-visible:ring-olive-500/30'
+   500→                    )}
+   501→                  />
+   502→                  {emailValid && regEmail.length > 0 && (
+   503→                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
+   504→                  )}
+   505→                </FormField>
+   506→
+   507→                {/* Username */}
+   508→                <FormField
+   509→                  label="Nombre de usuario"
+   510→                  icon={AtSign}
+   511→                  error={getFieldError('regUsername') || (usernameTaken ? 'Ya en uso, prueba otro' : undefined)}
+   512→                  success={usernameFree ? 'Disponible' : undefined}
+   513→                >
+   514→                  <Input
+   515→                    value={regUsername}
+   516→                    onChange={(e) => { setRegUsername(e.target.value); clearFieldError('regUsername') }}
+   517→                    onBlur={suggestUsername}
+   518→                    placeholder="SuperCreador99"
+   519→                    pattern="[a-zA-Z0-9_]{3,20}"
+   520→                    required
+   521→                    autoComplete="username"
+   522→                    className={cn(
+   523→                      'rounded-md pl-10 pr-10 h-11',
+   524→                      (getFieldError('regUsername') || usernameTaken) && 'border-red-500/50 focus-visible:ring-red-500/30',
+   525→                      usernameFree && 'border-olive-500/50 focus-visible:ring-olive-500/30'
+   526→                    )}
+   527→                  />
+   528→                  {checkingUsername ? (
+   529→                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+   530→                  ) : usernameFree ? (
+   531→                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
+   532→                  ) : null}
+   533→                </FormField>
+   534→
+   535→                {/* Password */}
+   536→                <FormField
+   537→                  label="Contraseña"
+   538→                  icon={Lock}
+   539→                  error={getFieldError('regPassword')}
+   540→                  trailing={
+   541→                    <button
+   542→                      type="button"
+   543→                      onClick={() => setShowRegPass(!showRegPass)}
+   544→                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+   545→                    >
+   546→                      {showRegPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   547→                    </button>
+   548→                  }
+   549→                >
+   550→                  <Input
+   551→                    type={showRegPass ? 'text' : 'password'}
+   552→                    value={regPassword}
+   553→                    onChange={(e) => { setRegPassword(e.target.value); clearFieldError('regPassword') }}
+   554→                    onKeyDown={detectCapsLock}
+   555→                    placeholder="Mínimo 6 caracteres"
+   556→                    minLength={6}
+   557→                    required
+   558→                    autoComplete="new-password"
+   559→                    className={cn(
+   560→                      'rounded-md pl-10 pr-10 h-11',
+   561→                      getFieldError('regPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
+   562→                    )}
+   563→                  />
+   564→                  {capsLockOn && (
+   565→                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
+   566→                      <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
+   567→                    </p>
+   568→                  )}
+   569→                  {/* Strength meter */}
+   570→                  {regPassword.length > 0 && (
+   571→                    <div className="mt-2 space-y-1">
+   572→                      <div className="flex gap-1">
+   573→                        {[1,2,3,4,5].map(i => (
+   574→                          <div
+   575→                            key={i}
+   576→                            className={cn(
+   577→                              'h-1 flex-1 rounded-full transition-colors',
+   578→                              i <= passwordStrength.score ? passwordStrength.color : 'bg-secondary'
+   579→                            )}
+   580→                          />
+   581→                        ))}
+   582→                      </div>
+   583→                      <p className="text-[10px] text-muted-foreground">
+   584→                        Fortaleza: <span className="font-medium">{passwordStrength.label}</span>
+   585→                      </p>
+   586→                    </div>
+   587→                  )}
+   588→                </FormField>
+   589→
+   590→                {/* Terms */}
+   591→                <div>
+   592→                  <label className="flex items-start gap-2 cursor-pointer">
+   593→                    <Checkbox
+   594→                      checked={agreeTerms}
+   595→                      onCheckedChange={(v) => { setAgreeTerms(!!v); clearFieldError('terms') }}
+   596→                      className="mt-0.5"
+   597→                    />
+   598→                    <span className="text-xs text-muted-foreground leading-relaxed">
+   599→                      Acepto los <button type="button" onClick={() => { closeAuth(); setView('about') }} className="text-primary hover:underline">Términos de servicio</button> y la{' '}
+   600→                      <button type="button" onClick={() => { closeAuth(); setView('about') }} className="text-primary hover:underline">Política de privacidad</button>
+   601→                    </span>
+   602→                  </label>
+   603→                  {getFieldError('terms') && (
+   604→                    <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1">
+   605→                      <AlertCircle className="h-3 w-3" /> {getFieldError('terms')}
+   606→                    </p>
+   607→                  )}
+   608→                </div>
+   609→
+   610→                {/* Submit */}
+   611→                <Button
+   612→                  type="submit"
+   613→                  disabled={loading || !agreeTerms}
+   614→                  className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
+   615→                >
+   616→                  {loading ? (
+   617→                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creando...</>
+   618→                  ) : (
+   619→                    <>Crear cuenta <ArrowRight className="ml-2 h-4 w-4" /></>
+   620→                  )}
+   621→                </Button>
+   622→              </motion.form>
+   623→            )}
+   624→          </AnimatePresence>
+   625→
+   626→          {/* ===== Guest ===== */}
+   627→          <Button
+   628→            variant="outline"
+   629→            onClick={handleGuest}
+   630→            disabled={guestLoading}
+   631→            className="w-full rounded-md h-11 mt-3 gap-2"
+   632→          >
+   633→            {guestLoading ? (
+   634→              <Loader2 className="h-4 w-4 animate-spin" />
+   635→            ) : (
+   636→              <Users className="h-4 w-4" />
+   637→            )}
+   638→            Explorar como invitado
+   639→          </Button>
+   640→
+   641→          {/* ===== Security badge ===== */}
+   642→          <div className="flex items-center justify-center gap-1.5 mt-4 text-[10px] text-muted-foreground">
+   643→            <Shield className="h-3 w-3 text-olive-500" />
+   644→            <span>Tus datos están protegidos con cifrado</span>
+   645→          </div>
+   646→        </div>
+   647→      </DialogContent>
+   648→
+   649→      {/* Modal de recuperar contraseña */}
+   650→      <ForgotPasswordModal open={showForgot} onClose={() => setShowForgot(false)} />
+   651→    </Dialog>
+   652→  )
+   653→}
+   654→
+   655→// ===== FormField wrapper =====
+   656→function FormField({
+   657→  label,
+   658→  icon: Icon,
+   659→  error,
+   660→  success,
+   661→  trailing,
+   662→  children,
+   663→}: {
+   664→  label: string
+   665→  icon: any
+   666→  error?: string
+   667→  success?: string
+   668→  trailing?: React.ReactNode
+   669→  children: React.ReactNode
+   670→}) {
+   671→  return (
+   672→    <div className="space-y-1.5">
+   673→      <Label className="text-xs font-semibold flex items-center justify-between">
+   674→        <span>{label}</span>
+   675→        {success && (
+   676→          <span className="text-[10px] text-olive-500 flex items-center gap-0.5">
+   677→            <Check className="h-3 w-3" /> {success}
+   678→          </span>
+   679→        )}
+   680→      </Label>
+   681→      <div className="relative">
+   682→        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   683→        {children}
+   684→        {trailing}
+   685→      </div>
+   686→      {error && (
+   687→        <p className="text-[10px] text-red-500 flex items-center gap-1">
+   688→          <AlertCircle className="h-3 w-3" /> {error}
+   689→        </p>
+   690→      )}
+   691→    </div>
+   692→  )
+   693→}
+   694→

@@ -43,7 +43,7 @@ try {
 
   const info = await t.sendMail({
     from: FROM,
-    to: USER, // bucle: te llega a ti mismo
+    to: process.argv[2] || USER, // por defecto: bucle a ti mismo; o pasa un destino como argv
     subject: 'Prueba de remitente · DevPlay 🧪',
     text: 'Si lees esto, el SMTP de DevPlay funciona. Revisa el NOMBRE del remitente: debería decir "DevPlay".',
     html: `<div style="font-family:Georgia,serif;background:#FBF3E4;border:3px solid #4A2E21;border-radius:14px;padding:24px;max-width:480px;margin:auto;">

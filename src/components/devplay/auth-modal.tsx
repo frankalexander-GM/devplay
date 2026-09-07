@@ -57,6 +57,12 @@ export function AuthModal() {
   const [usernameTaken, setUsernameTaken] = useState(false)
   const [checkingUsername, setCheckingUsername] = useState(false)
 
+  // Paso 2 del registro: confirmar el correo con un código 🔐
+  const [regCodeStep, setRegCodeStep] = useState(false)
+  const [regCode, setRegCode] = useState('')
+  const [regSentTo, setRegSentTo] = useState('')
+  const [regResendLoading, setRegResendLoading] = useState(false)
+
   // ===== Validaciones en tiempo real =====
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail || regEmail)
   const usernameValid = /^[a-zA-Z0-9_]{3,20}$/.test(regUsername)
@@ -226,17 +232,88 @@ export function AuthModal() {
     setLoading(true)
     setErrors([])
     try {
-      await authService.register({ email: regEmail, username: regUsername, password: regPassword })
-      await signIn('credentials', { email: regEmail, password: regPassword, redirect: false })
-      toast.success('¡Cuenta creada! Bienvenido a DevPlay')
-      setRegEmail(''); setRegUsername(''); setRegPassword(''); setAgreeTerms(false)
-      await refreshAfterLogin()
-      closeAuth()
+      const data: any = await authService.register({ email: regEmail, username: regUsername, password: regPassword })
+      // Paso 1 listo: la cuenta existe → pedir el código enviado al correo 📮
+      setRegSentTo(data?.sentTo || 'tu correo')
+      setRegCode('')
+      setRegCodeStep(true)
+      if (data?.demoCode) toast.info(`Modo demo (sin correo): tu código es ${data.demoCode}`)
+      else toast.success(`¡Cuenta creada! Código enviado a ${data?.sentTo || 'tu correo'} 📬`)
     } catch (err: any) {
       setErrors([{ field: 'regEmail', message: err.message || 'Error al registrarse' }])
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleVerifyRegCode(e: React.FormEvent) {
+    e.preventDefault()
+    if (regCode.replace(/\D/g, '').length !== 6) {
+      setErrors([{ field: 'regCode', message: 'Escribe los 6 dígitos del código' }])
+      return
+    }
+    setLoading(true)
+    setErrors([])
+    try {
+      const res = await fetch('/api/devplay/auth/verify-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: regEmail, code: regCode.replace(/\D/g, '') }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setErrors([{ field: 'regCode', message: data.error || 'Código incorrecto o expirado. Revisa tu correo.' }])
+        return
+      }
+      // Correo confirmado → sesión con email+contraseña (camino 2 del authorize)
+      const s = await signIn('credentials', { email: regEmail, password: regPassword, redirect: false })
+      if (s?.error) {
+        setErrors([{ field: 'regCode', message: 'Correo confirmado, pero falló el acceso. Inicia sesión normal.' }])
+        return
+      }
+      toast.success('¡Correo confirmado! Bienvenido a DevPlay 🎉')
+      setRegEmail(''); setRegUsername(''); setRegPassword(''); setRegCode(''); setAgreeTerms(false)
+      setRegCodeStep(false)
+      await refreshAfterLogin()
+      closeAuth()
+    } catch {
+      setErrors([{ field: 'regCode', message: 'Error de conexión. Intenta de nuevo.' }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleResendRegCode() {
+    setRegResendLoading(true)
+    try {
+      const res = await fetch('/api/devplay/auth/verify-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: regEmail, resend: true }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(data.error || 'No se pudo reenviar el código')
+        return
+      }
+      setRegSentTo(data.sentTo || regSentTo)
+      setRegCode('')
+      setErrors([])
+      if (data.demoCode) toast.info(`Modo demo: tu nuevo código es ${data.demoCode}`)
+      else toast.success('Código reenviado 📬')
+    } catch {
+      toast.error('Error de conexión')
+    } finally {
+      setRegResendLoading(false)
+    }
+  }
+
+  function goToLoginFromReg() {
+    setRegCodeStep(false)
+    setRegCode('')
+    setErrors([])
+    setLoginEmail(regEmail)
+    setActiveTab('login')
   }
 
   async function handleGuest() {
@@ -276,7 +353,7 @@ export function AuthModal() {
           <div className="grid w-full grid-cols-2 gap-1 rounded-lg bg-secondary/50 p-1">
             <button
               type="button"
-              onClick={() => { setActiveTab('login'); setErrors([]); setCodeStep(false) }}
+              onClick={() => { setActiveTab('login'); setErrors([]); setCodeStep(false); setRegCodeStep(false) }}
               className={cn(
                 'rounded-md py-2 text-sm font-semibold transition-all',
                 activeTab === 'login'
@@ -288,7 +365,7 @@ export function AuthModal() {
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('register'); setErrors([]); setCodeStep(false) }}
+              onClick={() => { setActiveTab('register'); setErrors([]); setCodeStep(false); setRegCodeStep(false) }}
               className={cn(
                 'rounded-md py-2 text-sm font-semibold transition-all',
                 activeTab === 'register'
@@ -426,12 +503,12 @@ export function AuthModal() {
                       getFieldError('loginPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
                     )}
                   />
-                  {capsLockOn && (
-                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
-                      <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
-                    </p>
-                  )}
                 </FormField>
+                {capsLockOn && (
+                  <p className="text-[10px] text-amber-500 flex items-center gap-1">
+                    <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
+                  </p>
+                )}
 
                 {/* Remember + Forgot */}
                 <div className="flex items-center justify-between text-xs">
@@ -463,6 +540,70 @@ export function AuthModal() {
               </motion.form>
               )
             ) : (
+              regCodeStep ? (
+                /* ===== Paso 2 del registro: confirmar correo 🔐 ===== */
+                <motion.form
+                  key="reg-code"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                  onSubmit={handleVerifyRegCode}
+                  className="space-y-4"
+                >
+                  <div className="text-center">
+                    <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-sm frame-double bg-secondary">
+                      <Shield className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-display font-bold text-lg">Confirma tu correo</h3>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Enviamos un código de 6 dígitos a<br /><b className="text-foreground">{regSentTo}</b>
+                    </p>
+                  </div>
+
+                  <FormField label="Código de confirmación" icon={Shield} error={getFieldError('regCode')}>
+                    <Input
+                      value={regCode}
+                      onChange={(e) => { setRegCode(e.target.value.replace(/\D/g, '').slice(0, 6)); clearFieldError('regCode') }}
+                      placeholder="000000"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      required
+                      className="rounded-md pl-10 pr-4 h-12 text-center text-xl font-bold tracking-[0.4em] font-mono"
+                    />
+                  </FormField>
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
+                  >
+                    {loading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando...</>
+                    ) : (
+                      <>Confirmar y entrar <ArrowRight className="ml-2 h-4 w-4" /></>
+                    )}
+                  </Button>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <button
+                      type="button"
+                      onClick={goToLoginFromReg}
+                      className="text-muted-foreground hover:text-foreground font-medium"
+                    >
+                      ← Iniciar sesión
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResendRegCode}
+                      disabled={regResendLoading}
+                      className="text-primary hover:underline font-medium disabled:opacity-50"
+                    >
+                      {regResendLoading ? 'Reenviando…' : 'Reenviar código'}
+                    </button>
+                  </div>
+                </motion.form>
+              ) : (
               <motion.form
                 key="register"
                 initial={{ opacity: 0, x: 10 }}
@@ -561,31 +702,32 @@ export function AuthModal() {
                       getFieldError('regPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
                     )}
                   />
-                  {capsLockOn && (
-                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
-                      <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
-                    </p>
-                  )}
-                  {/* Strength meter */}
-                  {regPassword.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      <div className="flex gap-1">
-                        {[1,2,3,4,5].map(i => (
-                          <div
-                            key={i}
-                            className={cn(
-                              'h-1 flex-1 rounded-full transition-colors',
-                              i <= passwordStrength.score ? passwordStrength.color : 'bg-secondary'
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">
-                        Fortaleza: <span className="font-medium">{passwordStrength.label}</span>
-                      </p>
-                    </div>
-                  )}
                 </FormField>
+
+                {/* Avisos FUERA del campo para no descuadrar los iconos 🎯 */}
+                {capsLockOn && (
+                  <p className="text-[10px] text-amber-500 flex items-center gap-1">
+                    <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
+                  </p>
+                )}
+                {regPassword.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex gap-1">
+                      {[1,2,3,4,5].map(i => (
+                        <div
+                          key={i}
+                          className={cn(
+                            'h-1 flex-1 rounded-full transition-colors',
+                            i <= passwordStrength.score ? passwordStrength.color : 'bg-secondary'
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Fortaleza: <span className="font-medium">{passwordStrength.label}</span>
+                    </p>
+                  </div>
+                )}
 
                 {/* Terms */}
                 <div>
@@ -620,6 +762,7 @@ export function AuthModal() {
                   )}
                 </Button>
               </motion.form>
+              )
             )}
           </AnimatePresence>
 

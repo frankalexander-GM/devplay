@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Mail, Loader2, ArrowLeft, CheckCircle2, Copy, ExternalLink } from 'lucide-react'
+import { Mail, Loader2, ArrowLeft, CheckCircle2, Copy, ExternalLink, Eye, EyeOff } from 'lucide-react'
 
 export function ForgotPasswordModal({
   open,
@@ -293,7 +293,7 @@ export function ResetPasswordModal({
                   onClick={() => setShowPass(!showPass)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {showPass ? '🙈' : '👁'}
+                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>

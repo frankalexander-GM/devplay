@@ -1,8 +1,16 @@
+/**
+ * POST /api/devplay/auth/register
+ * Crea la cuenta y envía un código de 6 dígitos al correo para CONFIRMAR
+ * que el email es real 🔐. La sesión NO se crea aquí — se crea en el
+ * verify-register (tras escribir el código correcto).
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
-import { mailEnabled, sendMail, welcomeEmail } from '@/lib/mailer'
+import { createLoginCode, maskEmail } from '@/lib/login-code'
+import { sendMail, verificationCodeEmail } from '@/lib/mailer'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -37,16 +45,30 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Correo de bienvenida 🎉 (no bloquea el registro si falla)
-    if (mailEnabled()) {
-      const tpl = welcomeEmail(user.username)
-      sendMail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => {})
+    // Código de confirmación de correo 📮 (puede lanzar TOO_MANY_CODES por antispam)
+    let code: string
+    try {
+      code = await createLoginCode(user.id)
+    } catch (e: any) {
+      if (e?.message === 'TOO_MANY_CODES') {
+        return NextResponse.json(
+          { error: 'Demasiados códigos enviados seguidos. Espera unos 15 minutos plis 🙏' },
+          { status: 429 }
+        )
+      }
+      throw e
     }
 
+    const tpl = verificationCodeEmail(user.username, code, 'confirmar tu cuenta de DevPlay')
+    const sent = await sendMail({ to: user.email, subject: tpl.subject, html: tpl.html })
+
     return NextResponse.json({
+      ok: true,
       id: user.id,
       username: user.username,
-      email: user.email,
+      sentTo: maskEmail(user.email),
+      // Solo en modo demo (sin SMTP): el código vuelve para poder probar
+      demoCode: sent ? undefined : code,
     })
   } catch (e) {
     console.error('register error', e)
