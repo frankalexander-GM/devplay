@@ -1,0 +1,621 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useState, useEffect } from 'react'
+     4→     4→import { signIn } from 'next-auth/react'
+     5→     5→import { motion, AnimatePresence } from 'framer-motion'
+     6→     6→import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+     7→     7→import { Button } from '@/components/ui/button'
+     8→     8→import { Input } from '@/components/ui/input'
+     9→     9→import { Label } from '@/components/ui/label'
+    10→    10→import { Checkbox } from '@/components/ui/checkbox'
+    11→    11→import { useUIStore } from '@/lib/stores'
+    12→    12→import { useCurrentUser } from '@/hooks/use-current-user'
+    13→    13→import { authService, userService } from '@/services/devplay-service'
+    14→    14→import { toast } from 'sonner'
+    15→    15→import {
+    16→    16→  Eye, EyeOff, Loader2, Mail, Lock, AtSign, Shield,
+    17→    17→  Check, AlertCircle, Users, ArrowRight, ArrowBigUp,
+    18→    18→} from 'lucide-react'
+    19→    19→import { cn } from '@/lib/utils'
+    20→    20→import { ForgotPasswordModal } from '@/components/devplay/forgot-password-modal'
+    21→    21→
+    22→    22→type FieldError = { field: string; message: string }
+    23→    23→
+    24→    24→export function AuthModal() {
+    25→    25→  const { authModalOpen, authMode, closeAuth, setView } = useUIStore()
+    26→    26→  const { refreshAfterLogin, loginAsGuest } = useCurrentUser()
+    27→    27→  const [activeTab, setActiveTab] = useState<'login' | 'register'>(authMode)
+    28→    28→
+    29→    29→  useEffect(() => {
+    30→    30→    if (authModalOpen) setActiveTab(authMode)
+    31→    31→  }, [authModalOpen, authMode])
+    32→    32→
+    33→    33→  const [loading, setLoading] = useState(false)
+    34→    34→  const [guestLoading, setGuestLoading] = useState(false)
+    35→    35→  const [googleLoading, setGoogleLoading] = useState(false)
+    36→    36→  // Botón de Google SOLO cuando las llaves OAuth estén configuradas en el
+    37→    37→  // servidor real (NEXT_PUBLIC_GOOGLE_ENABLED=1). Mientras tanto, oculto para
+    38→    38→  // no mostrar un botón roto.
+    39→    39→  const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === '1'
+    40→    40→  const [errors, setErrors] = useState<FieldError[]>([])
+    41→    41→  const [showForgot, setShowForgot] = useState(false)
+    42→    42→
+    43→    43→  // login state
+    44→    44→  const [loginEmail, setLoginEmail] = useState('')
+    45→    45→  const [loginPassword, setLoginPassword] = useState('')
+    46→    46→  const [showLoginPass, setShowLoginPass] = useState(false)
+    47→    47→  const [rememberMe, setRememberMe] = useState(true)
+    48→    48→  const [capsLockOn, setCapsLockOn] = useState(false)
+    49→    49→
+    50→    50→  // register state
+    51→    51→  const [regEmail, setRegEmail] = useState('')
+    52→    52→  const [regUsername, setRegUsername] = useState('')
+    53→    53→  const [regPassword, setRegPassword] = useState('')
+    54→    54→  const [showRegPass, setShowRegPass] = useState(false)
+    55→    55→  const [agreeTerms, setAgreeTerms] = useState(false)
+    56→    56→  const [usernameTaken, setUsernameTaken] = useState(false)
+    57→    57→  const [checkingUsername, setCheckingUsername] = useState(false)
+    58→    58→
+    59→    59→  // ===== Validaciones en tiempo real =====
+    60→    60→  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail || regEmail)
+    61→    61→  const usernameValid = /^[a-zA-Z0-9_]{3,20}$/.test(regUsername)
+    62→    62→  const usernameFree = usernameValid && !checkingUsername && !usernameTaken // disponible de verdad
+    63→    63→  const passwordStrength = getPasswordStrength(regPassword)
+    64→    64→
+    65→    65→  // ===== Disponibilidad real del nombre de usuario (con espera) =====
+    66→    66→  useEffect(() => {
+    67→    67→    setUsernameTaken(false)
+    68→    68→    if (!usernameValid) {
+    69→    69→      setCheckingUsername(false)
+    70→    70→      return
+    71→    71→    }
+    72→    72→    setCheckingUsername(true)
+    73→    73→    const t = setTimeout(async () => {
+    74→    74→      try {
+    75→    75→        const res = await userService.getByUsername(regUsername)
+    76→    76→        setUsernameTaken(!!res?.user)
+    77→    77→      } catch {
+    78→    78→        setUsernameTaken(false)
+    79→    79→      } finally {
+    80→    80→        setCheckingUsername(false)
+    81→    81→      }
+    82→    82→    }, 500)
+    83→    83→    return () => clearTimeout(t)
+    84→    84→  }, [regUsername, usernameValid])
+    85→    85→
+    86→    86→  // Sugerencia amable: proponer usuario a partir del correo
+    87→    87→  function suggestUsername() {
+    88→    88→    if (!regUsername && regEmail.includes('@')) {
+    89→    89→      const base = regEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 16)
+    90→    90→      if (base.length >= 3) setRegUsername(base)
+    91→    91→    }
+    92→    92→  }
+    93→    93→
+    94→    94→  // (validaciones definidas arriba)
+    95→    95→
+    96→    96→  function getPasswordStrength(pwd: string): { score: number; label: string; color: string } {
+    97→    97→    let score = 0
+    98→    98→    if (pwd.length >= 6) score++
+    99→    99→    if (pwd.length >= 10) score++
+   100→   100→    if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++
+   101→   101→    if (/[0-9]/.test(pwd)) score++
+   102→   102→    if (/[^A-Za-z0-9]/.test(pwd)) score++
+   103→   103→    const labels = ['Muy débil', 'Débil', 'Regular', 'Buena', 'Fuerte', 'Muy fuerte']
+   104→   104→    const colors = ['bg-red-500', 'bg-bronze-500', 'bg-amber-500', 'bg-lime-500', 'bg-olive-500', 'bg-olive-600']
+   105→   105→    return { score, label: labels[score] || 'Muy débil', color: colors[score] || 'bg-red-500' }
+   106→   106→  }
+   107→   107→
+   108→   108→  function getFieldError(field: string): string | undefined {
+   109→   109→    return errors.find(e => e.field === field)?.message
+   110→   110→  }
+   111→   111→
+   112→   112→  function clearFieldError(field: string) {
+   113→   113→    setErrors(prev => prev.filter(e => e.field !== field))
+   114→   114→  }
+   115→   115→
+   116→   116→  function detectCapsLock(e: React.KeyboardEvent) {
+   117→   117→    setCapsLockOn(!!e.getModifierState('CapsLock'))
+   118→   118→  }
+   119→   119→
+   120→   120→  async function handleLogin(e: React.FormEvent) {
+   121→   121→    e.preventDefault()
+   122→   122→    const newErrors: FieldError[] = []
+   123→   123→    if (!emailValid) newErrors.push({ field: 'loginEmail', message: 'Email inválido' })
+   124→   124→    if (loginPassword.length < 1) newErrors.push({ field: 'loginPassword', message: 'Contraseña requerida' })
+   125→   125→    if (newErrors.length) { setErrors(newErrors); return }
+   126→   126→
+   127→   127→    setLoading(true)
+   128→   128→    setErrors([])
+   129→   129→    try {
+   130→   130→      const res = await signIn('credentials', {
+   131→   131→        email: loginEmail,
+   132→   132→        password: loginPassword,
+   133→   133→        redirect: false,
+   134→   134→      })
+   135→   135→      if (res?.error) {
+   136→   136→        setErrors([{ field: 'loginPassword', message: 'Email o contraseña incorrectos' }])
+   137→   137→      } else {
+   138→   138→        toast.success('¡Bienvenido de vuelta!')
+   139→   139→        setLoginEmail('')
+   140→   140→        setLoginPassword('')
+   141→   141→        await refreshAfterLogin()
+   142→   142→        closeAuth()
+   143→   143→      }
+   144→   144→    } catch {
+   145→   145→      setErrors([{ field: 'loginEmail', message: 'Error de conexión. Intenta de nuevo.' }])
+   146→   146→    } finally {
+   147→   147→      setLoading(false)
+   148→   148→    }
+   149→   149→  }
+   150→   150→
+   151→   151→  async function handleRegister(e: React.FormEvent) {
+   152→   152→    e.preventDefault()
+   153→   153→    const newErrors: FieldError[] = []
+   154→   154→    if (!emailValid) newErrors.push({ field: 'regEmail', message: 'Email inválido' })
+   155→   155→    if (!usernameValid) newErrors.push({ field: 'regUsername', message: '3-20 caracteres: letras, números y _' })
+   156→   156→    else if (usernameTaken) newErrors.push({ field: 'regUsername', message: 'Ese nombre ya está en uso, prueba otro' })
+   157→   157→    if (regPassword.length < 6) newErrors.push({ field: 'regPassword', message: 'Mínimo 6 caracteres' })
+   158→   158→    if (!agreeTerms) newErrors.push({ field: 'terms', message: 'Debes aceptar los términos' })
+   159→   159→    if (newErrors.length) { setErrors(newErrors); return }
+   160→   160→
+   161→   161→    setLoading(true)
+   162→   162→    setErrors([])
+   163→   163→    try {
+   164→   164→      await authService.register({ email: regEmail, username: regUsername, password: regPassword })
+   165→   165→      await signIn('credentials', { email: regEmail, password: regPassword, redirect: false })
+   166→   166→      toast.success('¡Cuenta creada! Bienvenido a DevPlay')
+   167→   167→      setRegEmail(''); setRegUsername(''); setRegPassword(''); setAgreeTerms(false)
+   168→   168→      await refreshAfterLogin()
+   169→   169→      closeAuth()
+   170→   170→    } catch (err: any) {
+   171→   171→      setErrors([{ field: 'regEmail', message: err.message || 'Error al registrarse' }])
+   172→   172→    } finally {
+   173→   173→      setLoading(false)
+   174→   174→    }
+   175→   175→  }
+   176→   176→
+   177→   177→  async function handleGuest() {
+   178→   178→    setGuestLoading(true)
+   179→   179→    try {
+   180→   180→      await loginAsGuest()
+   181→   181→      toast.success('Explorando como invitado')
+   182→   182→      closeAuth()
+   183→   183→    } catch {
+   184→   184→      toast.error('Error al entrar como invitado')
+   185→   185→    } finally {
+   186→   186→      setGuestLoading(false)
+   187→   187→    }
+   188→   188→  }
+   189→   189→
+   190→   190→  return (
+   191→   191→    <Dialog open={authModalOpen} onOpenChange={(o) => !o && closeAuth()}>
+   192→   192→      <DialogContent className="glass-strong max-w-md rounded-lg p-0 overflow-hidden border-border/60">
+   193→   193→        {/* Título oculto: solo para lectores de pantalla */}
+   194→   194→        <DialogTitle className="sr-only">{activeTab === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</DialogTitle>
+   195→   195→        {/* ===== Header con branding ===== */}
+   196→   196→        <div className="relative px-6 pt-6 pb-4 text-center border-b border-border/40">
+   197→   197→          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent" />
+   198→   198→          <div className="relative">
+   199→   199→            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+   200→   200→              <img src="/logo-devplay.png" alt="DevPlay" className="h-10 w-10 rounded-md object-cover" />
+   201→   201→            </div>
+   202→   202→            <h2 className="font-display text-3xl font-black tracking-tight text-foreground">DevPlay</h2>
+   203→   203→            <p className="label-caps mt-1">
+   204→   204→              Comunidad para devs de videojuegos indie
+   205→   205→            </p>
+   206→   206→          </div>
+   207→   207→        </div>
+   208→   208→
+   209→   209→        {/* ===== Tab switcher ===== */}
+   210→   210→        <div className="px-6 pt-4">
+   211→   211→          <div className="grid w-full grid-cols-2 gap-1 rounded-lg bg-secondary/50 p-1">
+   212→   212→            <button
+   213→   213→              type="button"
+   214→   214→              onClick={() => { setActiveTab('login'); setErrors([]) }}
+   215→   215→              className={cn(
+   216→   216→                'rounded-md py-2 text-sm font-semibold transition-all',
+   217→   217→                activeTab === 'login'
+   218→   218→                  ? 'btn-gradient-primary shadow-sm'
+   219→   219→                  : 'text-muted-foreground hover:text-foreground'
+   220→   220→              )}
+   221→   221→            >
+   222→   222→              Iniciar sesión
+   223→   223→            </button>
+   224→   224→            <button
+   225→   225→              type="button"
+   226→   226→              onClick={() => { setActiveTab('register'); setErrors([]) }}
+   227→   227→              className={cn(
+   228→   228→                'rounded-md py-2 text-sm font-semibold transition-all',
+   229→   229→                activeTab === 'register'
+   230→   230→                  ? 'btn-gradient-primary shadow-sm'
+   231→   231→                  : 'text-muted-foreground hover:text-foreground'
+   232→   232→              )}
+   233→   233→            >
+   234→   234→              Crear cuenta
+   235→   235→            </button>
+   236→   236→          </div>
+   237→   237→        </div>
+   238→   238→
+   239→   239→        {/* ===== Formularios ===== */}
+   240→   240→        <div className="px-6 pb-6 pt-4">
+   241→   241→          <AnimatePresence mode="wait">
+   242→   242→            {activeTab === 'login' ? (
+   243→   243→              <motion.form
+   244→   244→                key="login"
+   245→   245→                initial={{ opacity: 0, x: -10 }}
+   246→   246→                animate={{ opacity: 1, x: 0 }}
+   247→   247→                exit={{ opacity: 0, x: 10 }}
+   248→   248→                transition={{ duration: 0.2 }}
+   249→   249→                onSubmit={handleLogin}
+   250→   250→                className="space-y-4"
+   251→   251→              >
+   252→   252→                {/* Email */}
+   253→   253→                <FormField
+   254→   254→                  label="Email"
+   255→   255→                  icon={Mail}
+   256→   256→                  error={getFieldError('loginEmail')}
+   257→   257→                >
+   258→   258→                  <Input
+   259→   259→                    type="email"
+   260→   260→                    value={loginEmail}
+   261→   261→                    onChange={(e) => { setLoginEmail(e.target.value); clearFieldError('loginEmail') }}
+   262→   262→                    placeholder="tu@email.com"
+   263→   263→                    required
+   264→   264→                    autoComplete="email"
+   265→   265→                    className={cn(
+   266→   266→                      'rounded-md pl-10 pr-4 h-11',
+   267→   267→                      getFieldError('loginEmail') && 'border-red-500/50 focus-visible:ring-red-500/30'
+   268→   268→                    )}
+   269→   269→                  />
+   270→   270→                </FormField>
+   271→   271→
+   272→   272→                {/* Password */}
+   273→   273→                <FormField
+   274→   274→                  label="Contraseña"
+   275→   275→                  icon={Lock}
+   276→   276→                  error={getFieldError('loginPassword')}
+   277→   277→                  trailing={
+   278→   278→                    <button
+   279→   279→                      type="button"
+   280→   280→                      onClick={() => setShowLoginPass(!showLoginPass)}
+   281→   281→                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+   282→   282→                    >
+   283→   283→                      {showLoginPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   284→   284→                    </button>
+   285→   285→                  }
+   286→   286→                >
+   287→   287→                  <Input
+   288→   288→                    type={showLoginPass ? 'text' : 'password'}
+   289→   289→                    value={loginPassword}
+   290→   290→                    onChange={(e) => { setLoginPassword(e.target.value); clearFieldError('loginPassword') }}
+   291→   291→                    onKeyDown={detectCapsLock}
+   292→   292→                    placeholder="••••••••"
+   293→   293→                    required
+   294→   294→                    autoComplete="current-password"
+   295→   295→                    className={cn(
+   296→   296→                      'rounded-md pl-10 pr-10 h-11',
+   297→   297→                      getFieldError('loginPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
+   298→   298→                    )}
+   299→   299→                  />
+   300→   300→                  {capsLockOn && (
+   301→   301→                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
+   302→   302→                      <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
+   303→   303→                    </p>
+   304→   304→                  )}
+   305→   305→                </FormField>
+   306→   306→
+   307→   307→                {/* Remember + Forgot */}
+   308→   308→                <div className="flex items-center justify-between text-xs">
+   309→   309→                  <label className="flex items-center gap-2 cursor-pointer">
+   310→   310→                    <Checkbox checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
+   311→   311→                    <span className="text-muted-foreground">Recuérdame</span>
+   312→   312→                  </label>
+   313→   313→                  <button
+   314→   314→                    type="button"
+   315→   315→                    onClick={() => setShowForgot(true)}
+   316→   316→                    className="text-primary hover:underline font-medium"
+   317→   317→                  >
+   318→   318→                    ¿Olvidaste tu contraseña?
+   319→   319→                  </button>
+   320→   320→                </div>
+   321→   321→
+   322→   322→                {/* Submit */}
+   323→   323→                <Button
+   324→   324→                  type="submit"
+   325→   325→                  disabled={loading}
+   326→   326→                  className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
+   327→   327→                >
+   328→   328→                  {loading ? (
+   329→   329→                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</>
+   330→   330→                  ) : (
+   331→   331→                    <>Entrar <ArrowRight className="ml-2 h-4 w-4" /></>
+   332→   332→                  )}
+   333→   333→                </Button>
+   334→   334→              </motion.form>
+   335→   335→            ) : (
+   336→   336→              <motion.form
+   337→   337→                key="register"
+   338→   338→                initial={{ opacity: 0, x: 10 }}
+   339→   339→                animate={{ opacity: 1, x: 0 }}
+   340→   340→                exit={{ opacity: 0, x: -10 }}
+   341→   341→                transition={{ duration: 0.2 }}
+   342→   342→                onSubmit={handleRegister}
+   343→   343→                className="space-y-4"
+   344→   344→              >
+   345→   345→                {/* Beneficios */}
+   346→   346→                <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-muted-foreground bg-secondary/40 rounded-md py-2 px-3">
+   347→   347→                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Gratis</span>
+   348→   348→                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Publica y comparte</span>
+   349→   349→                  <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Habla con Pixel 🤖</span>
+   350→   350→                </div>
+   351→   351→
+   352→   352→                {/* Email */}
+   353→   353→                <FormField
+   354→   354→                  label="Email"
+   355→   355→                  icon={Mail}
+   356→   356→                  error={getFieldError('regEmail')}
+   357→   357→                  success={emailValid && regEmail.length > 0 ? 'Email válido' : undefined}
+   358→   358→                >
+   359→   359→                  <Input
+   360→   360→                    type="email"
+   361→   361→                    value={regEmail}
+   362→   362→                    onChange={(e) => { setRegEmail(e.target.value); clearFieldError('regEmail') }}
+   363→   363→                    placeholder="tu@email.com"
+   364→   364→                    required
+   365→   365→                    autoComplete="email"
+   366→   366→                    className={cn(
+   367→   367→                      'rounded-md pl-10 pr-10 h-11',
+   368→   368→                      getFieldError('regEmail') && 'border-red-500/50 focus-visible:ring-red-500/30',
+   369→   369→                      emailValid && regEmail.length > 0 && 'border-olive-500/50 focus-visible:ring-olive-500/30'
+   370→   370→                    )}
+   371→   371→                  />
+   372→   372→                  {emailValid && regEmail.length > 0 && (
+   373→   373→                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
+   374→   374→                  )}
+   375→   375→                </FormField>
+   376→   376→
+   377→   377→                {/* Username */}
+   378→   378→                <FormField
+   379→   379→                  label="Nombre de usuario"
+   380→   380→                  icon={AtSign}
+   381→   381→                  error={getFieldError('regUsername') || (usernameTaken ? 'Ya en uso, prueba otro' : undefined)}
+   382→   382→                  success={usernameFree ? 'Disponible' : undefined}
+   383→   383→                >
+   384→   384→                  <Input
+   385→   385→                    value={regUsername}
+   386→   386→                    onChange={(e) => { setRegUsername(e.target.value); clearFieldError('regUsername') }}
+   387→   387→                    onBlur={suggestUsername}
+   388→   388→                    placeholder="SuperCreador99"
+   389→   389→                    pattern="[a-zA-Z0-9_]{3,20}"
+   390→   390→                    required
+   391→   391→                    autoComplete="username"
+   392→   392→                    className={cn(
+   393→   393→                      'rounded-md pl-10 pr-10 h-11',
+   394→   394→                      (getFieldError('regUsername') || usernameTaken) && 'border-red-500/50 focus-visible:ring-red-500/30',
+   395→   395→                      usernameFree && 'border-olive-500/50 focus-visible:ring-olive-500/30'
+   396→   396→                    )}
+   397→   397→                  />
+   398→   398→                  {checkingUsername ? (
+   399→   399→                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+   400→   400→                  ) : usernameFree ? (
+   401→   401→                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
+   402→   402→                  ) : null}
+   403→   403→                </FormField>
+   404→   404→
+   405→   405→                {/* Password */}
+   406→   406→                <FormField
+   407→   407→                  label="Contraseña"
+   408→   408→                  icon={Lock}
+   409→   409→                  error={getFieldError('regPassword')}
+   410→   410→                  trailing={
+   411→   411→                    <button
+   412→   412→                      type="button"
+   413→   413→                      onClick={() => setShowRegPass(!showRegPass)}
+   414→   414→                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+   415→   415→                    >
+   416→   416→                      {showRegPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   417→   417→                    </button>
+   418→   418→                  }
+   419→   419→                >
+   420→   420→                  <Input
+   421→   421→                    type={showRegPass ? 'text' : 'password'}
+   422→   422→                    value={regPassword}
+   423→   423→                    onChange={(e) => { setRegPassword(e.target.value); clearFieldError('regPassword') }}
+   424→   424→                    onKeyDown={detectCapsLock}
+   425→   425→                    placeholder="Mínimo 6 caracteres"
+   426→   426→                    minLength={6}
+   427→   427→                    required
+   428→   428→                    autoComplete="new-password"
+   429→   429→                    className={cn(
+   430→   430→                      'rounded-md pl-10 pr-10 h-11',
+   431→   431→                      getFieldError('regPassword') && 'border-red-500/50 focus-visible:ring-red-500/30'
+   432→   432→                    )}
+   433→   433→                  />
+   434→   434→                  {capsLockOn && (
+   435→   435→                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
+   436→   436→                      <ArrowBigUp className="h-3 w-3" /> Bloq Mayús activado
+   437→   437→                    </p>
+   438→   438→                  )}
+   439→   439→                  {/* Strength meter */}
+   440→   440→                  {regPassword.length > 0 && (
+   441→   441→                    <div className="mt-2 space-y-1">
+   442→   442→                      <div className="flex gap-1">
+   443→   443→                        {[1,2,3,4,5].map(i => (
+   444→   444→                          <div
+   445→   445→                            key={i}
+   446→   446→                            className={cn(
+   447→   447→                              'h-1 flex-1 rounded-full transition-colors',
+   448→   448→                              i <= passwordStrength.score ? passwordStrength.color : 'bg-secondary'
+   449→   449→                            )}
+   450→   450→                          />
+   451→   451→                        ))}
+   452→   452→                      </div>
+   453→   453→                      <p className="text-[10px] text-muted-foreground">
+   454→   454→                        Fortaleza: <span className="font-medium">{passwordStrength.label}</span>
+   455→   455→                      </p>
+   456→   456→                    </div>
+   457→   457→                  )}
+   458→   458→                </FormField>
+   459→   459→
+   460→   460→                {/* Terms */}
+   461→   461→                <div>
+   462→   462→                  <label className="flex items-start gap-2 cursor-pointer">
+   463→   463→                    <Checkbox
+   464→   464→                      checked={agreeTerms}
+   465→   465→                      onCheckedChange={(v) => { setAgreeTerms(!!v); clearFieldError('terms') }}
+   466→   466→                      className="mt-0.5"
+   467→   467→                    />
+   468→   468→                    <span className="text-xs text-muted-foreground leading-relaxed">
+   469→   469→                      Acepto los <button type="button" onClick={() => { closeAuth(); setView('about') }} className="text-primary hover:underline">Términos de servicio</button> y la{' '}
+   470→   470→                      <button type="button" onClick={() => { closeAuth(); setView('about') }} className="text-primary hover:underline">Política de privacidad</button>
+   471→   471→                    </span>
+   472→   472→                  </label>
+   473→   473→                  {getFieldError('terms') && (
+   474→   474→                    <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1">
+   475→   475→                      <AlertCircle className="h-3 w-3" /> {getFieldError('terms')}
+   476→   476→                    </p>
+   477→   477→                  )}
+   478→   478→                </div>
+   479→   479→
+   480→   480→                {/* Submit */}
+   481→   481→                <Button
+   482→   482→                  type="submit"
+   483→   483→                  disabled={loading || !agreeTerms}
+   484→   484→                  className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
+   485→   485→                >
+   486→   486→                  {loading ? (
+   487→   487→                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creando...</>
+   488→   488→                  ) : (
+   489→   489→                    <>Crear cuenta <ArrowRight className="ml-2 h-4 w-4" /></>
+   490→   490→                  )}
+   491→   491→                </Button>
+   492→   492→              </motion.form>
+   493→   493→            )}
+   494→   494→          </AnimatePresence>
+   495→   495→
+   496→   496→          {/* ===== Divider + Social login (solo con OAuth configurado) ===== */}
+   497→   497→          {googleEnabled && (
+   498→   498→            <>
+   499→   499→              <div className="relative my-5">
+   500→   500→                <div className="absolute inset-0 flex items-center">
+   501→   501→                  <span className="w-full border-t border-border/50" />
+   502→   502→                </div>
+   503→   503→                <div className="relative flex justify-center text-xs uppercase">
+   504→   504→                  <span className="glass-strong px-3 text-muted-foreground rounded-sm label-caps">o continúa con</span>
+   505→   505→                </div>
+   506→   506→              </div>
+   507→   507→              <div>
+   508→   508→                <SocialButton
+   509→   509→                  provider="google"
+   510→   510→                  loading={googleLoading}
+   511→   511→                  onClick={async () => {
+   512→   512→                    setGoogleLoading(true)
+   513→   513→                    try {
+   514→   514→                      await signIn('google', { callbackUrl: '/' })
+   515→   515→                    } catch {
+   516→   516→                      toast.error('Error al conectar con Google')
+   517→   517→                      setGoogleLoading(false)
+   518→   518→                    }
+   519→   519→                  }}
+   520→   520→                />
+   521→   521→              </div>
+   522→   522→            </>
+   523→   523→          )}
+   524→   524→
+   525→   525→          {/* ===== Guest ===== */}
+   526→   526→          <Button
+   527→   527→            variant="outline"
+   528→   528→            onClick={handleGuest}
+   529→   529→            disabled={guestLoading}
+   530→   530→            className="w-full rounded-md h-11 mt-3 gap-2"
+   531→   531→          >
+   532→   532→            {guestLoading ? (
+   533→   533→              <Loader2 className="h-4 w-4 animate-spin" />
+   534→   534→            ) : (
+   535→   535→              <Users className="h-4 w-4" />
+   536→   536→            )}
+   537→   537→            Explorar como invitado
+   538→   538→          </Button>
+   539→   539→
+   540→   540→          {/* ===== Security badge ===== */}
+   541→   541→          <div className="flex items-center justify-center gap-1.5 mt-4 text-[10px] text-muted-foreground">
+   542→   542→            <Shield className="h-3 w-3 text-olive-500" />
+   543→   543→            <span>Tus datos están protegidos con cifrado</span>
+   544→   544→          </div>
+   545→   545→        </div>
+   546→   546→      </DialogContent>
+   547→   547→
+   548→   548→      {/* Modal de recuperar contraseña */}
+   549→   549→      <ForgotPasswordModal open={showForgot} onClose={() => setShowForgot(false)} />
+   550→   550→    </Dialog>
+   551→   551→  )
+   552→   552→}
+   553→   553→
+   554→   554→// ===== FormField wrapper =====
+   555→   555→function FormField({
+   556→   556→  label,
+   557→   557→  icon: Icon,
+   558→   558→  error,
+   559→   559→  success,
+   560→   560→  trailing,
+   561→   561→  children,
+   562→   562→}: {
+   563→   563→  label: string
+   564→   564→  icon: any
+   565→   565→  error?: string
+   566→   566→  success?: string
+   567→   567→  trailing?: React.ReactNode
+   568→   568→  children: React.ReactNode
+   569→   569→}) {
+   570→   570→  return (
+   571→   571→    <div className="space-y-1.5">
+   572→   572→      <Label className="text-xs font-semibold flex items-center justify-between">
+   573→   573→        <span>{label}</span>
+   574→   574→        {success && (
+   575→   575→          <span className="text-[10px] text-olive-500 flex items-center gap-0.5">
+   576→   576→            <Check className="h-3 w-3" /> {success}
+   577→   577→          </span>
+   578→   578→        )}
+   579→   579→      </Label>
+   580→   580→      <div className="relative">
+   581→   581→        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   582→   582→        {children}
+   583→   583→        {trailing}
+   584→   584→      </div>
+   585→   585→      {error && (
+   586→   586→        <p className="text-[10px] text-red-500 flex items-center gap-1">
+   587→   587→          <AlertCircle className="h-3 w-3" /> {error}
+   588→   588→        </p>
+   589→   589→      )}
+   590→   590→    </div>
+   591→   591→  )
+   592→   592→}
+   593→   593→
+   594→   594→// ===== Social login button =====
+   595→   595→function SocialButton({ provider, onClick, loading }: { provider: 'google' | 'github'; onClick: () => void; loading?: boolean }) {
+   596→   596→  return (
+   597→   597→    <button
+   598→   598→      type="button"
+   599→   599→      onClick={onClick}
+   600→   600→      disabled={loading}
+   601→   601→      className="flex w-full items-center justify-center gap-2 rounded-sm border border-border/60 py-2.5 text-sm font-medium hover:bg-secondary/50 transition disabled:opacity-50"
+   602→   602→    >
+   603→   603→      {loading ? (
+   604→   604→        <Loader2 className="h-4 w-4 animate-spin" />
+   605→   605→      ) : provider === 'google' ? (
+   606→   606→        <svg className="h-4 w-4" viewBox="0 0 24 24">
+   607→   607→          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+   608→   608→          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+   609→   609→          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+   610→   610→          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+   611→   611→        </svg>
+   612→   612→      ) : (
+   613→   613→        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+   614→   614→          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+   615→   615→        </svg>
+   616→   616→      )}
+   617→   617→      <span className="capitalize">{provider === 'google' ? 'Google' : 'GitHub'}</span>
+   618→   618→    </button>
+   619→   619→  )
+   620→   620→}
+   621→   621→

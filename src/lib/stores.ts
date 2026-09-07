@@ -45,6 +45,15 @@ interface UIState {
   chatOpen: boolean
   toggleChat: () => void
 
+  // Mensajería privada 💬
+  chatTab: 'world' | 'dm'
+  setChatTab: (t: 'world' | 'dm') => void
+  dmPeerId: string | null
+  openDM: (peerId: string) => void   // desde fuera (perfil, chat): abre panel + hilo
+  setDMPeer: (peerId: string | null) => void // navegación interna del panel
+  dmUnread: number
+  setDMUnread: (n: number) => void
+
   // Sidebar móvil
   mobileSidebarOpen: boolean
   toggleMobileSidebar: () => void
@@ -106,6 +115,14 @@ export const useUIStore = create<UIState>()(
 
       chatOpen: false,
       toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
+
+      chatTab: 'world',
+      setChatTab: (t) => set({ chatTab: t }),
+      dmPeerId: null,
+      openDM: (peerId) => set({ dmPeerId: peerId, chatTab: 'dm', chatOpen: true }),
+      setDMPeer: (peerId) => set({ dmPeerId: peerId }),
+      dmUnread: 0,
+      setDMUnread: (n) => set({ dmUnread: Math.max(0, n) }),
 
       mobileSidebarOpen: false,
       toggleMobileSidebar: () => set((s) => ({ mobileSidebarOpen: !s.mobileSidebarOpen })),

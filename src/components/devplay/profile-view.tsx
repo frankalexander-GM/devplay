@@ -16,11 +16,11 @@ import { useUIStore } from '@/lib/stores'
 import { toast } from 'sonner'
 import { UserAvatar, TimeAgo, formatBytes } from './shared'
 import { PostCard } from './post-card'
-import { UserPlus, UserCheck, Settings, Radio, Download, ArrowLeft, Loader2 } from 'lucide-react'
+import { UserPlus, UserCheck, Settings, Radio, Download, ArrowLeft, Loader2, MessageSquare } from 'lucide-react'
 
 export function ProfileView({ userId }: { userId: string }) {
   const { user: me, isAuthed, isGuest, refresh } = useCurrentUser()
-  const { setView, openAuth } = useUIStore()
+  const { setView, openAuth, openDM } = useUIStore()
   const qc = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
@@ -42,6 +42,7 @@ export function ProfileView({ userId }: { userId: string }) {
   const { user, posts } = data
   const isMe = me?.id === userId
   const canFollow = isAuthed && !isGuest && !isMe
+  const canMessage = isAuthed && !isGuest && !isMe && !user?.isGuest
 
   async function handleFollow() {
     if (!canFollow) {
@@ -120,6 +121,18 @@ export function ProfileView({ userId }: { userId: string }) {
                       Seguir
                     </>
                   )}
+                </Button>
+              )}
+              {canMessage && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  title="Mensaje privado"
+                  onClick={() => openDM(user.id)}
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Mensaje
                 </Button>
               )}
             </div>

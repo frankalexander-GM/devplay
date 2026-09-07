@@ -291,3 +291,47 @@ export const storeService = {
   getBalance: () =>
     fetchJson<{ balance: number; transactions: DevCoinTransaction[] }>(`${API_BASE}/store/balance`),
 }
+
+/* ============================================================
+   dmService — mensajería privada 💬
+   ============================================================ */
+
+export interface DMPeer {
+  id: string
+  username: string
+  avatar: string | null
+  fullName: string | null
+}
+
+export interface DMMessage {
+  id: string
+  senderId: string
+  recipientId: string
+  content: string
+  createdAt: string
+  readAt: string | null
+  sender?: DMPeer
+}
+
+export interface DMConversation {
+  peerId: string
+  peer: DMPeer
+  lastContent: string
+  lastAt: string
+  lastMine: boolean
+  unread: number
+}
+
+export const dmService = {
+  list: () =>
+    fetchJson<{ conversations: DMConversation[] }>(`${API_BASE}/dm`),
+
+  thread: (userId: string) =>
+    fetchJson<{ peer: DMPeer; messages: DMMessage[] }>(`${API_BASE}/dm/${userId}`),
+
+  send: (userId: string, content: string) =>
+    fetchJson<{ message: DMMessage }>(`${API_BASE}/dm/${userId}`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
+}

@@ -65,10 +65,45 @@ model User {
   loginEvents        LoginEvent[]
   pollVotes          PollVote[] @relation("UserPollVotes")
   deletionCodes      AccountDeletionCode[] @relation("AccountDeletionCodes")
+  // ===== Seguridad de acceso (código por correo) =====
+  loginCodes         LoginCode[]
+  // ===== Mensajería privada 💬 =====
+  dmsSent            DirectMessage[] @relation("DMSent")
+  dmsRecv            DirectMessage[] @relation("DMRecv")
   // ===== Tienda =====
   devCoins           Int      @default(100) // Monedas virtuales iniciales
   storePurchases     StorePurchase[] @relation("UserStorePurchases")
   coinTransactions   DevCoinTransaction[] @relation("UserCoinTransactions")
+}
+
+// Códigos de acceso de un solo uso enviados por correo al iniciar sesión 🔐
+model LoginCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String    // bcrypt del código de 6 dígitos
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// Mensaje directo entre dos usuarios 💬
+model DirectMessage {
+  id          String    @id @default(cuid())
+  senderId    String
+  sender      User      @relation("DMSent", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User      @relation("DMRecv", fields: [recipientId], references: [id], onDelete: Cascade)
+  content     String
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([senderId, recipientId])
+  @@index([recipientId, readAt])
+  @@index([createdAt])
 }
 
 model Post {

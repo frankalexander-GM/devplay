@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Globe, MoreVertical, Eraser, Trash2, Link2, Maximize2 } from 'lucide-react'
+import { MessageSquare, Send, X, Copy, Check, Flag, ScrollText, Globe, MoreVertical, Eraser, Trash2, Link2, Maximize2, Mail } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import { useWorldChat, type ChatMessage } from '@/hooks/use-socket'
+import { useWorldChat, useSocket, type ChatMessage } from '@/hooks/use-socket'
+import { DMView } from '@/components/devplay/layout/dm-panel'
 import { UserAvatar, TimeAgo } from '@/components/devplay/shared/shared'
 import { filterProfanity } from '@/lib/profanity'
 import { AdSlot } from '@/components/devplay/shared/ad-slot'
@@ -40,10 +41,27 @@ interface ChatPanelProps {
 
 export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
   const { user, isGuest } = useCurrentUser()
-  const { chatOpen, toggleChat, openAuth, setView } = useUIStore()
+  const { chatOpen, toggleChat, openAuth, setView, chatTab, setChatTab, dmUnread, dmPeerId } = useUIStore()
   const { messages, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected } = useWorldChat(user?.id, user?.username)
+  const { socket } = useSocket()
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // ===== 🔔 DM en vivo: badge de no leídos + aviso amable =====
+  useEffect(() => {
+    if (!socket) return
+    const onDMNew = (m: any) => {
+      if (m?.recipientId !== user?.id) return
+      const s = useUIStore.getState()
+      if (s.chatTab === 'dm' && s.dmPeerId === m.senderId) return // ya lo está leyendo
+      s.setDMUnread(s.dmUnread + 1)
+      toast(`${m.sender?.username ?? 'Un dev'} te escribió 💬`, {
+        description: String(m.content ?? '').slice(0, 60),
+      })
+    }
+    socket.on('dm:new', onDMNew)
+    return () => { socket.off('dm:new', onDMNew) }
+  }, [socket, user?.id])
 
   // ===== Antiflood: 5 segundos entre mensajes =====
   const [cooldown, setCooldown] = useState(0)
@@ -207,39 +225,51 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-sm frame-double bg-primary text-primary-foreground">
-              <MessageSquare className="h-4 w-4" />
+              {chatTab === 'world' ? <MessageSquare className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
             </div>
             <div>
-              <h3 className="font-display font-bold text-base leading-tight">Chat Mundial</h3>
+              <h3 className="font-display font-bold text-base leading-tight">
+                {chatTab === 'world' ? 'Chat Mundial' : 'Mensajes privados'}
+              </h3>
               <div className="flex items-center gap-1.5">
                 <span className={cn('h-1.5 w-1.5 rounded-full', isConnected ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
                 <span className="label-caps !text-[9px] !tracking-[0.12em]">
-                  En vivo · nadie ve quién está aquí 🤫
+                  {chatTab === 'world' ? 'En vivo · nadie ve quién está aquí 🤫' : 'Tus chats 1 a 1 🔒'}
                 </span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-0.5">
-            <ChatOptionsMenu
-              isFull={false}
-              canChat={!!canChat}
-              onClearLocal={handleClearLocal}
-              onDeleteAllMine={handleDeleteAllMine}
-            />
+            {chatTab === 'world' && (
+              <ChatOptionsMenu
+                isFull={false}
+                canChat={!!canChat}
+                onClearLocal={handleClearLocal}
+                onDeleteAllMine={handleDeleteAllMine}
+              />
+            )}
             <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={toggleChat}>
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        <div className="rule-ornate mt-2.5 opacity-60">
-          <span className="text-[8px] leading-none">◆</span>
+
+        {/* Tabs: Mundial / Privados */}
+        <div className="mt-2.5 grid grid-cols-2 gap-1 rounded-md bg-secondary/50 p-1">
+          <TabButton active={chatTab === 'world'} onClick={() => setChatTab('world')} icon={<Globe className="h-3 w-3" />} label="Mundial" />
+          <TabButton active={chatTab === 'dm'} onClick={() => setChatTab('dm')} icon={<Mail className="h-3 w-3" />} label="Privados" badge={dmUnread} />
         </div>
       </div>
 
-      {messagesArea}
-
-      {emojiRow}
-      {inputArea}
+      {chatTab === 'world' ? (
+        <>
+          {messagesArea}
+          {emojiRow}
+          {inputArea}
+        </>
+      ) : (
+        <DMView variant={variant} />
+      )}
     </div>
   )
 
@@ -252,16 +282,24 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
       <div className="space-y-5">
         {/* ===== Masthead de la gaceta ===== */}
         <header className="relative text-center pt-2 pb-1">
-          <p className="label-caps opacity-80">La plaza pública · Edición continua</p>
+          <p className="label-caps opacity-80">
+            {chatTab === 'world' ? 'La plaza pública · Edición continua' : 'Solo para ti y tu contacto 🔒'}
+          </p>
           <h1 className="text-page mt-1.5 flex items-center justify-center gap-3">
-            <Globe className="h-7 w-7 text-primary hidden sm:block" />
-            Chat Mundial
+            {chatTab === 'world' ? (
+              <Globe className="h-7 w-7 text-primary hidden sm:block" />
+            ) : (
+              <Mail className="h-7 w-7 text-primary hidden sm:block" />
+            )}
+            {chatTab === 'world' ? 'Chat Mundial' : 'Mensajes privados'}
           </h1>
           <div className="rule-ornate w-56 mx-auto mt-3 opacity-80">
             <span className="text-[9px] leading-none">◆</span>
           </div>
           <p className="text-meta italic mt-2.5">
-            La conversación es en tiempo real y 100% privada — nadie sabe quién está conectado, pasa la voz a tus devs favoritos
+            {chatTab === 'world'
+              ? 'La conversación es en tiempo real y 100% privada — nadie sabe quién está conectado, pasa la voz a tus devs favoritos'
+              : 'Conversaciones 1 a 1 en tiempo real — guardadas de forma segura, solo ustedes las leen'}
           </p>
         </header>
 
@@ -273,22 +311,35 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
               <div className="flex items-center gap-2 min-w-0">
                 <span className={cn('h-2 w-2 rounded-full shrink-0', isConnected ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
                 <span className="label-caps !text-[10px] truncate">
-                  En vivo · sala privada 🤫
+                  {chatTab === 'world' ? 'En vivo · sala privada 🤫' : 'Chats 1 a 1 🔒'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <ChatOptionsMenu
-                  isFull
-                  canChat={!!canChat}
-                  onClearLocal={handleClearLocal}
-                  onDeleteAllMine={handleDeleteAllMine}
-                />
+                {/* Tabs: Mundial / Privados */}
+                <div className="grid grid-cols-2 gap-1 rounded-md bg-secondary/50 p-1">
+                  <TabButton active={chatTab === 'world'} onClick={() => setChatTab('world')} icon={<Globe className="h-3 w-3" />} label="Mundial" />
+                  <TabButton active={chatTab === 'dm'} onClick={() => setChatTab('dm')} icon={<Mail className="h-3 w-3" />} label="Privados" badge={dmUnread} />
+                </div>
+                {chatTab === 'world' && (
+                  <ChatOptionsMenu
+                    isFull
+                    canChat={!!canChat}
+                    onClearLocal={handleClearLocal}
+                    onDeleteAllMine={handleDeleteAllMine}
+                  />
+                )}
               </div>
             </div>
 
-            {messagesArea}
-            {emojiRow}
-            {inputArea}
+            {chatTab === 'world' ? (
+              <>
+                {messagesArea}
+                {emojiRow}
+                {inputArea}
+              </>
+            ) : (
+              <DMView variant={variant} />
+            )}
           </div>
 
           {/* ===== Columna lateral de la sala ===== */}
@@ -409,6 +460,7 @@ function ChatBubble({ msg, isMine, onDelete }: { msg: ChatMessage; isMine: boole
   const [menuOpen, setMenuOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
+  const openDM = useUIStore((s) => s.openDM)
 
   if (msg.type === 'system') {
     return (
@@ -511,6 +563,21 @@ function ChatBubble({ msg, isMine, onDelete }: { msg: ChatMessage; isMine: boole
               {!isMine && (
                 <button
                   onClick={() => {
+                    setMenuOpen(false)
+                    openDM(msg.userId)
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-xs hover:bg-secondary/60 transition"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Mensaje privado
+                </button>
+              )}
+              {!isMine && (
+                <div className="border-t border-border/40" />
+              )}
+              {!isMine && (
+                <button
+                  onClick={() => {
                     import('@/services/security-service').then(s => {
                       s.securityService.report({
                         type: 'COMMENT',
@@ -550,6 +617,37 @@ function MoreVerticalIcon() {
       <circle cx="12" cy="12" r="1.8" />
       <circle cx="12" cy="19" r="1.8" />
     </svg>
+  )
+}
+
+// ===== Botón de pestaña (Mundial / Privados) =====
+function TabButton({ active, onClick, icon, label, badge }: {
+  active: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  label: string
+  badge?: number
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex items-center justify-center gap-1.5 rounded-sm py-1.5 text-xs font-semibold transition-all',
+        active ? 'btn-gradient-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
+      )}
+    >
+      {icon}
+      {label}
+      {!!badge && badge > 0 && (
+        <span className={cn(
+          'flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold',
+          active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
+        )}>
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
+    </button>
   )
 }
 

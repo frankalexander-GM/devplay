@@ -100,6 +100,37 @@ const internalServer = createServer(async (req: IncomingMessage, res: ServerResp
     return
   }
 
+  // Internal endpoint: POST /internal/dm
+  // Body: payload de DirectMessage + sender {id,username,avatar}
+  // Emite 'dm:new' a TODOS los sockets del destinatario y del remitente
+  // (el remitente lo recibe para sincronizar otras pestañas).
+  if (req.method === 'POST' && req.url === '/internal/dm') {
+    try {
+      const body = await readBody(req)
+      const data = JSON.parse(body)
+      if (!data?.id || !data?.senderId || !data?.recipientId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: 'bad payload' }))
+        return
+      }
+      const targets = new Set([String(data.senderId), String(data.recipientId)])
+      let emitted = 0
+      for (const [socketId, info] of userSockets.entries()) {
+        if (targets.has(info.userId)) {
+          io.to(socketId).emit('dm:new', data)
+          emitted++
+        }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true, emitted }))
+    } catch (e) {
+      console.error('dm internal error', e)
+      res.writeHead(500)
+      res.end(JSON.stringify({ error: 'internal' }))
+    }
+    return
+  }
+
   // Internal endpoint: POST /internal/chat-deleted
   // Body: { ids: string[] } — mensajes eliminados del chat mundial
   if (req.method === 'POST' && req.url === '/internal/chat-deleted') {
