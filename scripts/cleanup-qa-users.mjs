@@ -6,7 +6,11 @@
 import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
-const QA_EMAILS = ['frankalexander064+qa1@gmail.com', 'frankalexander064+qa2@gmail.com']
+const QA_EMAILS = [
+  'frankalexander064+qa1@gmail.com',
+  'frankalexander064+qa2@gmail.com',
+  'frankalexander064+qa3@gmail.com',
+]
 
 for (const email of QA_EMAILS) {
   const u = await db.user.findUnique({ where: { email } })
