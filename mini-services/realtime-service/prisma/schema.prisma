@@ -1,5 +1,6 @@
-// DevPlay - Prisma Schema (SQLite)
-// Note: SQLite doesn't support enums, so we use String with app-level constants.
+// DevPlay - Prisma Schema del realtime-service (PostgreSQL / Supabase)
+// Migrado de SQLite a Postgres (2026-09-07): el chat mundial valida usuarios y
+// persiste mensajes en Supabase igual que la web.
 // Note: No list primitive types - mediaUrls stored as JSON string.
 
 generator client {
@@ -7,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

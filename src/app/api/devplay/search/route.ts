@@ -15,11 +15,13 @@ export async function GET(req: NextRequest) {
   }
 
   // Buscar usuarios por username o bio
+  // ⚠️ Postgres: contains = LIKE case-sensitive → mode:'insensitive' obligatorio
+  // (en SQLite LIKE era case-insensitive y esto funcionaba sin mode)
   const users = await db.user.findMany({
     where: {
       OR: [
-        { username: { contains: q } },
-        { bio: { contains: q } },
+        { username: { contains: q, mode: 'insensitive' as const } },
+        { bio: { contains: q, mode: 'insensitive' as const } },
       ],
       isGuest: false,
     },
@@ -39,9 +41,9 @@ export async function GET(req: NextRequest) {
   const posts = await db.post.findMany({
     where: {
       OR: [
-        { content: { contains: q } },
-        { beta: { title: { contains: q } } },
-        { beta: { description: { contains: q } } },
+        { content: { contains: q, mode: 'insensitive' as const } },
+        { beta: { title: { contains: q, mode: 'insensitive' as const } } },
+        { beta: { description: { contains: q, mode: 'insensitive' as const } } },
       ],
     },
     include: {

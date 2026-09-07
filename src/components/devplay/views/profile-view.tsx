@@ -19,7 +19,7 @@ import {
   Calendar, Sparkles, Bookmark, BarChart3, Home, Activity,
   Share2, Star, MapPin, Globe, Briefcase, Cake,
   Image as ImageIcon, Video, Info, Shield, Ban,
-  User as UserIcon,
+  User as UserIcon, MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PREDEFINED_TAGS, SOCIAL_PLATFORMS } from '@/types/devplay'
@@ -34,7 +34,7 @@ type ProfileTab = 'inicio' | 'informacion' | 'publicaciones' | 'fotos' | 'favori
 
 export function ProfileView({ userId }: { userId: string }) {
   const { user: me, isAuthed, isGuest, refresh } = useCurrentUser()
-  const { setView, openAuth, openPostDetail, profileTab } = useUIStore()
+  const { setView, openAuth, openPostDetail, profileTab, openDM } = useUIStore()
   const [editing, setEditing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<ProfileTab>(
@@ -182,6 +182,18 @@ export function ProfileView({ userId }: { userId: string }) {
               )}
               {canFollow && !user.isBlocked && (
                 <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openDM(user.id)}
+                  className="gap-1.5 rounded-full"
+                  title="Mensaje privado"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Mensaje</span>
+                </Button>
+              )}
+              {canFollow && !user.isBlocked && (
+                <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowBlockDialog(true)}
@@ -214,6 +226,25 @@ export function ProfileView({ userId }: { userId: string }) {
               )}
             </div>
             <p className="text-sm text-muted-foreground">@{user.username}</p>
+
+            {/* Contadores visibles: seguidores · seguidos · publicaciones */}
+            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-secondary/40 px-3.5 py-1.5 text-sm">
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-wine-500" />
+                <b className="text-foreground">{user.followersCount}</b>
+                <span className="text-muted-foreground">seguidores</span>
+              </span>
+              <span className="text-muted-foreground/50">·</span>
+              <span>
+                <b className="text-foreground">{user.followingCount}</b>
+                <span className="text-muted-foreground"> seguidos</span>
+              </span>
+              <span className="text-muted-foreground/50">·</span>
+              <span>
+                <b className="text-foreground">{posts.length}</b>
+                <span className="text-muted-foreground"> publicaciones</span>
+              </span>
+            </div>
 
             {/* Tags */}
             {user.tags && user.tags.length > 0 && (
