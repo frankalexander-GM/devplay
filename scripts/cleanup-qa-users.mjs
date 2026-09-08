@@ -11,6 +11,7 @@ const QA_EMAILS = [
   'frankalexander064+qa2@gmail.com',
   'frankalexander064+qa3@gmail.com',
   'frankalexander064+recup@gmail.com',
+  'devplay.online+edad@gmail.com',
 ]
 
 for (const email of QA_EMAILS) {

@@ -54,6 +54,7 @@ export function AuthModal() {
   const [regPassword, setRegPassword] = useState('')
   const [showRegPass, setShowRegPass] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
+  const [agreeAge, setAgreeAge] = useState(false)
   const [usernameTaken, setUsernameTaken] = useState(false)
   const [checkingUsername, setCheckingUsername] = useState(false)
 
@@ -227,6 +228,7 @@ export function AuthModal() {
     else if (usernameTaken) newErrors.push({ field: 'regUsername', message: 'Ese nombre ya está en uso, prueba otro' })
     if (regPassword.length < 6) newErrors.push({ field: 'regPassword', message: 'Mínimo 6 caracteres' })
     if (!agreeTerms) newErrors.push({ field: 'terms', message: 'Debes aceptar los términos' })
+    if (!agreeAge) newErrors.push({ field: 'age', message: 'Debes confirmar que tienes al menos 13 años' })
     if (newErrors.length) { setErrors(newErrors); return }
 
     setLoading(true)
@@ -729,6 +731,25 @@ export function AuthModal() {
                   </div>
                 )}
 
+                {/* Edad mínima (Ley 1581 Art. 7: datos de menores) 🎂 */}
+                <div>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={agreeAge}
+                      onCheckedChange={(v) => { setAgreeAge(!!v); clearFieldError('age') }}
+                      className="mt-0.5"
+                    />
+                    <span className="text-xs text-muted-foreground leading-relaxed">
+                      Confirmo que tengo <span className="font-medium text-foreground">al menos 13 años</span> (o la edad mínima que exija la ley de mi país)
+                    </span>
+                  </label>
+                  {getFieldError('age') && (
+                    <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {getFieldError('age')}
+                    </p>
+                  )}
+                </div>
+
                 {/* Terms */}
                 <div>
                   <label className="flex items-start gap-2 cursor-pointer">
@@ -752,7 +773,7 @@ export function AuthModal() {
                 {/* Submit */}
                 <Button
                   type="submit"
-                  disabled={loading || !agreeTerms}
+                  disabled={loading || !agreeTerms || !agreeAge}
                   className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
                 >
                   {loading ? (
