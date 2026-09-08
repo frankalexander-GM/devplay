@@ -14,9 +14,11 @@ import { filterProfanity } from '@/lib/profanity'
 const TAKE = 60
 const MAX_PER_MINUTE = 20
 
-// Notifica al servicio realtime (:3004) para entrega en vivo por socket
+// Notifica al servicio realtime para entrega en vivo por socket.
+// Local: 127.0.0.1:3004 · Docker/Coolify: http://realtime:3004 (REALTIME_INTERNAL_URL)
+const REALTIME_INTERNAL_URL = process.env.REALTIME_INTERNAL_URL || 'http://127.0.0.1:3004'
 function notifyRealtime(payload: Record<string, unknown>) {
-  fetch('http://127.0.0.1:3004/internal/dm', {
+  fetch(`${REALTIME_INTERNAL_URL}/internal/dm`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

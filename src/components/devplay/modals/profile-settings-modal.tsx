@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button'
 import { securityService } from '@/services/security-service'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useUIStore } from '@/lib/stores'
+import { useT, type Lang } from '@/lib/i18n'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
-  X, Settings, Lock, Globe, Cookie, Trash2, Loader2, ShieldCheck, Eye,
+  X, Settings, Lock, Globe, Cookie, Trash2, Loader2, ShieldCheck, Eye, Languages,
 } from 'lucide-react'
 import { DeleteAccountModal } from '@/components/devplay/modals/delete-account-modal'
 
@@ -34,6 +35,7 @@ function loadConsent(): CookieConsent | null {
 }
 
 export function ProfileSettingsModal() {
+  const { t, lang, setLang } = useT()
   const { settingsOpen, closeSettings } = useUIStore()
   const { user, refresh } = useCurrentUser()
   const [privacyLoading, setPrivacyLoading] = useState(false)
@@ -90,7 +92,7 @@ export function ProfileSettingsModal() {
                 <Settings className="h-4 w-4" />
               </span>
               <div>
-                <h2 className="font-bold text-sm leading-none">Configuración del perfil</h2>
+                <h2 className="font-bold text-sm leading-none">{t('Configuración del perfil')}</h2>
                 <p className="text-[10px] text-muted-foreground mt-0.5">@{user?.username ?? 'invitado'}</p>
               </div>
             </div>
@@ -106,9 +108,39 @@ export function ProfileSettingsModal() {
               </div>
             ) : (
               <>
+                {/* ===== Idioma 🌐 ===== */}
+                <section>
+                  <h3 className="label-caps mb-2 flex items-center gap-1.5">
+                    <Languages className="h-3.5 w-3.5 text-primary" />
+                    {t('Idioma')}
+                  </h3>
+                  <div className="rounded-md glass p-2 grid grid-cols-2 gap-2">
+                    {([
+                      { id: 'es' as Lang, label: t('Español'), flag: '🇨🇴' },
+                      { id: 'en' as Lang, label: t('English'), flag: '🇺🇸' },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setLang(opt.id)}
+                        className={cn(
+                          'flex items-center gap-2 rounded-sm border px-3 py-2 text-sm font-semibold transition',
+                          lang === opt.id
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border/50 hover:bg-secondary/60 text-foreground/80'
+                        )}
+                      >
+                        <span className="text-base">{opt.flag}</span>
+                        {opt.label}
+                        {lang === opt.id && <ShieldCheck className="h-3.5 w-3.5 ml-auto text-primary" />}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">{t('Elige el idioma de la interfaz')}</p>
+                </section>
+
                 {/* ===== Privacidad ===== */}
                 <section>
-                  <h3 className="label-caps mb-2">Privacidad</h3>
+                  <h3 className="label-caps mb-2">{t('Privacidad')}</h3>
                   <div className="rounded-md glass divide-y divide-border/40">
                     <button
                       onClick={togglePrivacy}
@@ -119,9 +151,9 @@ export function ProfileSettingsModal() {
                         {user?.isPrivate ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-semibold">Perfil privado</span>
+                        <span className="block text-sm font-semibold">{t('Perfil privado')}</span>
                         <span className="block text-[11px] text-muted-foreground">
-                          {user?.isPrivate ? 'Solo tus seguidores pueden ver tu contenido' : 'Cualquiera puede ver tu perfil'}
+                          {user?.isPrivate ? t('Solo tus seguidores pueden ver tu contenido') : t('Cualquiera puede ver tu perfil')}
                         </span>
                       </span>
                       <span className={cn('relative h-5 w-9 rounded-full transition shrink-0', user?.isPrivate ? 'bg-primary' : 'bg-secondary')}>
@@ -133,8 +165,8 @@ export function ProfileSettingsModal() {
                         <Eye className="h-4 w-4" />
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-semibold">Logros y estadísticas</span>
-                        <span className="block text-[11px] text-muted-foreground">Siempre privados: solo tú los ves</span>
+                        <span className="block text-sm font-semibold">{t('Logros y estadísticas')}</span>
+                        <span className="block text-[11px] text-muted-foreground">{t('Siempre privados: solo tú los ves')}</span>
                       </span>
                       <ShieldCheck className="h-4 w-4 text-olive-500 shrink-0" />
                     </div>
@@ -145,24 +177,24 @@ export function ProfileSettingsModal() {
                 <section>
                   <h3 className="label-caps mb-2 flex items-center gap-1.5">
                     <Cookie className="h-3.5 w-3.5 text-amber-500" />
-                    Cookies
+                    {t('Cookies')}
                   </h3>
                   <div className="rounded-md glass divide-y divide-border/40">
                     <CookieRow
-                      title="Esenciales"
-                      desc="Necesarias para iniciar sesión y mantener tu tema"
+                      title={t('Esenciales')}
+                      desc={t('Necesarias para iniciar sesión y mantener tu tema')}
                       checked
                       locked
                     />
                     <CookieRow
-                      title="Preferencias"
-                      desc="Recuerdan tu sidebar, chat y ajustes de vista"
+                      title={t('Preferencias')}
+                      desc={t('Recuerdan tu sidebar, chat y ajustes de vista')}
                       checked={consent?.preferences ?? true}
                       onChange={(v) => saveConsent({ ...{ analytics: consent?.analytics ?? true, preferences: v } })}
                     />
                     <CookieRow
-                      title="Analíticas"
-                      desc="Nos ayudan a saber qué funciones se usan más"
+                      title={t('Analíticas')}
+                      desc={t('Nos ayudan a saber qué funciones se usan más')}
                       checked={consent?.analytics ?? false}
                       onChange={(v) => saveConsent({ ...{ preferences: consent?.preferences ?? true, analytics: v } })}
                     />
@@ -171,7 +203,7 @@ export function ProfileSettingsModal() {
 
                 {/* ===== Zona de peligro ===== */}
                 <section>
-                  <h3 className="label-caps mb-2 text-red-500">Zona de peligro</h3>
+                  <h3 className="label-caps mb-2 text-red-500">{t('Zona de peligro')}</h3>
                   <button
                     onClick={() => setShowDelete(true)}
                     className="flex w-full items-center gap-3 rounded-md border border-red-500/30 bg-red-500/5 p-3 text-left hover:bg-red-500/10 transition"
@@ -180,9 +212,9 @@ export function ProfileSettingsModal() {
                       <Trash2 className="h-4 w-4" />
                     </span>
                     <span className="flex-1 min-w-0">
-                      <span className="block text-sm font-semibold text-red-500">Eliminar mi cuenta</span>
+                      <span className="block text-sm font-semibold text-red-500">{t('Eliminar mi cuenta')}</span>
                       <span className="block text-[11px] text-muted-foreground">
-                        Código al correo + contraseña para confirmar
+                        {t('Código al correo + contraseña para confirmar')}
                       </span>
                     </span>
                   </button>

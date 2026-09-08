@@ -221,7 +221,7 @@ export default function NotFound() {
             transition={{ delay: 0.2, duration: 0.4 }}
             className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 text-foreground"
           >
-            ¡Ups! Esta página se fue a otro nivel
+            ¡Ups! Esta página no existe
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -248,6 +248,16 @@ export default function NotFound() {
             >
               <Home className="h-5 w-5" />
               Volver al inicio
+            </Button>
+            {/* Volver a la página anterior 🡐 */}
+            <Button
+              onClick={() => router.back()}
+              variant="outline"
+              className="h-11 px-6 text-base gap-2 w-full sm:w-auto"
+              size="lg"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              Volver atrás
             </Button>
             {/* Fallback: plain anchor that always works, even with JS off
                 or when reached via a direct URL */}

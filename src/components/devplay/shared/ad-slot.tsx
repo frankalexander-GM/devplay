@@ -10,8 +10,8 @@ import { pickHouseAd } from './ad-utils'
  *
  * - Con AdSense configurado → renderiza el bloque <ins> de Google.
  * - Con patrocinadores propios (SPONSOR_HOUSE_ADS) → muestra su tarjeta.
- * - Sin nada de eso → tarjeta elegante "Tu anuncio aquí" (contáctanos),
- *   que además deja claro dónde irá publicidad cuando se active.
+ * - Sin nada de eso → NO renderiza nada (el dueño pidió quitar el
+ *   placeholder "Tu anuncio aquí").
  */
 
 declare global {
@@ -36,6 +36,9 @@ export function AdSlot({ slot, className }: { slot?: string; className?: string 
 
   const house = pickHouseAd(SPONSOR_HOUSE_ADS)
 
+  // Sin AdSense y sin patrocinadores → nada de placeholders 🚫
+  if (!adsEnabled && !house) return null
+
   return (
     <div className={`glass-card frame-double relative overflow-hidden ${className ?? ''}`} aria-label="Espacio publicitario">
       {/* Sello esquina */}
@@ -53,7 +56,7 @@ export function AdSlot({ slot, className }: { slot?: string; className?: string 
           data-ad-slot={slot || ADSENSE_SLOT_FEED}
           data-full-width-responsive="true"
         />
-      ) : house ? (
+      ) : (
         /* ===== Patrocinador de la casa ===== */
         <a href={house.href} target="_blank" rel="noopener sponsored" className="block group">
           <div className="flex items-center gap-3.5 px-4 py-4">
@@ -69,22 +72,6 @@ export function AdSlot({ slot, className }: { slot?: string; className?: string 
             </div>
           </div>
         </a>
-      ) : (
-        /* ===== Placeholder "Tu anuncio aquí" ===== */
-        <div className="px-4 py-4 flex items-center gap-3.5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm frame-double bg-secondary/60">
-            <Megaphone className="h-5 w-5 text-muted-foreground/60" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-display font-bold text-sm text-foreground/80 leading-tight">Tu anuncio aquí</p>
-            <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-              Apoya a DevPlay y llega a miles de devs indie 🎮
-            </p>
-            <span className="label-caps !text-[8px] text-primary/80 mt-1 inline-block">
-              Escríbenos para patrocinar
-            </span>
-          </div>
-        </div>
       )}
     </div>
   )

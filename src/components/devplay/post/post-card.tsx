@@ -439,7 +439,7 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
       {/* Cover image */}
       {beta.coverImage && (
         <div className="relative h-40 bg-gradient-to-br from-amber-300 to-bronze-400">
-          <img src={beta.coverImage} alt={beta.title} className="w-full h-full object-cover" />
+          <img src={beta.coverImage} alt={beta.title} className="w-full h-full object-contain p-2" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between">
             <div className="text-white">

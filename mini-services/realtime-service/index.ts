@@ -105,9 +105,12 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
   res.end(JSON.stringify({ service: 'devplay-realtime', ok: true }))
 })
 
-// Servidor HTTP interno (solo localhost) para endpoints que el backend Next
-// llama para disparar eventos en tiempo real. Socket.io no interfiere aquí.
+// Servidor HTTP interno (solo localhost por defecto) para endpoints que el
+// backend Next llama para disparar eventos en tiempo real. Socket.io no
+// interfiere aquí. En Docker (compose) se escucha en 0.0.0.0 pa' que el
+// servicio web lo alcance por la red interna.
 const INTERNAL_PORT = 3004
+const INTERNAL_HOST = process.env.REALTIME_INTERNAL_HOST || '127.0.0.1'
 
 const internalServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   // Internal endpoint: POST /internal/broadcast-live
@@ -308,8 +311,8 @@ io.on('connection', (socket: Socket) => {
 
 httpServer.listen(PORT, () => {
   console.log(`[devplay-realtime] listening on port ${PORT}`)
-  internalServer.listen(INTERNAL_PORT, '127.0.0.1', () => {
-    console.log(`[devplay-realtime] internal endpoints on 127.0.0.1:${INTERNAL_PORT}`)
+  internalServer.listen(INTERNAL_PORT, INTERNAL_HOST, () => {
+    console.log(`[devplay-realtime] internal endpoints on ${INTERNAL_HOST}:${INTERNAL_PORT}`)
   })
 })
 

@@ -199,7 +199,7 @@ export function BetasView() {
                   onClick={() => openPostDetail(post.id)}
                 >
                   {beta.coverImage ? (
-                    <img src={beta.coverImage} alt={beta.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <img src={beta.coverImage} alt={beta.title} className="absolute inset-0 w-full h-full object-contain p-2" />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-5xl font-black text-white/30 select-none drop-shadow">

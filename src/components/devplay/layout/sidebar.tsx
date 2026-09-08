@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { UserAvatar, UserTags } from '@/components/devplay/shared/shared'
 import type { ViewId } from '@/types/devplay'
@@ -69,6 +70,7 @@ const COMMUNITY_ITEMS = [
 ]
 
 export function Sidebar() {
+  const { t } = useT()
   const {
     currentView,
     setView,
@@ -129,7 +131,7 @@ export function Sidebar() {
         {/* ===== Sección 1: Menú Principal (+ opciones del sidebar) ===== */}
         <div>
           <div className="flex items-center justify-between pr-1.5">
-            <SectionTitle>Menú principal</SectionTitle>
+            <SectionTitle>{t('Menú principal')}</SectionTitle>
             <SidebarOptionsButton />
           </div>
           <div className="space-y-1">
@@ -148,7 +150,7 @@ export function Sidebar() {
         {/* ===== Sección 2: Comunidad (filtros rápidos) — ocultable ===== */}
         {!hideCommunity && (
         <div>
-          <SectionTitle>Comunidad</SectionTitle>
+          <SectionTitle>{t('Comunidad')}</SectionTitle>
           <div className="space-y-1">
             {COMMUNITY_ITEMS.map((c) => (
               <button
@@ -170,10 +172,10 @@ export function Sidebar() {
                   <c.icon className={sidebarCompact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} />
                 </span>
                 <div className="min-w-0 flex-1 text-left">
-                  <div className="truncate text-sm font-semibold">{c.label}</div>
+                  <div className="truncate text-sm font-semibold">{t(c.label)}</div>
                   {!sidebarCompact && (
                     <div className={cn('truncate text-[11px]', activeFilter === c.id ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-                      {c.desc}
+                      {t(c.desc)}
                     </div>
                   )}
                 </div>
@@ -186,12 +188,12 @@ export function Sidebar() {
         {/* ===== Sección 3: Crear (logueados) ===== */}
         {canCreate && (
           <div>
-            <SectionTitle>Crear contenido</SectionTitle>
+            <SectionTitle>{t('Crear contenido')}</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={FileText} label="Nueva publicación" gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={openCreatePost} />
-              <CreateButton icon={Gamepad2} label="Subir beta" gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={openCreateBeta} />
-              <CreateButton icon={Video} label="Subir video" gradient="from-wine-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePost} />
-              <CreateButton icon={BarChart3} label="Crear encuesta" gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePoll} />
+              <CreateButton icon={FileText} label={t('Nueva publicación')} gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={openCreatePost} />
+              <CreateButton icon={Gamepad2} label={t('Subir beta')} gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={openCreateBeta} />
+              <CreateButton icon={Video} label={t('Subir video')} gradient="from-wine-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePost} />
+              <CreateButton icon={BarChart3} label={t('Crear encuesta')} gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePoll} />
             </div>
           </div>
         )}
@@ -199,12 +201,12 @@ export function Sidebar() {
         {/* ===== Sección 4: Biblioteca (logueados) ===== */}
         {canCreate && (
           <div>
-            <SectionTitle>Mi biblioteca</SectionTitle>
+            <SectionTitle>{t('Mi biblioteca')}</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'favoritos')} />
-              <CreateButton icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'publicaciones')} />
-              <CreateButton icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'logros')} />
-              <CreateButton icon={ClipboardList} label="Reportes" gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={() => setView('reportes')} />
+              <CreateButton icon={Bookmark} label={t('Guardados')} gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'favoritos')} />
+              <CreateButton icon={Library} label={t('Mis betas')} gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'publicaciones')} />
+              <CreateButton icon={Award} label={t('Logros')} gradient="from-wine-400 to-bronze-500" compact={sidebarCompact} onClick={() => user && openProfile(user.id, 'logros')} />
+              <CreateButton icon={ClipboardList} label={t('Reportes')} gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={() => setView('reportes')} />
             </div>
           </div>
         )}
@@ -212,18 +214,18 @@ export function Sidebar() {
         {/* ===== Sección 5: Ayuda — ocultable ===== */}
         {!hideHelp && (
         <div>
-          <SectionTitle>Ayuda</SectionTitle>
+          <SectionTitle>{t('Ayuda')}</SectionTitle>
           <div className="space-y-1">
             <CreateButton
               icon={HelpCircle}
-              label="Tour guiado"
+              label={t('Tour guiado')}
               gradient="from-wine-400 to-bronze-500"
               compact={sidebarCompact}
               onClick={() => startTour()}
             />
             <CreateButton
               icon={Info}
-              label="Acerca de DevPlay"
+              label={t('Acerca de DevPlay')}
               gradient="from-slate-400 to-gray-500"
               compact={sidebarCompact}
               onClick={() => setView('about')}
@@ -428,19 +430,19 @@ function MobileDrawer({
               {/* Accesos rápidos — grid de 2x2 */}
               {canCreate && (
                 <div>
-                  <SectionTitle>Crear</SectionTitle>
+                  <SectionTitle>{t('Crear')}</SectionTitle>
                   <div className="grid grid-cols-2 gap-2">
-                    <QuickAction icon={FileText} label="Publicar" gradient="from-wine-400 to-wine-500" onClick={() => { openCreatePost(); onClose() }} />
-                    <QuickAction icon={Gamepad2} label="Beta" gradient="from-amber-400 to-bronze-500" onClick={() => { openCreateBeta(); onClose() }} />
-                    <QuickAction icon={Video} label="Video" gradient="from-wine-400 to-sepia-500" onClick={() => { openCreatePost(); onClose() }} />
-                    <QuickAction icon={BarChart3} label="Encuesta" gradient="from-olive-400 to-sepia-500" onClick={() => { openCreatePoll(); onClose() }} />
+                    <QuickAction icon={FileText} label={t('Publicar')} gradient="from-wine-400 to-wine-500" onClick={() => { openCreatePost(); onClose() }} />
+                    <QuickAction icon={Gamepad2} label={t('Beta')} gradient="from-amber-400 to-bronze-500" onClick={() => { openCreateBeta(); onClose() }} />
+                    <QuickAction icon={Video} label={t('Video')} gradient="from-wine-400 to-sepia-500" onClick={() => { openCreatePost(); onClose() }} />
+                    <QuickAction icon={BarChart3} label={t('Encuesta')} gradient="from-olive-400 to-sepia-500" onClick={() => { openCreatePoll(); onClose() }} />
                   </div>
                 </div>
               )}
 
               {/* Navegación principal */}
               <div>
-                <SectionTitle>Navegación</SectionTitle>
+                <SectionTitle>{t('Navegación')}</SectionTitle>
                 <div className="space-y-1">
                   {MAIN_NAV.map((item, i) => (
                     <motion.div
@@ -462,7 +464,7 @@ function MobileDrawer({
               {/* Comunidad — ocultable desde opciones */}
               {!hideCommunity && (
               <div>
-                <SectionTitle>Comunidad</SectionTitle>
+                <SectionTitle>{t('Comunidad')}</SectionTitle>
                 <div className="space-y-1">
                   {COMMUNITY_ITEMS.map((c) => (
                     <button
@@ -482,8 +484,8 @@ function MobileDrawer({
                         <c.icon className="h-[18px] w-[18px]" />
                       </span>
                       <div className="min-w-0 flex-1 text-left">
-                        <div className="truncate text-sm font-semibold">{c.label}</div>
-                        <div className={cn('truncate text-[11px]', activeFilter === c.id ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{c.desc}</div>
+                        <div className="truncate text-sm font-semibold">{t(c.label)}</div>
+                        <div className={cn('truncate text-[11px]', activeFilter === c.id ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{t(c.desc)}</div>
                       </div>
                     </button>
                   ))}
@@ -494,12 +496,12 @@ function MobileDrawer({
               {/* Biblioteca */}
               {canCreate && (
                 <div>
-                  <SectionTitle>Mi biblioteca</SectionTitle>
+                  <SectionTitle>{t('Mi biblioteca')}</SectionTitle>
                   <div className="grid grid-cols-4 gap-2">
-                    <LibraryMini icon={Bookmark} label="Guardados" gradient="from-amber-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'favoritos'); onClose() } }} />
-                    <LibraryMini icon={Library} label="Mis betas" gradient="from-wine-400 to-wine-500" onClick={() => { if (user) { openProfile(user.id, 'publicaciones'); onClose() } }} />
-                    <LibraryMini icon={Award} label="Logros" gradient="from-wine-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'logros'); onClose() } }} />
-                    <LibraryMini icon={ClipboardList} label="Reportes" gradient="from-olive-400 to-sepia-500" onClick={() => { setView('reportes'); onClose() }} />
+                    <LibraryMini icon={Bookmark} label={t('Guardados')} gradient="from-amber-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'favoritos'); onClose() } }} />
+                    <LibraryMini icon={Library} label={t('Mis betas')} gradient="from-wine-400 to-wine-500" onClick={() => { if (user) { openProfile(user.id, 'publicaciones'); onClose() } }} />
+                    <LibraryMini icon={Award} label={t('Logros')} gradient="from-wine-400 to-bronze-500" onClick={() => { if (user) { openProfile(user.id, 'logros'); onClose() } }} />
+                    <LibraryMini icon={ClipboardList} label={t('Reportes')} gradient="from-olive-400 to-sepia-500" onClick={() => { setView('reportes'); onClose() }} />
                   </div>
                 </div>
               )}
@@ -507,7 +509,7 @@ function MobileDrawer({
               {/* Ayuda — ocultable desde opciones */}
               {!hideHelp && (
               <div>
-                <SectionTitle>Ayuda</SectionTitle>
+                <SectionTitle>{t('Ayuda')}</SectionTitle>
                 <div className="space-y-1">
                   <button
                     onClick={() => {
@@ -519,7 +521,7 @@ function MobileDrawer({
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary from-wine-400 to-bronze-500">
                       <HelpCircle className="h-4 w-4" />
                     </span>
-                    <span className="font-semibold text-sm">Tour guiado</span>
+                    <span className="font-semibold text-sm">{t('Tour guiado')}</span>
                   </button>
                   <button
                     onClick={() => { setView('about'); onClose() }}
@@ -528,7 +530,7 @@ function MobileDrawer({
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary from-slate-400 to-gray-500">
                       <Info className="h-4 w-4" />
                     </span>
-                    <span className="font-semibold text-sm">Acerca de</span>
+                    <span className="font-semibold text-sm">{t('Acerca de')}</span>
                   </button>
                 </div>
               </div>
@@ -555,6 +557,7 @@ function MobileDrawer({
 
 // ===== Item de navegación móvil (más grande y claro) =====
 function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+  const { t } = useT()
   const Icon = item.icon
   return (
     <button
@@ -576,8 +579,8 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
         <Icon className="h-[22px] w-[22px]" />
       </span>
       <div className="min-w-0 flex-1 text-left">
-        <div className="truncate font-semibold text-sm">{item.label}</div>
-        <div className={cn('truncate text-[11px]', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{item.description}</div>
+        <div className="truncate font-semibold text-sm">{t(item.label)}</div>
+        <div className={cn('truncate text-[11px]', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{t(item.description)}</div>
       </div>
       {active && (
         <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
@@ -632,6 +635,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function NavButton({ item, active, onClick, compact }: { item: NavItem; active: boolean; onClick: () => void; compact?: boolean }) {
+  const { t } = useT()
   const Icon = item.icon
   return (
     <button
@@ -655,10 +659,10 @@ function NavButton({ item, active, onClick, compact }: { item: NavItem; active: 
         <Icon className={compact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} />
       </span>
       <div className="min-w-0 flex-1 text-left">
-        <div className="truncate font-semibold">{item.label}</div>
+        <div className="truncate font-semibold">{t(item.label)}</div>
         {!compact && (
           <div className={cn('truncate text-[11px]', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-            {item.description}
+            {t(item.description)}
           </div>
         )}
       </div>
@@ -703,6 +707,7 @@ function CreateButton({
 
 // ===== Botón de opciones del sidebar (⋯) =====
 function SidebarOptionsButton() {
+  const { t } = useT()
   const {
     sidebarCompact, setSidebarCompact,
     hideCommunity, setHideCommunity,
@@ -714,8 +719,8 @@ function SidebarOptionsButton() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          title="Opciones del sidebar"
-          aria-label="Opciones del sidebar"
+          title={t('Opciones del sidebar')}
+          aria-label={t('Opciones del sidebar')}
           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
         >
           <Settings2 className="h-3.5 w-3.5" />
@@ -724,7 +729,7 @@ function SidebarOptionsButton() {
       <DropdownMenuContent align="end" className="w-60 rounded-md">
         <DropdownMenuLabel className="flex items-center gap-1.5 text-xs">
           <Settings2 className="h-3 w-3" />
-          Opciones del sidebar
+          {t('Opciones del sidebar')}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuCheckboxItem
@@ -733,7 +738,7 @@ function SidebarOptionsButton() {
           onSelect={(e) => e.preventDefault()}
           className="gap-2 rounded-lg text-xs"
         >
-          Modo compacto
+          {t('Modo compacto')}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={hideCommunity}
@@ -741,7 +746,7 @@ function SidebarOptionsButton() {
           onSelect={(e) => e.preventDefault()}
           className="gap-2 rounded-lg text-xs"
         >
-          Ocultar sección Comunidad
+          {t('Ocultar sección Comunidad')}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={hideHelp}
@@ -749,18 +754,18 @@ function SidebarOptionsButton() {
           onSelect={(e) => e.preventDefault()}
           className="gap-2 rounded-lg text-xs"
         >
-          Ocultar sección Ayuda
+          {t('Ocultar sección Ayuda')}
         </DropdownMenuCheckboxItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
             resetSidebarPrefs()
-            toast.success('Sidebar restablecido')
+            toast.success(t('Sidebar restablecido'))
           }}
           className="gap-2 rounded-lg text-xs"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          Restablecer todo
+          {t('Restablecer todo')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

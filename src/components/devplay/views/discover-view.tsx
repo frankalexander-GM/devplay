@@ -167,7 +167,7 @@ export function DiscoverView() {
                     >
                       <div className="aspect-video bg-gradient-to-br from-primary/15 to-accent/25 relative overflow-hidden">
                         {beta.coverImage ? (
-                          <img src={beta.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                          <img src={beta.coverImage} alt="" className="absolute inset-0 w-full h-full object-contain p-2" />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <span className="text-3xl font-black text-primary/40 select-none">

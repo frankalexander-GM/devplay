@@ -41,14 +41,19 @@ model User {
   // Redes sociales: JSON string { facebook, instagram, twitter, tiktok, youtube, twitch, linkedin, github, discord }
   socialLinks  String?
   // ===== Sistema =====
-  role         String   @default("USER")
-  tags         String?  // JSON string array de tags predefinidos
-  isGuest      Boolean  @default(false)
-  isPrivate    Boolean  @default(false) // Perfil privado (solo seguidores)
-  twoFAEnabled Boolean  @default(false)
-  lastSeen     DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role          String   @default("USER")
+  tags          String?  // JSON string array de tags predefinidos
+  isGuest       Boolean  @default(false)
+  isPrivate     Boolean  @default(false) // Perfil privado (solo seguidores)
+  twoFAEnabled  Boolean  @default(false)
+  // Tour de bienvenida: solo se muestra una vez a usuarios NUEVOS (los
+  // existentes nacen con true vía DDL). true = ya lo vio o lo cerró.
+  tourCompleted Boolean  @default(false)
+  // Idioma de la interfaz: "es" | "en" — se elige desde Configuración
+  language      String   @default("es")
+  lastSeen      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   posts              Post[]
   comments           Comment[]

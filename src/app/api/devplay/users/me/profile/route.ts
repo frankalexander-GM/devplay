@@ -27,6 +27,9 @@ const schema = z.object({
   profession: z.string().max(100).optional().nullable(),
   birthDate: z.string().optional().nullable(),
   socialLinks: z.record(z.string()).optional().nullable(),
+  // Onboarding + idioma 🌐
+  tourCompleted: z.boolean().optional(),
+  language: z.enum(['es', 'en']).optional(),
 })
 
 export async function PATCH(req: NextRequest) {
@@ -51,6 +54,8 @@ export async function PATCH(req: NextRequest) {
   if (data.profession !== undefined) update.profession = data.profession
   if (data.birthDate !== undefined) update.birthDate = data.birthDate ? new Date(data.birthDate) : null
   if (data.socialLinks !== undefined) update.socialLinks = data.socialLinks ? JSON.stringify(data.socialLinks) : null
+  if (data.tourCompleted !== undefined) update.tourCompleted = data.tourCompleted
+  if (data.language !== undefined) update.language = data.language
 
   const user = await db.user.update({
     where: { id: userId },
@@ -71,6 +76,8 @@ export async function PATCH(req: NextRequest) {
       profession: true,
       birthDate: true,
       socialLinks: true,
+      tourCompleted: true,
+      language: true,
       lastSeen: true,
       createdAt: true,
     },

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { useT } from '@/lib/i18n'
 import { useWorldChat, useSocket, type ChatMessage } from '@/hooks/use-socket'
 import { DMView } from '@/components/devplay/layout/dm-panel'
 import { UserAvatar, TimeAgo } from '@/components/devplay/shared/shared'
@@ -25,21 +26,12 @@ import { cn } from '@/lib/utils'
 
 const QUICK_EMOJIS = ['🎮', '🔥', '👀', '❤️', '🚀', '😎']
 
-const TICKER_ITEMS = [
-  '✦ Bienvenido a la plaza pública de DevPlay',
-  '🎮 Comparte tu devlog de la semana',
-  '📢 Regla de oro: sé amable con los demás devs',
-  '🕹️ Las betas nuevas se anuncian primero aquí',
-  '☕ El café de la plaza siempre está servido',
-  '🏆 Celebra los logros de tus devs favoritos',
-  '◆ Chat en tiempo real · sé amable y diviértete',
-]
-
 interface ChatPanelProps {
   variant?: 'sidebar' | 'fullview'
 }
 
 export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
+  const { t } = useT()
   const { user, isGuest } = useCurrentUser()
   const { chatOpen, toggleChat, openAuth, setView, chatTab, setChatTab, dmUnread, dmPeerId } = useUIStore()
   const { messages, sendMessage, deleteMessage, clearMessages, deleteMyMessages, isConnected } = useWorldChat(user?.id, user?.username)
@@ -229,12 +221,12 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
             </div>
             <div>
               <h3 className="font-display font-bold text-base leading-tight">
-                {chatTab === 'world' ? 'Chat Mundial' : 'Mensajes privados'}
+                {chatTab === 'world' ? t('Chat Mundial') : t('Mensajes privados')}
               </h3>
               <div className="flex items-center gap-1.5">
                 <span className={cn('h-1.5 w-1.5 rounded-full', isConnected ? 'bg-olive-400 live-pulse' : 'bg-muted-foreground/50')} />
                 <span className="label-caps !text-[9px] !tracking-[0.12em]">
-                  {chatTab === 'world' ? 'En vivo · nadie ve quién está aquí 🤫' : 'Tus chats 1 a 1 🔒'}
+                  {chatTab === 'world' ? t('En vivo · nadie ve quién está aquí 🤫') : t('Tus chats 1 a 1 🔒')}
                 </span>
               </div>
             </div>
@@ -256,8 +248,8 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
 
         {/* Tabs: Mundial / Privados */}
         <div className="mt-2.5 grid grid-cols-2 gap-1 rounded-md bg-secondary/50 p-1">
-          <TabButton active={chatTab === 'world'} onClick={() => setChatTab('world')} icon={<Globe className="h-3 w-3" />} label="Mundial" />
-          <TabButton active={chatTab === 'dm'} onClick={() => setChatTab('dm')} icon={<Mail className="h-3 w-3" />} label="Privados" badge={dmUnread} />
+          <TabButton active={chatTab === 'world'} onClick={() => setChatTab('world')} icon={<Globe className="h-3 w-3" />} label={t('Mundial')} />
+          <TabButton active={chatTab === 'dm'} onClick={() => setChatTab('dm')} icon={<Mail className="h-3 w-3" />} label={t('Privados')} badge={dmUnread} />
         </div>
       </div>
 
@@ -395,21 +387,6 @@ export function ChatPanel({ variant = 'sidebar' }: ChatPanelProps) {
                 className="label-caps !text-[9px] border border-border bg-secondary/50 px-2.5 py-1 rounded-sm hover:bg-accent hover:text-accent-foreground hover:border-primary/40 transition cursor-default"
               >
                 {topic}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* ===== Cinta de teletipo — llena el cierre de la página ===== */}
-        <div className="glass-card overflow-hidden py-2.5" aria-hidden>
-          <div className="ticker-track items-center gap-10 pr-10">
-            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-              <span
-                key={i}
-                className="label-caps !text-[9px] whitespace-nowrap flex items-center gap-10 shrink-0"
-              >
-                {item}
-                <span className="text-primary/60">◆</span>
               </span>
             ))}
           </div>

@@ -140,7 +140,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
           {/* Cover background */}
           <div className={cn('h-40 sm:h-56 relative overflow-hidden bg-gradient-to-br', statusMeta.color)}>
             {beta.coverImage ? (
-              <img src={beta.coverImage} alt={beta.title} className="absolute inset-0 w-full h-full object-cover" />
+              <img src={beta.coverImage} alt={beta.title} className="absolute inset-0 w-full h-full object-contain p-3" />
             ) : (
               <div className="flex h-full items-center justify-center">
                 <img src="/logo-devplay.png" alt="DevPlay" className="h-12 w-12 opacity-40" />

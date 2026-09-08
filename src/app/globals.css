@@ -440,38 +440,148 @@
   background: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
 }
 
-/* ===== Driver.js (tour) — papel crema ===== */
+/* ===== Driver.js (tour) — tarjeta crema retro "Terracota & Crema" ===== */
 .driver-popover.driverjs-theme {
-  background: var(--glass-bg);
+  background: color-mix(in oklch, var(--background) 92%, var(--accent));
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--glass-border);
+  border: 2px solid var(--primary);
   color: var(--foreground);
-  box-shadow: var(--glass-shadow);
+  /* Marco doble retro: borde interior crema + sombra terracota desplazada */
+  box-shadow:
+    inset 0 0 0 4px color-mix(in oklch, var(--background) 85%, white),
+    8px 8px 0 color-mix(in oklch, var(--primary) 30%, transparent),
+    0 24px 48px rgba(0, 0, 0, 0.18);
   border-radius: var(--radius-lg);
+  max-width: 380px;
+  padding: 1.25rem 1.35rem 1.1rem;
 }
 .driver-popover.driverjs-theme .driver-popover-title {
-  color: var(--foreground);
+  color: var(--primary);
   font-family: var(--font-display), Georgia, serif;
+  font-size: 1.3rem;
+  line-height: 1.35;
   font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.5rem;
 }
 .driver-popover.driverjs-theme .driver-popover-description {
-  color: var(--muted-foreground);
+  color: var(--foreground);
+  opacity: 0.82;
+  font-size: 0.9rem;
+  line-height: 1.55;
 }
 .driver-popover.driverjs-theme .driver-popover-progress-text {
   color: var(--muted-foreground);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.driver-popover.driverjs-theme .driver-popover-navigation-btns {
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 .driver-popover.driverjs-theme button {
   background: var(--primary);
   color: var(--primary-foreground);
   border: none;
   text-shadow: none;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.5rem 1.05rem;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.driver-popover.driverjs-theme button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
 .driver-popover.driverjs-theme button.driver-popover-prev-btn {
-  background: var(--secondary);
-  color: var(--secondary-foreground);
+  background: transparent;
+  color: var(--muted-foreground);
+  border: 1.5px solid var(--border);
+}
+.driver-popover.driverjs-theme button.driver-popover-prev-btn:hover {
+  color: var(--foreground);
+  border-color: var(--muted-foreground);
+}
+/* Puntito decorativo ✦ arriba del popover */
+.driver-popover.driverjs-theme::before {
+  content: '✦';
+  position: absolute;
+  top: 0.65rem;
+  right: 1rem;
+  color: var(--accent-foreground);
+  opacity: 0.5;
+  font-size: 0.9rem;
+}
+/* El cierre (×) del popover, discreto y alineado */
+.driver-popover.driverjs-theme .driver-popover-close-btn {
+  color: var(--muted-foreground);
+  font-size: 1.1rem;
+}
+.driver-popover.driverjs-theme .driver-popover-close-btn:hover {
+  color: var(--primary);
+}
+
+/* ===== Toasts retro (sonner) — "Terracota & Crema" 🍞 ===== */
+.toast-retro {
+  border: 2px solid var(--primary) !important;
+  border-radius: var(--radius-lg) !important;
+  background: color-mix(in oklch, var(--background) 94%, var(--accent)) !important;
+  color: var(--foreground) !important;
+  box-shadow:
+    6px 6px 0 color-mix(in oklch, var(--primary) 22%, transparent),
+    0 16px 40px rgba(0, 0, 0, 0.18) !important;
+  font-family: var(--font-bitter), Georgia, serif;
+  padding: 0.85rem 1rem !important;
+  gap: 0.5rem;
+}
+.toast-retro-title {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.005em;
+}
+.toast-retro-desc {
+  color: var(--muted-foreground);
+  opacity: 0.92;
+}
+.toast-retro-action {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-radius: 999px !important;
+  font-weight: 700;
+}
+.toast-retro-cancel {
+  background: transparent !important;
+  color: var(--muted-foreground) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 999px !important;
+  font-weight: 600;
+}
+/* Acento por tipo de aviso: borde e icono cambian de color */
+.toast-retro[data-type='success'] {
+  border-color: oklch(0.62 0.13 150) !important;
+  box-shadow:
+    6px 6px 0 color-mix(in oklch, oklch(0.62 0.13 150) 25%, transparent),
+    0 16px 40px rgba(0, 0, 0, 0.18) !important;
+}
+.toast-retro[data-type='error'] {
+  border-color: oklch(0.58 0.19 25) !important;
+  box-shadow:
+    6px 6px 0 color-mix(in oklch, oklch(0.58 0.19 25) 25%, transparent),
+    0 16px 40px rgba(0, 0, 0, 0.18) !important;
+}
+.toast-retro[data-type='warning'] {
+  border-color: oklch(0.75 0.15 75) !important;
+  box-shadow:
+    6px 6px 0 color-mix(in oklch, oklch(0.75 0.15 75) 25%, transparent),
+    0 16px 40px rgba(0, 0, 0, 0.18) !important;
+}
+.toast-retro[data-type='info'] {
+  border-color: var(--primary) !important;
 }
 
 /* ============================================================

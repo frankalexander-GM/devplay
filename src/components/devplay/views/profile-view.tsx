@@ -528,7 +528,7 @@ function ProfileInicio({ betaPosts, normalPosts, isMe, onPostClick }: any) {
               >
                 <div className="aspect-video bg-gradient-to-br from-amber-300 to-bronze-400 relative">
                   {post.beta?.coverImage && (
-                    <img src={post.beta.coverImage} alt="" className="w-full h-full object-cover" />
+                    <img src={post.beta.coverImage} alt="" className="w-full h-full object-contain p-2" />
                   )}
                   <div className="absolute bottom-1 right-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] text-white font-bold">
                     {post.beta?.downloads ?? 0} ⬇
@@ -880,31 +880,6 @@ function ProfileEstadisticas({ userId }: { userId: string }) {
           <h3 className="text-sm font-bold">Estado de la cuenta</h3>
         </div>
 
-        {/* Nivel + progreso */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-bronze-400 to-wine-500 text-white">
-              <Star className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-bold">Nivel {stats.level}</p>
-              <p className="text-[10px] text-muted-foreground">{stats.points} puntos</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Siguiente nivel</p>
-            <p className="text-xs font-semibold">{stats.pointsForNextLevel - stats.points} pts</p>
-          </div>
-        </div>
-        <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${stats.progressToNext}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-bronze-400 to-wine-500"
-          />
-        </div>
-
         {/* Resumen rápido */}
         <div className="grid grid-cols-3 gap-2 mt-3">
           <div className="text-center glass rounded-lg p-2">
@@ -1051,7 +1026,6 @@ function EditProfileDialog({ open, onClose, user, onSaved }: any) {
   const [location, setLocation] = useState(user.location ?? '')
   const [website, setWebsite] = useState(user.website ?? '')
   const [profession, setProfession] = useState(user.profession ?? '')
-  const [birthDate, setBirthDate] = useState(user.birthDate ? user.birthDate.split('T')[0] : '')
   const [socialLinks, setSocialLinks] = useState<SocialLinks>(user.socialLinks || {})
   const [selectedTags, setSelectedTags] = useState<string[]>(user.tags ?? [])
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
@@ -1098,7 +1072,6 @@ function EditProfileDialog({ open, onClose, user, onSaved }: any) {
         location: location.trim() || null,
         website: website.trim() || null,
         profession: profession.trim() || null,
-        birthDate: birthDate || null,
         socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null,
         tags: selectedTags,
       })
@@ -1183,26 +1156,15 @@ function EditProfileDialog({ open, onClose, user, onSaved }: any) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs font-medium">Ubicación</label>
-                <input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Ciudad, País"
-                  maxLength={100}
-                  className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Cumpleaños</label>
-                <input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-              </div>
+            <div>
+              <label className="text-xs font-medium">Ubicación</label>
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Ciudad, País"
+                maxLength={100}
+                className="mt-0.5 w-full rounded-lg border border-input bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              />
             </div>
             <div>
               <label className="text-xs font-medium">Sitio web</label>

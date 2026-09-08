@@ -33,6 +33,8 @@ export async function GET(req: NextRequest) {
       profession: true,
       birthDate: true,
       socialLinks: true,
+      tourCompleted: true,
+      language: true,
       lastSeen: true,
       createdAt: true,
     },

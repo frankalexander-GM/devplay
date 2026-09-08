@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 /**
@@ -17,6 +18,7 @@ import { cn } from '@/lib/utils'
  * En desktop el Crear sigue viviendo en el header.
  */
 export function CreateDock() {
+  const { t } = useT()
   const { user, isAuthed, isGuest } = useCurrentUser()
   const { openCreatePost, openCreateBeta, openCreatePoll, currentView } = useUIStore()
 
@@ -30,10 +32,10 @@ export function CreateDock() {
         <DropdownMenuTrigger asChild>
           <button
             className="btn-gradient-primary flex h-12 items-center gap-2 rounded-full px-6 text-sm font-bold text-white shadow-xl ring-2 ring-background/60 transition active:scale-95"
-            aria-label="Crear contenido"
+            aria-label={t('Crear contenido')}
           >
             <Plus className="h-5 w-5" />
-            Crear
+            {t('Crear')}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -43,19 +45,19 @@ export function CreateDock() {
         >
           <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
             <FileText className="mr-2 h-4 w-4 text-wine-500" />
-            Publicación
+            {t('Publicación')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={openCreateBeta} className="rounded-lg">
             <Gamepad className="mr-2 h-4 w-4 text-amber-500" />
-            Subir Beta
+            {t('Subir Beta')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
             <Video className="mr-2 h-4 w-4 text-wine-500" />
-            Subir Video
+            {t('Subir Video')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={openCreatePoll} className="rounded-lg">
             <BarChart3 className="mr-2 h-4 w-4 text-olive-500" />
-            Encuesta
+            {t('Encuesta')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

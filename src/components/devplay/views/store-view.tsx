@@ -69,31 +69,64 @@ const ICON_MAP: Record<string, LucideIcon> = {
 // La Tienda está en preparación: se muestra como catálogo, sin compras (cambiar a false cuando abra)
 const STORE_CLOSED = true
 
-// ===== Aviso: tienda próximamente =====
+// ===== Letrero grande: tienda próximamente =====
 function StoreClosedBanner() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-card frame-double relative overflow-hidden p-4 sm:p-5 text-center"
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="relative overflow-hidden rounded-lg border-2 border-primary/50 px-6 py-14 sm:px-10 sm:py-20 text-center select-none"
+      style={{
+        background:
+          'linear-gradient(140deg, color-mix(in oklch, var(--primary) 88%, black) 0%, color-mix(in oklch, var(--primary) 78%, var(--accent)) 55%, color-mix(in oklch, var(--primary) 88%, black) 100%)',
+        boxShadow:
+          '8px 8px 0 color-mix(in oklch, var(--primary) 25%, transparent), 0 24px 60px rgba(0,0,0,0.22)',
+      }}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10" />
-      <div className="relative flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-bronze-500 text-white shadow">
-          <ShoppingBag className="h-5 w-5" />
+      {/* Marco de bombillas arriba y abajo (estilo letrero de neón retro) */}
+      <div
+        aria-hidden
+        className="absolute inset-x-6 top-3.5 h-2"
+        style={{
+          backgroundImage: 'radial-gradient(circle, oklch(0.88 0.14 88) 2.2px, transparent 3px)',
+          backgroundSize: '20px 8px',
+          backgroundRepeat: 'repeat-x',
+          backgroundPosition: 'center',
+          opacity: 0.9,
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-x-6 bottom-3.5 h-2"
+        style={{
+          backgroundImage: 'radial-gradient(circle, oklch(0.88 0.14 88) 2.2px, transparent 3px)',
+          backgroundSize: '20px 8px',
+          backgroundRepeat: 'repeat-x',
+          backgroundPosition: 'center',
+          opacity: 0.9,
+        }}
+      />
+      {/* Destello cálido central */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full opacity-30 blur-3xl"
+        style={{ background: 'radial-gradient(circle, oklch(0.9 0.1 85), transparent 70%)' }}
+      />
+
+      <div className="relative flex flex-col items-center gap-4">
+        <span className="label-caps !text-[10px] !tracking-[0.32em] text-white/70">✦ DevPlay Tienda ✦</span>
+        <h2 className="font-display text-5xl sm:text-7xl font-black leading-none tracking-tight text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.25)]">
+          ¡MUY PRONTO!
+        </h2>
+        <p className="max-w-md text-sm sm:text-base text-white/85 font-medium leading-relaxed">
+          Estamos endulzando la tienda: power-ups, avatares y sorpresas para tu perfil.
+          Sigue ganando DevCoins, que el día del estreno las vas a querer gastar 🪙
+        </p>
+        <span className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-bold text-white backdrop-blur">
+          <ShoppingBag className="h-3.5 w-3.5" />
+          Apertura muy pronto
         </span>
-        <div>
-          <p className="font-display font-bold text-sm sm:text-base">
-            La Tienda está en preparación 🛒✨
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
-            Aún no está disponible, pero llega muy pronto con sorpresas geniales.
-            Sigue ganando DevCoins para estrenarla el día del estreno 💛
-          </p>
-        </div>
-        <Badge className="rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
-          Próximamente
-        </Badge>
       </div>
     </motion.div>
   )

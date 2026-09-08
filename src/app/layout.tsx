@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "@/components/providers";
+import { LangProvider } from "@/lib/i18n";
+import { OfflineWatcher } from "@/components/devplay/shared/offline-watcher";
 import { ADSENSE_CLIENT } from "@/lib/ads";
 
 const fraunces = Fraunces({
@@ -49,9 +51,13 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <Providers>
-            {children}
-            <Toaster />
-            <SonnerToaster position="top-right" richColors />
+            <LangProvider>
+              {children}
+              <Toaster />
+              <SonnerToaster position="top-right" />
+              {/* Sin internet → pantalla retro amable (misma del 404/error) */}
+              <OfflineWatcher />
+            </LangProvider>
           </Providers>
           {/* Google AdSense 📢 — solo se carga si NEXT_PUBLIC_ADSENSE_CLIENT está en .env */}
           {ADSENSE_CLIENT && (

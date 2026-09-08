@@ -15,7 +15,8 @@ import {
 
 /**
  * Vista "Reportes" — resumen de actividad de tu cuenta:
- * totales, nivel, gráfica semanal y tus publicaciones más queridas.
+ * Actividad personal: resumen de tu cuenta, actividad semanal y tus
+ * publicaciones más queridas.
  */
 export function ReportsView() {
   const { user, isAuthed, isGuest } = useCurrentUser()
@@ -120,27 +121,19 @@ export function ReportsView() {
             })}
           </div>
 
-          {/* Nivel + actividad semanal */}
+          {/* Actividad + resumen */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="glass-card p-4">
-              <div className="flex items-center gap-2 mb-2.5">
+              <div className="flex items-center gap-2 mb-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-bronze-400 to-wine-500 text-white">
                   <Star className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold leading-none">Nivel {stats.level}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{stats.points} puntos · faltan {Math.max(stats.pointsForNextLevel - stats.points, 0)} para el siguiente</p>
+                  <p className="text-sm font-bold leading-none">Tu actividad</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Tu resumen en la plaza</p>
                 </div>
               </div>
-              <div className="h-2.5 w-full bg-secondary rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.max(stats.progressToNext, 4)}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-bronze-400 to-wine-500"
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-3">
+              <div className="grid grid-cols-3 gap-2 mt-1">
                 <MiniStat label="Siguiendo" value={stats.following} />
                 <MiniStat label="Guardados" value={stats.bookmarks} />
                 <MiniStat label="Likes dados" value={stats.likes} />

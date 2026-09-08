@@ -187,7 +187,8 @@ export function PixelBuddy() {
   useEffect(() => {
     if (!mounted) return
     const interval = setInterval(() => {
-      if (chatOpen || registerOpen || dragging || falling) return
+      // Cuando duerme 💤 NO camina (nada de sonambulismo jaja)
+      if (chatOpen || registerOpen || dragging || falling || mood === 'sleepy') return
       const { minX, maxX } = limits()
       const span = maxX - minX
       // A veces paseo cortito, a veces atravieso TODA la pantalla
@@ -203,7 +204,7 @@ export function PixelBuddy() {
       })
     }, 15000)
     return () => clearInterval(interval)
-  }, [mounted, chatOpen, registerOpen, dragging, falling, limits])
+  }, [mounted, chatOpen, registerOpen, dragging, falling, limits, mood])
 
   // ===== Personalidad: emotes (saltar, bailar, girar, guiñar, chispas) =====
   const doEmote = useCallback((kind: Emote, m: Mood = 'idle') => {
@@ -226,7 +227,8 @@ export function PixelBuddy() {
 
   // Pixel es AUTÓNOMO 🤖: se entretiene solo (saltitos, bailecitos, giros, guiños)
   useEffect(() => {
-    if (!mounted || collapsed || chatOpen || registerOpen || walking || dragging || falling || mood === 'dizzy') return
+    // Dormido 💤 = quieto: ni saltos ni bailes ni giros
+    if (!mounted || collapsed || chatOpen || registerOpen || walking || dragging || falling || mood === 'dizzy' || mood === 'sleepy') return
     const t = setInterval(() => {
       const r = Math.random()
       if (r < 0.2) doEmote('jump', 'happy')
@@ -920,10 +922,10 @@ export function PixelBuddy() {
         title="Pixel · tócame para hablar, arrástrame y suéltame ¡hago caiditas! (doble clic minimiza)"
         aria-label="Pixel, asistente de IA"
       >
-        {/* Flotación suave (solo cuando está quieto) */}
+        {/* Flotación suave (solo cuando está quieto y despierto) */}
         <motion.div
-          animate={walking || dragging || falling ? { y: 0 } : mood === 'sleepy' ? { y: [0, -2, 0] } : { y: [0, -5, 0] }}
-          transition={{ duration: mood === 'sleepy' ? 4 : 2.4, repeat: walking || dragging || falling ? 0 : Infinity, ease: 'easeInOut' }}
+          animate={walking || dragging || falling || mood === 'sleepy' ? { y: 0 } : { y: [0, -5, 0] }}
+          transition={{ duration: 2.4, repeat: walking || dragging || falling || mood === 'sleepy' ? 0 : Infinity, ease: 'easeInOut' }}
           whileHover={{ scale: walking || dragging || falling ? 1 : 1.1 }}
         >
           {/* Emotes de un disparo (salto / baile / aterrizaje) */}

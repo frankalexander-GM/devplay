@@ -32,6 +32,7 @@ import {
 } from 'lucide-react'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { useT } from '@/lib/i18n'
 import { notificationService } from '@/services/devplay-service'
 import { useLiveNotifications } from '@/hooks/use-socket'
 import { toast } from 'sonner'
@@ -41,6 +42,7 @@ import { cn } from '@/lib/utils'
 import type { NotificationItem } from '@/types/devplay'
 
 export function Header() {
+  const { t } = useT()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const { user, isAuthed, isGuest, refresh, logoutGuest } = useCurrentUser()
@@ -171,7 +173,7 @@ export function Header() {
           className="glass w-full flex items-center gap-2 h-9 rounded-sm px-3 text-sm text-muted-foreground hover:bg-secondary/80 transition italic"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span>Buscar juegos, devs, betas...</span>
+          <span>{t('Buscar juegos, devs, betas...')}</span>
         </button>
       </div>
 
@@ -194,25 +196,25 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button size="sm" className="btn-gradient-primary hidden lg:flex gap-1.5 rounded-sm" data-tour="create">
               <Plus className="h-4 w-4" />
-              Crear
+              {t('Crear')}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52 rounded-md">
             <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
               <FileText className="mr-2 h-4 w-4 text-wine-500" />
-              Publicación
+              {t('Publicación')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreateBeta} className="rounded-lg">
               <Gamepad className="mr-2 h-4 w-4 text-amber-500" />
-              Subir Beta
+              {t('Subir Beta')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
               <Video className="mr-2 h-4 w-4 text-wine-500" />
-              Subir Video
+              {t('Subir Video')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreatePoll} className="rounded-lg">
               <BarChart3 className="mr-2 h-4 w-4 text-olive-500" />
-              Encuesta
+              {t('Encuesta')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

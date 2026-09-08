@@ -114,6 +114,10 @@ export interface CurrentUser {
   socialLinks?: SocialLinks | null
   lastSeen?: string | null
   createdAt?: string
+  /** Tour de bienvenida: true = ya lo vio (solo se muestra a usuarios nuevos) */
+  tourCompleted?: boolean
+  /** Idioma de la interfaz: "es" | "en" — se cambia en Configuración */
+  language?: string | null
 }
 
 export interface UserProfile {

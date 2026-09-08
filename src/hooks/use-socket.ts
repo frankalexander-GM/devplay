@@ -16,7 +16,11 @@ export interface LiveNotification {
   message: string
 }
 
-const SOCKET_URL = typeof window !== 'undefined' ? window.location.origin : '/'
+// URL del realtime:
+//  - NEXT_PUBLIC_REALTIME_URL definida (Coolify/prod) → se usa directa.
+//  - Si no (sandbox/local) → mismo origen con XTransformPort=3003.
+const CUSTOM_RT_URL = process.env.NEXT_PUBLIC_REALTIME_URL || ''
+const SOCKET_URL = CUSTOM_RT_URL || (typeof window !== 'undefined' ? window.location.origin : '/')
 // Caddy (producción) enruta el realtime con este query param; en dev lo
 // intercepta el rewrite de Next por el EIO. Como query OPT (no en la URI)
 // para que el parser de socket.io-client no lo confunda con el namespace.
@@ -61,7 +65,9 @@ export function getSocket(): Socket {
   if (!socketInstance) {
     socketInstance = io(SOCKET_URL, {
       path: '/',
-      query: { XTransformPort: '3003' },
+      // En el sandbox, Caddy enruta el realtime con este query param.
+      // Con URL propia (Coolify) no hace falta.
+      ...(CUSTOM_RT_URL ? {} : { query: { XTransformPort: '3003' } }),
       // Polling puro: funciona a través de CUALQUIER proxy HTTP (Next dev,
       // Caddy/Coolify, Railway). El upgrade websocket a través del proxy dev
       // crea conexiones zombi (el upgrade nunca llega al server), así que lo
