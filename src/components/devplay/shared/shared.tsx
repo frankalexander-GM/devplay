@@ -10,7 +10,7 @@ import {
   Layers, Box, Bug, Grid3x3, Shapes, Target, Music, Volume2, PenTool,
   Code, Radio, MessageSquare, Palette, Film, Map, Rewind, Ghost, Sword,
   Footprints, Compass, Skull, BookOpen, Cog, Settings, Zap, Joystick, Brush,
-  type LucideIcon,
+  Tag, type LucideIcon,
 } from 'lucide-react'
 
 // Mapa de iconos para beta statuses

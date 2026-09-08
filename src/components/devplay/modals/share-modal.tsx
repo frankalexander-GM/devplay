@@ -32,7 +32,18 @@ export function ShareModal({
   const qc = useQueryClient()
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/?post=${postId}` : ''
-  const shareText = postContent ? postContent.slice(0, 100) + '...' : 'Mira esta publicación en DevPlay'
+  // Corte seguro por puntos de código: un slice normal puede partir un emoji
+  // por la mitad (surrogate suelto) y eso revienta encodeURIComponent (URIError).
+  const shareText = postContent ? [...postContent].slice(0, 100).join('') + '...' : 'Mira esta publicación en DevPlay'
+  // encodeURIComponent blindado: si aun así llegara un surrogate suelto,
+  // lo limpiamos en vez de tumbar la app.
+  const enc = (s: string) => {
+    try {
+      return encodeURIComponent(s)
+    } catch {
+      return encodeURIComponent(s.replace(/[\uD800-\uDFFF]/g, ''))
+    }
+  }
 
   function copyLink() {
     navigator.clipboard?.writeText(shareUrl)
@@ -73,10 +84,10 @@ export function ShareModal({
   }
 
   const socialLinks = [
-    { label: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, color: 'from-olive-500 to-olive-600' },
-    { label: 'X (Twitter)', icon: Twitter, url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, color: 'from-gray-700 to-gray-900' },
-    { label: 'Facebook', icon: Facebook, url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, color: 'from-wine-500 to-wine-700' },
-    { label: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, color: 'from-wine-400 to-wine-500' },
+    { label: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=${enc(shareText + ' ' + shareUrl)}`, color: 'from-olive-500 to-olive-600' },
+    { label: 'X (Twitter)', icon: Twitter, url: `https://twitter.com/intent/tweet?text=${enc(shareText)}&url=${enc(shareUrl)}`, color: 'from-gray-700 to-gray-900' },
+    { label: 'Facebook', icon: Facebook, url: `https://www.facebook.com/sharer/sharer.php?u=${enc(shareUrl)}`, color: 'from-wine-500 to-wine-700' },
+    { label: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${enc(shareUrl)}&text=${enc(shareText)}`, color: 'from-wine-400 to-wine-500' },
     { label: 'Instagram', icon: Instagram, url: shareUrl, color: 'from-bronze-500 to-sepia-600' },
   ]
 
