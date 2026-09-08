@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { rateLimitByKey, tooMany } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,10 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Debes iniciar sesión para comprar' }, { status: 401 })
     }
+
+    // Anti-abuso 🛡️: máx. 10 compras por usuario cada minuto (evita doble-click/flood)
+    const rl = rateLimitByKey(`buy:${userId}`, 10, 60_000)
+    if (!rl.ok) return tooMany(rl.retryAfter, 'Demasiadas compras seguidas. Espera un momentico plis 🙏')
 
     const body = await req.json().catch(() => ({} as any))
     const itemId = body?.itemId

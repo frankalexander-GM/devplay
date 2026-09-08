@@ -11,11 +11,14 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { createLoginCode, maskEmail } from '@/lib/login-code'
 import { sendMail, verificationCodeEmail } from '@/lib/mailer'
+import { rateLimit, tooMany } from '@/lib/rate-limit'
 
 const registerSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, 'Solo letras, números y guion bajo'),
   password: z.string().min(6),
+  // Honeypot anti-bots 🍯: campo invisible para humanos; si llega lleno, es un bot
+  website: z.string().max(200).optional(),
   // Datos de perfil pedidos en el registro (Ley 1581: declaramos la edad — menores de 13 no entran)
   fullName: z.string().trim().min(3).max(30, 'El nombre de perfil debe tener 3-30 caracteres'),
   age: z.number().int().min(13, 'Debes tener al menos 13 años para usar DevPlay').max(120),
@@ -23,6 +26,10 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Anti-bots 🛡️: máx. 5 intentos de registro por IP cada minuto
+    const rl = rateLimit(req, 'register', 5, 60_000)
+    if (!rl.ok) return tooMany(rl.retryAfter)
+
     const body = await req.json()
     const parsed = registerSchema.safeParse(body)
     if (!parsed.success) {
@@ -30,6 +37,13 @@ export async function POST(req: NextRequest) {
     }
 
     const { email, username, password, fullName, age } = parsed.data
+
+    // Honeypot 🍯: los bots rellenan campos ocultos. Respondemos ok falso y NO
+    // creamos nada — el bot se va contento y la BD queda limpia.
+    if (parsed.data.website && parsed.data.website.trim() !== '') {
+      console.warn(`[register] honeypot activado (${maskEmail(email)}) — posible bot descartado`)
+      return NextResponse.json({ ok: true, id: 'ignored', username, sentTo: maskEmail(email) })
+    }
 
     const existing = await db.user.findFirst({
       where: { OR: [{ email: email.toLowerCase() }, { username }] },

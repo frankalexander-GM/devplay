@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { randomUUID } from 'crypto'
+import { rateLimit, tooMany } from '@/lib/rate-limit'
 
 /**
  * Creates a guest user (read-only: can view feed & streams, cannot comment/like/chat).
+ * Anti-bots 🛡️: máx. 3 invitados por IP cada minuto — evita que inunden la BD.
  */
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(req, 'guest', 3, 60_000)
+  if (!rl.ok) return tooMany(rl.retryAfter)
+
   try {
     const body = await req.json().catch(() => ({}))
     const requestedName = body?.username as string | undefined

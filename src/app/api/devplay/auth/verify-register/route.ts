@@ -11,9 +11,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createLoginCode, verifyLoginCode, maskEmail } from '@/lib/login-code'
 import { sendMail, verificationCodeEmail, welcomeEmail } from '@/lib/mailer'
+import { rateLimit, tooMany } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
+    // Anti-bots 🛡️: máx. 15 verificaciones/reenvíos por IP cada minuto
+    const rl = rateLimit(req, 'verify-register', 15, 60_000)
+    if (!rl.ok) return tooMany(rl.retryAfter)
+
     const body = await req.json().catch(() => null)
     const email = String(body?.email || '').trim().toLowerCase()
     const code = String(body?.code || '').replace(/\D/g, '')
@@ -25,7 +30,8 @@ export async function POST(req: NextRequest) {
 
     const user = await db.user.findUnique({ where: { email } })
     if (!user || user.isGuest || !user.passwordHash) {
-      return NextResponse.json({ error: 'Cuenta no encontrada' }, { status: 404 })
+      // Error genérico: no revelar si el email existe o no (anti-enumeración)
+      return NextResponse.json({ error: 'Código incorrecto o expirado. Revisa tu correo.' }, { status: 400 })
     }
 
     // ===== Reenvío de código =====

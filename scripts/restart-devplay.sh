@@ -12,6 +12,10 @@ cd "$(dirname "$0")/.."
 
 SUPA_URL='postgresql://postgres.uizpoczewriaxbpsjena:frankalexander2025%40hhpp@aws-0-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=10'
 
+# Secretos de seguridad (tarea 33) — se leen del .env del repo si existen
+NA_SECRET=$(grep -E '^NEXTAUTH_SECRET=' .env | head -1 | cut -d= -f2-)
+RT_SECRET=$(grep -E '^REALTIME_SECRET=' .env | head -1 | cut -d= -f2-)
+
 echo "🛑 Matando servicios..."
 pkill -9 -f next-server 2>/dev/null || true
 pkill -9 -f "next dev" 2>/dev/null || true
@@ -20,10 +24,10 @@ sleep 1
 
 echo "🐘 Arrancando web (puerto 3000) con Supabase..."
 rm -rf .next
-( cd /home/z/my-project && DATABASE_URL="$SUPA_URL" setsid bun run dev > .zscripts/next-direct.log 2>&1 < /dev/null & )
+( cd /home/z/my-project && DATABASE_URL="$SUPA_URL" NEXTAUTH_SECRET="$NA_SECRET" REALTIME_SECRET="$RT_SECRET" setsid bun run dev > .zscripts/next-direct.log 2>&1 < /dev/null & )
 
 echo "🔌 Arrancando realtime (puerto 3003) con Supabase..."
-( cd /home/z/my-project/mini-services/realtime-service && DATABASE_URL="$SUPA_URL" setsid bun run dev > /home/z/my-project/.zscripts/realtime-supabase.log 2>&1 < /dev/null & )
+( cd /home/z/my-project/mini-services/realtime-service && DATABASE_URL="$SUPA_URL" REALTIME_SECRET="$RT_SECRET" NEXTAUTH_SECRET="$NA_SECRET" setsid bun run dev > /home/z/my-project/.zscripts/realtime-supabase.log 2>&1 < /dev/null & )
 
 echo ""
 echo "✅ Listo. Verifica con:"

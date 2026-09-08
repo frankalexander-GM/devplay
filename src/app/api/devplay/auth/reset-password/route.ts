@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { verifyLoginCode } from '@/lib/login-code'
+import { rateLimit, tooMany } from '@/lib/rate-limit'
 
 // POST /api/devplay/auth/reset-password
 // Paso 2 de la recuperación 🔑: valida el CÓDIGO de 6 dígitos y guarda la
@@ -20,6 +21,10 @@ const legacySchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  // Anti fuerza bruta 🛡️: máx. 10 intentos por IP cada minuto
+  const rl = rateLimit(req, 'reset-password', 10, 60_000)
+  if (!rl.ok) return tooMany(rl.retryAfter)
+
   const body = await req.json().catch(() => null)
   if (!body) {
     return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })

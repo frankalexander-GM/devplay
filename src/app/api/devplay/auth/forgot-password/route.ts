@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLoginCode, maskEmail } from '@/lib/login-code'
 import { mailEnabled, sendMail, verificationCodeEmail } from '@/lib/mailer'
+import { rateLimit, tooMany } from '@/lib/rate-limit'
 
 const schema = z.object({
   email: z.string().email(),
@@ -13,6 +14,10 @@ const schema = z.object({
 // (10 min de validez, un solo uso, antispam 5 códigos/15 min).
 // La contraseña nueva se guarda en /reset-password con { email, code, password }.
 export async function POST(req: NextRequest) {
+  // Anti-abuso 🛡️: máx. 5 solicitudes por IP cada minuto (evita bombardeo de correos)
+  const rl = rateLimit(req, 'forgot-password', 5, 60_000)
+  if (!rl.ok) return tooMany(rl.retryAfter)
+
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) {

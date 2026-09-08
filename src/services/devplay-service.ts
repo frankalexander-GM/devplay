@@ -43,7 +43,7 @@ async function fetchJson<T = any>(url: string, options?: RequestInit): Promise<T
  * Servicio de Autenticación
  */
 export const authService = {
-  register: (data: { email: string; username: string; password: string; role?: 'PLAYER' | 'DEV' }) =>
+  register: (data: { email: string; username: string; password: string; fullName?: string; age?: number; website?: string; role?: 'PLAYER' | 'DEV' }) =>
     fetchJson<AuthResponse>(`${API_BASE}/auth/register`, {
       method: 'POST',
       body: JSON.stringify(data),

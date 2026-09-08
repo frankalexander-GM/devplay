@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { rateLimitByKey, tooMany } from '@/lib/rate-limit'
 
 async function getAuthUserId(req: NextRequest): Promise<string | null> {
   const session = await getServerSession(authOptions)
@@ -48,6 +49,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const userId = await getAuthUserId(req)
   if (!userId) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+
+  // Anti-abuso 🛡️: máx. 30 follows por usuario cada minuto
+  const rl = rateLimitByKey(`follow:${userId}`, 30, 60_000)
+  if (!rl.ok) return tooMany(rl.retryAfter, 'Sigues cuentas muy rápido 😅 Espera un momentico.')
 
   const { followeeId } = await req.json()
   if (!followeeId || followeeId === userId) {

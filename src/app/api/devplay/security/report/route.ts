@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { rateLimitByKey, tooMany } from '@/lib/rate-limit'
 
 async function getAuthUserId(req: NextRequest): Promise<string | null> {
   const session = await getServerSession(authOptions)
@@ -25,6 +26,10 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const userId = await getAuthUserId(req)
   if (!userId) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+
+  // Anti-abuso 🛡️: máx. 5 reportes por usuario cada minuto
+  const rl = rateLimitByKey(`report:${userId}`, 5, 60_000)
+  if (!rl.ok) return tooMany(rl.retryAfter, 'Estás enviando reportes muy rápido. Espera un momentico plis 🙏')
 
   const body = await req.json()
   const parsed = schema.safeParse(body)

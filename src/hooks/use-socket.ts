@@ -16,22 +16,101 @@ export interface LiveNotification {
   message: string
 }
 
-const SOCKET_URL = '/?XTransformPort=3003'
+const SOCKET_URL = typeof window !== 'undefined' ? window.location.origin : '/'
+// Caddy (producción) enruta el realtime con este query param; en dev lo
+// intercepta el rewrite de Next por el EIO. Como query OPT (no en la URI)
+// para que el parser de socket.io-client no lo confunda con el namespace.
+
+// ===== Token firmado para el handshake 🔐 (tarea 33: blindaje) =====
+// El backend lo emite firmado (HMAC) y el realtime-service lo verifica:
+// sin sesión NO hay socket — nadie puede suplantar a otro usuario.
+let cachedToken: string | null = null
+let tokenPromise: Promise<string | null> | null = null
+
+function tokenUsable(t: string | null): boolean {
+  if (!t) return false
+  const exp = Number(t.split('.')[0])
+  return Number.isFinite(exp) && exp - Date.now() > 60_000 // margen de 1 min
+}
+
+export async function ensureRealtimeToken(): Promise<string | null> {
+  if (tokenUsable(cachedToken)) return cachedToken
+  if (!tokenPromise) {
+    tokenPromise = fetch('/api/devplay/realtime-token', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: any) => {
+        cachedToken = typeof data?.token === 'string' ? data.token : null
+        return cachedToken
+      })
+      .catch(() => {
+        cachedToken = null
+        return null
+      })
+      .finally(() => {
+        tokenPromise = null
+      })
+  }
+  return tokenPromise
+}
 
 let socketInstance: Socket | null = null
+// reintentos de conexión con refresco de token (evita bucle infinito sin sesión)
+let reconnectTries = 0
 
 export function getSocket(): Socket {
   if (!socketInstance) {
     socketInstance = io(SOCKET_URL, {
       path: '/',
-      transports: ['websocket', 'polling'],
+      query: { XTransformPort: '3003' },
+      // Polling puro: funciona a través de CUALQUIER proxy HTTP (Next dev,
+      // Caddy/Coolify, Railway). El upgrade websocket a través del proxy dev
+      // crea conexiones zombi (el upgrade nunca llega al server), así que lo
+      // desactivamos. Para chat en vivo es más que suficiente.
+      transports: ['polling'],
+      upgrade: false,
+      autoConnect: false, // conectamos tras conseguir el token 🔐
       reconnection: true,
       reconnectionAttempts: 15,
       reconnectionDelay: 2000,
       timeout: 15000,
+      // auth con CALLBACK (API real de socket.io-client): se evalúa en CADA
+      // intento de conexión → token siempre fresco. (Un `() => objeto` sin
+      // llamar al cb deja el handshake colgado para siempre 🫠)
+      auth: (cb: (data: Record<string, string>) => void) => cb({ token: cachedToken ?? '' }),
+    })
+
+    socketInstance.on('connect', () => {
+      reconnectTries = 0
+    })
+
+    // Si el handshake falla (token vencido/ausente), refrescamos el token
+    // y reintentamos un número finito de veces
+    socketInstance.on('connect_error', () => {
+      cachedToken = null
+      if (reconnectTries >= 5) return // sin sesión de verdad: no insistir más
+      reconnectTries++
+      ensureRealtimeToken()
+        .catch(() => null)
+        .then(() => {
+          const s = socketInstance
+          if (s && !s.connected && !s.active) s.connect()
+        })
     })
   }
   return socketInstance
+}
+
+/** Reintenta conexión (p.ej. justo después de iniciar sesión en la app) */
+export function reconnectSocketWithFreshToken(): void {
+  if (typeof window === 'undefined') return
+  cachedToken = null
+  reconnectTries = 0
+  ensureRealtimeToken()
+    .catch(() => null)
+    .then(() => {
+      const s = getSocket()
+      if (!s.connected && !s.active) s.connect()
+    })
 }
 
 export function useSocket() {
@@ -46,6 +125,13 @@ export function useSocket() {
 
   useEffect(() => {
     const socket = getSocket()
+    let cancelled = false
+
+    // 1) Conseguir token firmado → 2) conectar
+    // (socket.disconnected es true al inicio — la condición correcta es !connected)
+    ensureRealtimeToken().then(() => {
+      if (!cancelled && !socket.connected && !(socket as any).active) socket.connect()
+    })
 
     const onConnect = () => setIsConnected(true)
     const onDisconnect = () => setIsConnected(false)
@@ -54,6 +140,7 @@ export function useSocket() {
     socket.on('disconnect', onDisconnect)
 
     return () => {
+      cancelled = true
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
     }
@@ -107,6 +194,7 @@ export function useWorldChat(currentUserId: string | null | undefined, currentUs
     if (!socket || !isConnected || !currentUserId || !currentUsername) return
     if (hasJoined.current) return
     hasJoined.current = true
+    // El servidor usa la identidad VERIFICADA del token; esto es solo señuelo
     socket.emit('chat:join', { userId: currentUserId, username: currentUsername })
   }, [socket, isConnected, currentUserId, currentUsername])
 

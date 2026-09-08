@@ -4,6 +4,7 @@ import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import { userService, authService } from '@/services/devplay-service'
+import { reconnectSocketWithFreshToken } from '@/hooks/use-socket'
 import type { CurrentUser } from '@/types/devplay'
 import { useGuestStore } from '@/lib/stores'
 
@@ -77,6 +78,9 @@ export function useCurrentUser() {
     // Pequeña espera para que la cookie de sesión se propague
     await new Promise((r) => setTimeout(r, 250))
     await refresh()
+    // Blindaje 🔐: con la sesión lista, consigue token firmado y conecta el
+    // socket (antes del login no hay token y el realtime rechaza el handshake)
+    reconnectSocketWithFreshToken()
   }, [refresh])
 
   return { user, loading, isAuthed, isGuest, refresh, refreshAfterLogin, loginAsGuest, logoutGuest }

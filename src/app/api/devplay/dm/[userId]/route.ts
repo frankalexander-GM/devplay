@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { rateLimitByKey, tooMany } from '@/lib/rate-limit'
 import { filterProfanity } from '@/lib/profanity'
 
 const TAKE = 60
@@ -107,6 +108,10 @@ export async function POST(
     if (peerId === me) {
       return NextResponse.json({ error: 'No puedes hablar contigo mismo jaja' }, { status: 400 })
     }
+
+    // Anti-spam 🛡️: máx. 25 DMs por usuario cada minuto
+    const rl = rateLimitByKey(`dm:${me}`, 25, 60_000)
+    if (!rl.ok) return tooMany(rl.retryAfter, 'Estás enviando mensajes muy rápido 😅 Espera un momentico.')
 
     const body = await req.json().catch(() => null)
     const raw = String(body?.content ?? '')

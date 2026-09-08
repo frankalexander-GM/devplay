@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
 // POST a chat message (persisted - also broadcast by mini-service)
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { rateLimitByKey, tooMany } from '@/lib/rate-limit'
 
 async function getAuthUserId(req: NextRequest): Promise<string | null> {
   const session = await getServerSession(authOptions)
@@ -32,6 +33,10 @@ async function getAuthUserId(req: NextRequest): Promise<string | null> {
 export async function POST(req: NextRequest) {
   const userId = await getAuthUserId(req)
   if (!userId) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+
+  // Anti-spam 🛡️: máx. 20 mensajes por usuario cada minuto
+  const rl = rateLimitByKey(`chat:${userId}`, 20, 60_000)
+  if (!rl.ok) return tooMany(rl.retryAfter, 'Vas muy rápido 😅 Espera un momentico para volver a escribir.')
 
   const { content } = await req.json()
   if (!content || typeof content !== 'string' || content.trim().length === 0) {

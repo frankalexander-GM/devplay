@@ -8,6 +8,7 @@ import { Server, Socket } from 'socket.io'
 import { PrismaClient } from '@prisma/client'
 import { join } from 'path'
 import { readFileSync, existsSync } from 'fs'
+import { createHmac } from 'crypto'
 import { filterProfanity } from '../../src/lib/profanity'
 
 const PORT = 3003
@@ -27,6 +28,50 @@ function getDatabaseUrl(): string {
 
   // 3. Fallback a SQLite por defecto
   return `file:${join(process.cwd(), '..', '..', 'db', 'custom.db')}`
+}
+
+// Secreto compartido con el backend Next pa' verificar los tokens firmados 🔐
+function getRealtimeSecret(): string {
+  if (process.env.REALTIME_SECRET) return process.env.REALTIME_SECRET
+  if (process.env.NEXTAUTH_SECRET) return process.env.NEXTAUTH_SECRET
+  const envPath = join(process.cwd(), '..', '..', '.env')
+  if (existsSync(envPath)) {
+    const envContent = readFileSync(envPath, 'utf-8')
+    const m = envContent.match(/^REALTIME_SECRET=(.+)$/m)
+    if (m) return m[1].trim()
+    const m2 = envContent.match(/^NEXTAUTH_SECRET=(.+)$/m)
+    if (m2) return m2[1].trim()
+  }
+  return ''
+}
+
+const REALTIME_SECRET = getRealtimeSecret()
+if (!REALTIME_SECRET) {
+  console.error('[realtime] ⚠️ SIN REALTIME_SECRET/NEXTAUTH_SECRET — el chat quedará bloqueado. Configura la variable en Coolify.')
+}
+
+/**
+ * Verifica el token emitido por /api/devplay/realtime-token
+ * Formato: <expMs>.<base64url(JSON {uid,un,exp})>.<hmac-sha256>
+ */
+function verifyRealtimeToken(token: unknown): { uid: string; un: string } | null {
+  if (!REALTIME_SECRET) return null
+  if (typeof token !== 'string' || token.length > 1024) return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  const [expStr, payload, sig] = parts
+  const exp = Number(expStr)
+  if (!Number.isFinite(exp) || exp < Date.now()) return null
+  const expected = createHmac('sha256', REALTIME_SECRET).update(`${expStr}.${payload}`).digest('base64url')
+  if (sig.length !== expected.length || sig !== expected) return null
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'))
+    if (typeof data?.uid !== 'string' || typeof data?.un !== 'string') return null
+    if (data.uid.length > 64 || data.un.length > 40) return null
+    return { uid: data.uid, un: data.un }
+  } catch {
+    return null
+  }
 }
 
 const DATABASE_URL = getDatabaseUrl()
@@ -159,13 +204,28 @@ const internalServer = createServer(async (req: IncomingMessage, res: ServerResp
 
 const io = new Server(httpServer, {
   path: '/',
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: true, methods: ['GET', 'POST'] },
   pingTimeout: 60000,
   pingInterval: 25000,
+  maxHttpBufferSize: 1e6, // 1 MB — nadie necesita mandar más al chat
 })
 
 // socketId -> { userId, username }
 const userSockets = new Map<string, { userId: string; username: string }>()
+
+// ===== Handshake autenticado 🔐 =====
+// Sin token firmado válido NO hay conexión. La identidad del usuario sale
+// SIEMPRE del token — jamás de lo que diga el cliente.
+io.use((socket, next) => {
+  const auth = socket.handshake.auth as { token?: unknown } | undefined
+  const user = verifyRealtimeToken(auth?.token)
+  if (!user) {
+    console.warn(`[realtime] handshake rechazado (token inválido/ausente) from ${socket.handshake.address}`)
+    return next(new Error('unauthorized'))
+  }
+  socket.data.user = user
+  next()
+})
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -180,25 +240,39 @@ function readBody(req: IncomingMessage): Promise<string> {
 // El mapa userSockets solo se usa internamente para notificaciones en vivo.
 
 io.on('connection', (socket: Socket) => {
-  console.log(`[realtime] connected: ${socket.id}`)
+  const verified = socket.data.user as { uid: string; un: string }
+  console.log(`[realtime] connected: ${socket.id} as ${verified.un}`)
 
-  // Client identifies itself
-  socket.on('chat:join', (data: { userId: string; username: string }) => {
-    if (!data?.userId || !data?.username) return
-    userSockets.set(socket.id, { userId: data.userId, username: data.username })
+  // Anti-flood por socket 🛡️: máx. 5 mensajes cada 10 segundos
+  let msgTimestamps: number[] = []
+
+  // Client identifies itself — la identidad VERDADERA viene del token;
+  // lo que mande el cliente se ignora (anti-suplantación).
+  socket.on('chat:join', () => {
+    userSockets.set(socket.id, { userId: verified.uid, username: verified.un })
     // 🤫 Sin emisión de presencia: nadie puede saber quién está en la sala
   })
 
   // World chat message — persist + broadcast (con filtro anti-groserías 🧼)
-  socket.on('chat:message', async (data: { userId: string; username: string; content: string }) => {
+  socket.on('chat:message', async (data: { userId?: string; username?: string; content: string }) => {
     try {
-      if (!data?.content || !data?.userId) return
+      if (!data?.content) return
+      // Anti-flood: ventana deslizante de 10 s con tope 5 mensajes
+      const now = Date.now()
+      msgTimestamps = msgTimestamps.filter((t) => t > now - 10_000)
+      if (msgTimestamps.length >= 5) {
+        socket.emit('chat:error', { message: 'Vas muy rápido 😅 Espera un momentico.' })
+        return
+      }
+      msgTimestamps.push(now)
+
       const clean = filterProfanity(String(data.content).trim().slice(0, 500))
       const content = clean.trim()
       if (!content) return
 
+      // La identidad SIEMPRE del token verificado (ignora data.userId/username)
       const user = await db.user.findUnique({
-        where: { id: data.userId },
+        where: { id: verified.uid },
         select: { id: true, username: true, avatar: true },
       })
       if (!user) return

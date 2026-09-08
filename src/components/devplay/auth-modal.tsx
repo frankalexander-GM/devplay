@@ -64,6 +64,9 @@ export function AuthModal() {
   const [regCode, setRegCode] = useState('')
   const [regSentTo, setRegSentTo] = useState('')
   const [regResendLoading, setRegResendLoading] = useState(false)
+  // Honeypot anti-bots 🍯: campo invisible pa' humanos. Si llega con contenido
+  // al server, es un bot y se descarta en silencio.
+  const [honeypot, setHoneypot] = useState('')
 
   // ===== Validaciones en tiempo real =====
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail || regEmail)
@@ -239,7 +242,7 @@ export function AuthModal() {
     setLoading(true)
     setErrors([])
     try {
-      const data: any = await authService.register({ email: regEmail, username: regUsername, password: regPassword, fullName: regFullName.trim(), age: ageNum })
+      const data: any = await authService.register({ email: regEmail, username: regUsername, password: regPassword, fullName: regFullName.trim(), age: ageNum, website: honeypot })
       // Paso 1 listo: la cuenta existe → pedir el código enviado al correo 📮
       setRegSentTo(data?.sentTo || 'tu correo')
       setRegCode('')
@@ -620,6 +623,22 @@ export function AuthModal() {
                 onSubmit={handleRegister}
                 className="space-y-4"
               >
+                {/* Honeypot anti-bots 🍯 — invisible pa' humanos (aria-hidden +
+                    tabIndex -1 + truco CSS position absolute fuera de vista).
+                    Los bots de spam rellenan TODOS los inputs automáticamente. */}
+                <div className="absolute left-[-9999px] top-[-9999px]" aria-hidden="true">
+                  <label htmlFor="reg-website">No llenes este campo</label>
+                  <input
+                    id="reg-website"
+                    name="website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+
                 {/* Beneficios */}
                 <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-muted-foreground bg-secondary/40 rounded-md py-2 px-3">
                   <span className="flex items-center gap-1"><Check className="h-3 w-3 text-olive-500" /> Gratis</span>

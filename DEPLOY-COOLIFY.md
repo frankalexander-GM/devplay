@@ -38,13 +38,20 @@ En la sección **Environment Variables**, agrega:
 # Base de datos
 DATABASE_URL=file:/app/db/custom.db
 
-# NextAuth (IMPORTANTE: cambia el secret)
+# NextAuth (OBLIGATORIO — genera uno nuevo, nunca uses el de ejemplo)
 NEXTAUTH_SECRET=tu-secreto-super-largo-y-seguro
 NEXTAUTH_URL=https://tu-dominio.com
 
-# Google OAuth (opcional)
-GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=tu-client-secret
+# 🔐 Secreto compartido con el realtime-service (OBLIGATORIO desde el blindaje)
+# Si no coincide con el del servicio realtime, el chat mundial NO funcionará.
+REALTIME_SECRET=otro-secreto-super-largo-y-seguro
+
+# Correo (registro/recuperación — sin esto el registro no manda códigos)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=devplay.online@gmail.com
+SMTP_PASS=tu-app-password
+MAIL_FROM=DevPlay <devplay.online@gmail.com>
 ```
 
 #### ⚠️ Importante sobre NEXTAUTH_URL
@@ -57,6 +64,13 @@ Ejecuta en tu terminal:
 openssl rand -base64 32
 ```
 Pega el resultado como valor de `NEXTAUTH_SECRET`.
+
+#### 🔐 REALTIME_SECRET y el chat en tiempo real
+El blindaje (tarea 33) dejó el chat mundial autenticado con tokens firmados:
+1. El backend firma con `REALTIME_SECRET` (o `NEXTAUTH_SECRET` si falta)
+2. El realtime-service verifica con el MISMO secreto
+3. Si difieren → el chat da "conectando..." y nunca conecta
+Si el realtime corre como otro servicio en Coolify, ponle la MISMA `REALTIME_SECRET` en sus variables.
 
 ### Paso 4: Configurar Dominio (opcional)
 
@@ -123,14 +137,12 @@ Después del deploy, verifica que funciona:
 - Verifica que `DATABASE_URL` sea correcta
 - Si usas PostgreSQL, asegúrate de que la DB existe
 
-### "Google OAuth no funciona"
-- Verifica que `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` estén configurados
-- En Google Console, agrega la URL de callback:
-  `https://tu-dominio.com/api/auth/callback/google`
-
 ### "El chat no conecta"
 - Verifica que el servicio de realtime esté corriendo
 - Si usas Caddy/nginx, asegúrate de que el puerto 3003 esté accesible
+- **Desde el blindaje**: verifica que `REALTIME_SECRET` sea IDÉNTICA en el
+  backend y en el realtime-service (si difiere, el handshake es rechazado)
+- El chat exige sesión iniciada: los invitados ya no conectan al socket
 
 ### "Build falla"
 - Verifica que el repo tenga el `Dockerfile`

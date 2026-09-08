@@ -10,14 +10,33 @@ import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { createLoginCode, maskEmail } from '@/lib/login-code'
 import { sendMail, verificationCodeEmail } from '@/lib/mailer'
+import { rateLimit, rateLimitByKey, peekRateLimitByKey, tooMany } from '@/lib/rate-limit'
+
+// Bloqueo por cuenta: 15 fallos de contraseña en 15 min → 15 min de descanso
+const FAIL_LIMIT = 15
+const FAIL_WINDOW_MS = 15 * 60_000
 
 export async function POST(req: NextRequest) {
   try {
+    // Anti fuerza bruta 🛡️: máx. 10 intentos por IP cada minuto y máx. 15 fallos
+    // por cuenta cada 15 min (aunque cambien de IP)
+    const rl = rateLimit(req, 'login-challenge', 10, 60_000)
+    if (!rl.ok) return tooMany(rl.retryAfter)
+
     const body = await req.json().catch(() => null)
     const email = String(body?.email || '').trim().toLowerCase()
     const password = String(body?.password || '')
     if (!email || !password) {
       return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
+    }
+
+    const acctRl = rateLimitByKey(`login-acct:${email}`, 15, 15 * 60_000)
+    if (!acctRl.ok) return tooMany(acctRl.retryAfter, 'Demasiados intentos para esta cuenta. Espera 15 minutos plis 🙏')
+
+    // ¿Cuenta bloqueada por fallos recientes? (peek: solo mira, no suma)
+    const peek = peekRateLimitByKey(`login-fail:${email}`, FAIL_LIMIT, FAIL_WINDOW_MS)
+    if (!peek.ok) {
+      return tooMany(peek.retryAfter, 'Cuenta bloqueada temporalmente por intentos fallidos. Espera 15 minutos plis 🙏')
     }
 
     const user = await db.user.findUnique({ where: { email } })
@@ -28,6 +47,8 @@ export async function POST(req: NextRequest) {
 
     const valid = await bcrypt.compare(password, user.passwordHash)
     if (!valid) {
+      // registra el fallo pa' el bloqueo por cuenta (límite 15 en 15 min)
+      rateLimitByKey(`login-fail:${email}`, FAIL_LIMIT, FAIL_WINDOW_MS)
       return NextResponse.json({ error: 'Email o contraseña incorrectos' }, { status: 401 })
     }
 
