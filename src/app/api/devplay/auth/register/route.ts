@@ -16,6 +16,9 @@ const registerSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, 'Solo letras, números y guion bajo'),
   password: z.string().min(6),
+  // Datos de perfil pedidos en el registro (Ley 1581: declaramos la edad — menores de 13 no entran)
+  fullName: z.string().trim().min(3).max(30, 'El nombre de perfil debe tener 3-30 caracteres'),
+  age: z.number().int().min(13, 'Debes tener al menos 13 años para usar DevPlay').max(120),
 })
 
 export async function POST(req: NextRequest) {
@@ -26,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })
     }
 
-    const { email, username, password } = parsed.data
+    const { email, username, password, fullName, age } = parsed.data
 
     const existing = await db.user.findFirst({
       where: { OR: [{ email: email.toLowerCase() }, { username }] },
@@ -41,6 +44,8 @@ export async function POST(req: NextRequest) {
         email: email.toLowerCase(),
         username,
         passwordHash,
+        fullName,
+        age,
         role: 'USER',
       },
     })

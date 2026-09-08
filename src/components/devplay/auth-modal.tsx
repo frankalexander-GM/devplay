@@ -14,7 +14,7 @@ import { authService, userService } from '@/services/devplay-service'
 import { toast } from 'sonner'
 import {
   Eye, EyeOff, Loader2, Mail, Lock, AtSign, Shield,
-  Check, AlertCircle, Users, ArrowRight, ArrowBigUp,
+  Check, AlertCircle, Users, ArrowRight, ArrowBigUp, User, Cake,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ForgotPasswordModal } from '@/components/devplay/forgot-password-modal'
@@ -51,10 +51,11 @@ export function AuthModal() {
   // register state
   const [regEmail, setRegEmail] = useState('')
   const [regUsername, setRegUsername] = useState('')
+  const [regFullName, setRegFullName] = useState('')
+  const [regAge, setRegAge] = useState('')
   const [regPassword, setRegPassword] = useState('')
   const [showRegPass, setShowRegPass] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
-  const [agreeAge, setAgreeAge] = useState(false)
   const [usernameTaken, setUsernameTaken] = useState(false)
   const [checkingUsername, setCheckingUsername] = useState(false)
 
@@ -68,6 +69,9 @@ export function AuthModal() {
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail || regEmail)
   const usernameValid = /^[a-zA-Z0-9_]{3,20}$/.test(regUsername)
   const usernameFree = usernameValid && !checkingUsername && !usernameTaken // disponible de verdad
+  const fullNameValid = /^[\p{L}\p{N}][\p{L}\p{N} .'-]{1,29}$/u.test(regFullName.trim())
+  const ageNum = parseInt(regAge, 10)
+  const ageValid = Number.isInteger(ageNum) && ageNum >= 13 && ageNum <= 120
   const passwordStrength = getPasswordStrength(regPassword)
 
   // ===== Disponibilidad real del nombre de usuario (con espera) =====
@@ -227,14 +231,15 @@ export function AuthModal() {
     if (!usernameValid) newErrors.push({ field: 'regUsername', message: '3-20 caracteres: letras, números y _' })
     else if (usernameTaken) newErrors.push({ field: 'regUsername', message: 'Ese nombre ya está en uso, prueba otro' })
     if (regPassword.length < 6) newErrors.push({ field: 'regPassword', message: 'Mínimo 6 caracteres' })
+    if (!fullNameValid) newErrors.push({ field: 'regFullName', message: 'Escribe tu nombre de perfil (3-30 letras)' })
+    if (!ageValid) newErrors.push({ field: 'regAge', message: regAge && ageNum < 13 ? 'Debes tener al menos 13 años para usar DevPlay' : 'Escribe tu edad (mínimo 13)' })
     if (!agreeTerms) newErrors.push({ field: 'terms', message: 'Debes aceptar los términos' })
-    if (!agreeAge) newErrors.push({ field: 'age', message: 'Debes confirmar que tienes al menos 13 años' })
     if (newErrors.length) { setErrors(newErrors); return }
 
     setLoading(true)
     setErrors([])
     try {
-      const data: any = await authService.register({ email: regEmail, username: regUsername, password: regPassword })
+      const data: any = await authService.register({ email: regEmail, username: regUsername, password: regPassword, fullName: regFullName.trim(), age: ageNum })
       // Paso 1 listo: la cuenta existe → pedir el código enviado al correo 📮
       setRegSentTo(data?.sentTo || 'tu correo')
       setRegCode('')
@@ -675,6 +680,56 @@ export function AuthModal() {
                   ) : null}
                 </FormField>
 
+                {/* Nombre de perfil */}
+                <FormField
+                  label="Nombre de perfil"
+                  icon={User}
+                  error={getFieldError('regFullName')}
+                  success={fullNameValid ? '¡Qué buen nombre!' : undefined}
+                >
+                  <Input
+                    value={regFullName}
+                    onChange={(e) => { setRegFullName(e.target.value); clearFieldError('regFullName') }}
+                    placeholder="¿Cómo quieres que te llamen?"
+                    maxLength={30}
+                    required
+                    autoComplete="name"
+                    className={cn(
+                      'rounded-md pl-10 pr-10 h-11',
+                      getFieldError('regFullName') && 'border-red-500/50 focus-visible:ring-red-500/30',
+                      fullNameValid && 'border-olive-500/50 focus-visible:ring-olive-500/30'
+                    )}
+                  />
+                  {fullNameValid && (
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
+                  )}
+                </FormField>
+
+                {/* Edad — declaración obligatoria (Ley 1581 Art. 7: menores de 13 no) 🎂 */}
+                <FormField
+                  label="Edad"
+                  icon={Cake}
+                  error={getFieldError('regAge')}
+                  success={ageValid ? 'Perfecto' : undefined}
+                >
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    value={regAge}
+                    onChange={(e) => { setRegAge(e.target.value); clearFieldError('regAge') }}
+                    placeholder="Mínimo 13 años"
+                    required
+                    className={cn(
+                      'rounded-md pl-10 pr-10 h-11',
+                      getFieldError('regAge') && 'border-red-500/50 focus-visible:ring-red-500/30',
+                      ageValid && 'border-olive-500/50 focus-visible:ring-olive-500/30'
+                    )}
+                  />
+                  {ageValid && (
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-olive-500" />
+                  )}
+                </FormField>
+
                 {/* Password */}
                 <FormField
                   label="Contraseña"
@@ -731,25 +786,6 @@ export function AuthModal() {
                   </div>
                 )}
 
-                {/* Edad mínima (Ley 1581 Art. 7: datos de menores) 🎂 */}
-                <div>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={agreeAge}
-                      onCheckedChange={(v) => { setAgreeAge(!!v); clearFieldError('age') }}
-                      className="mt-0.5"
-                    />
-                    <span className="text-xs text-muted-foreground leading-relaxed">
-                      Confirmo que tengo <span className="font-medium text-foreground">al menos 13 años</span> (o la edad mínima que exija la ley de mi país)
-                    </span>
-                  </label>
-                  {getFieldError('age') && (
-                    <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" /> {getFieldError('age')}
-                    </p>
-                  )}
-                </div>
-
                 {/* Terms */}
                 <div>
                   <label className="flex items-start gap-2 cursor-pointer">
@@ -773,7 +809,7 @@ export function AuthModal() {
                 {/* Submit */}
                 <Button
                   type="submit"
-                  disabled={loading || !agreeTerms || !agreeAge}
+                  disabled={loading || !agreeTerms}
                   className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
                 >
                   {loading ? (

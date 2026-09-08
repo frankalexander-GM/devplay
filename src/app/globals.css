@@ -507,10 +507,10 @@
 /* Etiqueta editorial en versalitas espaciadas */
 .label-caps {
   font-family: var(--font-bitter), Georgia, serif;
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--muted-foreground);
 }
 

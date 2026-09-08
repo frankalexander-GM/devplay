@@ -11,7 +11,6 @@ import {
   Gamepad2,
   Plus,
   X,
-  Heart,
   TrendingUp,
   Flame,
   Bookmark,
@@ -160,19 +159,23 @@ export function Sidebar() {
                   sidebarCompact ? 'py-1.5' : 'py-2',
                   activeFilter === c.id
                     ? 'nav-active shadow-sm'
-                    : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
+                    : 'hover:bg-secondary/60 text-foreground/90 hover:text-foreground'
                 )}
               >
                 <span className={cn(
-                  'flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+                  'flex shrink-0 items-center justify-center rounded-lg transition',
                   sidebarCompact ? 'h-7 w-7' : 'h-8 w-8',
-                  c.gradient
+                  activeFilter === c.id ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary/10 text-primary'
                 )}>
-                  <c.icon className={sidebarCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+                  <c.icon className={sidebarCompact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} />
                 </span>
                 <div className="min-w-0 flex-1 text-left">
                   <div className="truncate text-sm font-semibold">{c.label}</div>
-                  {!sidebarCompact && <div className="truncate text-[10px] text-muted-foreground">{c.desc}</div>}
+                  {!sidebarCompact && (
+                    <div className={cn('truncate text-[11px]', activeFilter === c.id ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
+                      {c.desc}
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
@@ -229,18 +232,6 @@ export function Sidebar() {
         </div>
         )}
       </nav>
-
-      {/* Card de bienvenida para invitados */}
-      {!canCreate && (
-        <div className="px-3 pb-3">
-          <div className="card-rose rounded-lg p-4 text-center">
-            <Heart className="mx-auto mb-2 h-6 w-6 text-wine-400" />
-            <p className="text-xs text-muted-foreground">
-              Únete a DevPlay para comentar, dar like y seguir a tus devs favoritos
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Usuario abajo (+ rueda de configuración) */}
       {user && (
@@ -405,7 +396,7 @@ function MobileDrawer({
                     <UserAvatar username={user.username} avatar={user.avatar} size="lg" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold">{user.username}</p>
-                      <p className="truncate text-[10px] text-muted-foreground">
+                      <p className="truncate text-[11px] text-muted-foreground">
                         {isGuest ? 'Modo invitado' : 'Ver mi perfil'}
                       </p>
                       {user.tags && user.tags.length > 0 && (
@@ -481,18 +472,18 @@ function MobileDrawer({
                         'group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
                         activeFilter === c.id
                           ? 'nav-active shadow-sm'
-                          : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
+                          : 'hover:bg-secondary/60 text-foreground/90 hover:text-foreground'
                       )}
                     >
                       <span className={cn(
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
-                        c.gradient
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition',
+                        activeFilter === c.id ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary/10 text-primary'
                       )}>
-                        <c.icon className="h-4 w-4" />
+                        <c.icon className="h-[18px] w-[18px]" />
                       </span>
                       <div className="min-w-0 flex-1 text-left">
                         <div className="truncate text-sm font-semibold">{c.label}</div>
-                        <div className="truncate text-[10px] text-muted-foreground">{c.desc}</div>
+                        <div className={cn('truncate text-[11px]', activeFilter === c.id ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{c.desc}</div>
                       </div>
                     </button>
                   ))}
@@ -547,18 +538,12 @@ function MobileDrawer({
             {/* Footer — CTA para invitados */}
             {!canCreate && (
               <div className="border-t border-border/50 p-3">
-                <div className="card-rose rounded-lg p-3 text-center">
-                  <Heart className="mx-auto mb-1.5 h-5 w-5 text-wine-400" />
-                  <p className="text-[11px] text-muted-foreground mb-2">
-                    Únete para comentar, dar like y seguir devs
-                  </p>
-                  <button
-                    onClick={() => { openAuth('register'); onClose() }}
-                    className="btn-gradient-primary w-full rounded-sm py-2 text-xs font-bold"
-                  >
-                    Crear cuenta gratis
-                  </button>
-                </div>
+                <button
+                  onClick={() => { openAuth('register'); onClose() }}
+                  className="btn-gradient-primary w-full rounded-sm py-2.5 text-xs font-bold"
+                >
+                  Crear cuenta gratis
+                </button>
               </div>
             )}
           </motion.aside>
@@ -578,21 +563,21 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
         'group flex w-full items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all',
         active
           ? 'nav-active shadow-sm'
-          : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
+          : 'hover:bg-secondary/60 text-foreground/90 hover:text-foreground'
       )}
     >
       <span
         className={cn(
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary transition',
-          item.gradient,
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition',
+          active ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary/10 text-primary',
           !active && 'opacity-80 group-hover:opacity-100'
         )}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-[22px] w-[22px]" />
       </span>
       <div className="min-w-0 flex-1 text-left">
         <div className="truncate font-semibold text-sm">{item.label}</div>
-        <div className="truncate text-[10px] text-muted-foreground">{item.description}</div>
+        <div className={cn('truncate text-[11px]', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{item.description}</div>
       </div>
       {active && (
         <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
@@ -614,7 +599,7 @@ function QuickAction({ icon: Icon, label, gradient, onClick }: { icon: typeof Pl
       )}>
         <Icon className="h-5 w-5" />
       </span>
-      <span className="text-[11px] font-semibold">{label}</span>
+      <span className="text-xs font-semibold">{label}</span>
     </button>
   )
 }
@@ -632,7 +617,7 @@ function LibraryMini({ icon: Icon, label, gradient, onClick }: { icon: typeof Pl
       )}>
         <Icon className="h-4 w-4" />
       </span>
-      <span className="text-[9px] font-semibold text-center leading-tight">{label}</span>
+      <span className="text-[10px] font-semibold text-center leading-tight">{label}</span>
     </button>
   )
 }
@@ -656,22 +641,26 @@ function NavButton({ item, active, onClick, compact }: { item: NavItem; active: 
         compact ? 'py-1.5' : 'py-2.5',
         active
           ? 'nav-active shadow-sm'
-          : 'hover:bg-secondary/60 text-foreground/80 hover:text-foreground'
+          : 'hover:bg-secondary/60 text-foreground/90 hover:text-foreground'
       )}
     >
       <span
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition',
+          'flex shrink-0 items-center justify-center rounded-lg transition',
           compact ? 'h-7 w-7' : 'h-9 w-9',
-          item.gradient,
+          active ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary/10 text-primary',
           !active && 'opacity-80 group-hover:opacity-100'
         )}
       >
-        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} />
       </span>
       <div className="min-w-0 flex-1 text-left">
         <div className="truncate font-semibold">{item.label}</div>
-        {!compact && <div className="truncate text-[10px] text-muted-foreground">{item.description}</div>}
+        {!compact && (
+          <div className={cn('truncate text-[11px]', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
+            {item.description}
+          </div>
+        )}
       </div>
     </button>
   )
@@ -705,7 +694,7 @@ function CreateButton({
           gradient
         )}
       >
-        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} />
       </span>
       <span className="font-semibold text-sm">{label}</span>
     </button>

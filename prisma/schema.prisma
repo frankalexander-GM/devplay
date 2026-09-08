@@ -30,6 +30,7 @@ model User {
   resetTokenExpiry DateTime?
   // ===== Información personal =====
   fullName     String?
+  age          Int?     // edad declarada al registrarse (mínimo 13 — Ley 1581 Art. 7)
   bio          String?  // hasta 500 caracteres
   avatar       String?
   banner       String?  // foto de portada
