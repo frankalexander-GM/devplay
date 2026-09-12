@@ -120,6 +120,21 @@ DevPlay usa **Supabase (PostgreSQL externo)** — no hay contenedor de DB.
 ### "No llegan correos"
 - `SMTP_USER/SMTP_PASS/MAIL_FROM` correctos (app password de Gmail)
 
+### 🚨 "535 Username and Password not accepted" (Gmail)
+Casi siempre es la app-password: revocada, mal copiada o con espacios.
+
+1. Verifica que el 2FA esté **activo** en la cuenta de Google
+   (myaccount.google.com → Seguridad → Verificación en 2 pasos)
+2. Ve a **myaccount.google.com/apppasswords**
+3. Crea una nueva: nombre `devplay` → **Crear**
+4. Copia la contraseña de **16 caracteres** y pégala en Coolify como
+   `SMTP_PASS` **SIN espacios** (Gmail la muestra como `xxxx xxxx xxxx xxxx`)
+5. `MAIL_FROM` con formato: `DevPlay <devplay.online@gmail.com>`
+6. Guarda y vuelve a desplegar
+
+> 💡 Alternativa si Gmail sigue resistiéndose: un servicio de correo
+> transaccional como **Resend** o **Brevo** (plan gratis, SMTP simple).
+
 ### "Build falla"
 - Mínimo 1GB RAM; el Dockerfile hace build standalone con Bun
 
