@@ -38,8 +38,11 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# ⚠️ oven/bun:1-slim NO trae addgroup/adduser (paquete `adduser`) ni dumb-init:
+#    sin esto el build falla con "/bin/sh: addgroup: not found" (exit 127)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     dumb-init \
+    adduser \
     && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system --gid 1001 nodejs && \
