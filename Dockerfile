@@ -19,6 +19,14 @@ COPY prisma ./prisma/
 RUN bun install --frozen-lockfile
 RUN bunx prisma generate
 
+# Deps del chat mundial (realtime) en árbol PROPIO: el standalone de Next solo
+# incluye lo que la web usa — socket.io NO va trazado y sin esto el chat
+# crashearía al importar. También genera SU cliente Prisma aquí.
+COPY mini-services/realtime-service/package.json ./rt/
+COPY mini-services/realtime-service/bun.lock* ./rt/
+COPY prisma/schema.prisma ./rt/prisma/
+RUN cd rt && bun install && bunx prisma generate --schema prisma/schema.prisma
+
 # ===== Stage 2: Build =====
 FROM oven/bun:1 AS builder
 WORKDIR /app
@@ -58,11 +66,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Realtime (chat mundial :3003) integrado en el MISMO container — modo Dockerfile simple.
-# Sus deps (socket.io, @prisma/client) ya viven en node_modules y el proxy de Next
-# (REALTIME_PROXY_URL) apunta por defecto a http://localhost:3003 ✓
+# El proxy de Next (REALTIME_PROXY_URL) apunta por defecto a http://localhost:3003 ✓
 COPY --from=builder --chown=nextjs:nodejs /app/mini-services/realtime-service/index.ts ./realtime/index.ts
 # El import '../../src/lib/profanity' desde /app/realtime resuelve a /src/lib/profanity
 COPY --from=builder /app/src/lib/profanity.ts /src/lib/profanity.ts
+# Deps propias del realtime (socket.io + @prisma/client YA generado) — node
+# resuelve /app/realtime/node_modules primero, antes que el standalone
+COPY --from=deps --chown=nextjs:nodejs /app/rt/node_modules ./realtime/node_modules
 
 USER nextjs
 
