@@ -354,7 +354,12 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
 
       {/* Beta section */}
       {post.type === 'BETA' && post.beta && (
-        <BetaSection post={post} onDownload={handleBetaDownload} canInteract={canInteract} />
+        <BetaSection
+          post={post}
+          onDownload={handleBetaDownload}
+          canInteract={canInteract}
+          onOpenMedia={(url) => setLightboxMedia({ url, kind: 'image' })}
+        />
       )}
 
       {/* Poll widget */}
@@ -442,7 +447,7 @@ function StreamEmbed({ post }: { post: Post }) {
   )
 }
 
-function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload: () => void; canInteract: boolean }) {
+function BetaSection({ post, onDownload, canInteract, onOpenMedia }: { post: Post; onDownload: () => void; canInteract: boolean; onOpenMedia?: (url: string) => void }) {
   const beta = post.beta!
   const [showDetails, setShowDetails] = useState(false)
 
@@ -458,13 +463,14 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
 
   return (
     <div className="mx-4 mb-3 card-peach rounded-lg overflow-hidden">
-      {/* Carrusel: portada (slide 1) + capturas — con flechas y puntitos */}
+      {/* Carrusel: portada (slide 1) + capturas — IMÁGENES EN GRANDE, clickeables a pantalla completa */}
       {total > 0 && (
-        <div className="relative h-44 sm:h-52 bg-gradient-to-br from-amber-300 to-bronze-400 overflow-hidden">
+        <div className="relative h-64 sm:h-80 bg-gradient-to-br from-amber-300 to-bronze-400 overflow-hidden">
           <img
             src={current}
             alt={beta.title}
-            className="w-full h-full object-contain p-2 transition-opacity duration-200"
+            className="w-full h-full object-contain cursor-zoom-in transition-opacity duration-200"
+            onClick={(e) => { e.stopPropagation(); onOpenMedia?.(current) }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
 
