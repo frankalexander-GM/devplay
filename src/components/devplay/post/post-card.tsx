@@ -42,6 +42,16 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
   const [commentsCount, setCommentsCount] = useState(post.commentsCount)
   const [showShare, setShowShare] = useState(false)
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; kind: 'image' | 'video' } | null>(null)
+
+  // En posts BETA el carrusel ya muestra portada (slide 1) + capturas — el grid
+  // de media de arriba NO debe repetirlas (portada duplicada, bug reportado).
+  // Se filtra en render: los datos de Supabase quedan intactos.
+  const carouselUrls = post.type === 'BETA' && post.beta
+    ? [post.beta.coverImage, ...(post.beta.screenshots ?? [])].filter(Boolean)
+    : null
+  const mediaForGrid = carouselUrls
+    ? post.mediaUrls.filter(m => !carouselUrls.includes(m.url))
+    : post.mediaUrls
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(post.content || '')
   const [editLoading, setEditLoading] = useState(false)
@@ -291,10 +301,10 @@ export function PostCard({ post, onChange }: { post: Post; onChange?: () => void
         </div>
       )}
 
-      {/* Media — clickeable para abrir en grande */}
-      {post.mediaUrls.length > 0 && (
-        <div className={cn('grid gap-1', post.mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2')}>
-          {post.mediaUrls.map((m, i) => (
+      {/* Media — clickeable para abrir en grande (en betas omite portada/capturas del carrusel) */}
+      {mediaForGrid.length > 0 && (
+        <div className={cn('grid gap-1', mediaForGrid.length === 1 ? 'grid-cols-1' : 'grid-cols-2')}>
+          {mediaForGrid.map((m, i) => (
             <div key={i} className="overflow-hidden bg-black/5 cursor-pointer relative group" onClick={() => setLightboxMedia({ url: m.url, kind: m.kind })}>
               {m.kind === 'image' ? (
                 <img src={m.url} alt="" className="w-full max-h-[500px] object-cover" loading="lazy" />
