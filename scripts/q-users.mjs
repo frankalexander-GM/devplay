@@ -1,6 +1,6 @@
 /** SELECT rápido de usuarios. Uso: bun scripts/q-users.mjs <ilike> */
 import pg from 'pg'
-const cs = 'postgresql://postgres.uizpoczewriaxbpsjena:frankalexander2025%40hhpp@aws-0-us-east-2.pooler.supabase.com:6543/postgres'
+const cs = process.env.DATABASE_URL // URL de Supabase — viene del .env (nunca hardcodear)
 const c = new pg.Client({ connectionString: cs, ssl: { rejectUnauthorized: false } })
 await c.connect()
 const pat = process.argv[2] || '%qaB%'

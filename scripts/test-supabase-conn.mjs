@@ -6,7 +6,7 @@
 import pg from 'pg'
 
 const REF = 'uizpoczewriaxbpsjena'
-const PASS_ENC = 'frankalexander2025%40hhpp' // @ codificado
+const PASS_ENC = (process.env.DATABASE_URL || '').match(/://[^:]+:([^@]+)@/)?.[1] || '' // pass sale del .env (nunca hardcodear)
 
 const targets = [
   { name: 'Transaction pooler 6543', host: `aws-0-us-east-2.pooler.supabase.com`, port: 6543, user: `postgres.${REF}` },

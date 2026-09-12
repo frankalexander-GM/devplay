@@ -1,6 +1,6 @@
 /** Verifica que el último mensaje del chat mundial esté en Supabase. Uso: bun scripts/check-chat.mjs [texto] */
 import pg from 'pg'
-const cs = 'postgresql://postgres.uizpoczewriaxbpsjena:frankalexander2025%40hhpp@aws-0-us-east-2.pooler.supabase.com:6543/postgres'
+const cs = process.env.DATABASE_URL // URL de Supabase — viene del .env (nunca hardcodear)
 const c = new pg.Client({ connectionString: cs, ssl: { rejectUnauthorized: false } })
 await c.connect()
 const q = process.argv[2]

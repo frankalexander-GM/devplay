@@ -12,7 +12,7 @@ if (!email || !code || !/^\d{6}$/.test(code)) {
   process.exit(1)
 }
 
-const cs = 'postgresql://postgres.uizpoczewriaxbpsjena:frankalexander2025%40hhpp@aws-0-us-east-2.pooler.supabase.com:6543/postgres'
+const cs = process.env.DATABASE_URL // URL de Supabase — viene del .env (nunca hardcodear)
 const client = new pg.Client({ connectionString: cs, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15000 })
 await client.connect()
 

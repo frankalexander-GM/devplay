@@ -10,7 +10,12 @@
 set -e
 cd "$(dirname "$0")/.."
 
-SUPA_URL='postgresql://postgres.uizpoczewriaxbpsjena:frankalexander2025%40hhpp@aws-0-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=10'
+# ⚠️ La URL de Supabase vive SOLO en el .env (nunca hardcodeada aquí).
+SUPA_URL=$(grep -E '^DATABASE_URL=' .env | head -1 | cut -d= -f2-)
+if [ -z "$SUPA_URL" ]; then
+  echo "❌ No hay DATABASE_URL en .env — restauralo antes de reiniciar (ver worklog, trampa #2)"
+  exit 1
+fi
 
 # Secretos de seguridad (tarea 33) — se leen del .env del repo si existen
 NA_SECRET=$(grep -E '^NEXTAUTH_SECRET=' .env | head -1 | cut -d= -f2-)

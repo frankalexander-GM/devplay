@@ -14,7 +14,7 @@ import pg from 'pg'
 import bcrypt from 'bcryptjs'
 
 const BASE = 'http://localhost:3000'
-const SUPA = 'postgresql://postgres.uizpoczewriaxbpsjena:frankalexander2025%40hhpp@aws-0-us-east-2.pooler.supabase.com:6543/postgres'
+const SUPA = process.env.DATABASE_URL // URL de Supabase — viene del .env (nunca hardcodear)
 
 const STAMP = Date.now().toString(36).slice(-5)
 const A = { email: `qa.a.${STAMP}@example.com`, username: `qaA${STAMP}`, password: 'devplay123' }

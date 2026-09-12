@@ -5,7 +5,7 @@
 import pg from 'pg'
 import { readFileSync } from 'fs'
 
-const cs = 'postgresql://postgres.uizpoczewriaxbpsjena:frankalexander2025%40hhpp@aws-0-us-east-2.pooler.supabase.com:6543/postgres'
+const cs = process.env.DATABASE_URL // URL de Supabase — viene del .env (nunca hardcodear)
 const client = new pg.Client({ connectionString: cs, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 15_000 })
 
 await client.connect()
