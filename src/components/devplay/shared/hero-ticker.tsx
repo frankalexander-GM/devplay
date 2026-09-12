@@ -5,6 +5,7 @@
 // etiqueta fija a la izquierda (★ EN DEVPLAY / ◆ LO MÁS JUGADO)
 // y píldoras de juego pasando por debajo con degradado de salida.
 // Textura de rayas diagonales para el toque de boleto antiguo.
+// ⭐ LAS PÍLDORAS SON CLICABLES: llevan al detalle de la beta.
 // Loop perfecto: el track contiene la MISMA secuencia 2x y la
 // animación mueve translateX(0 → -50%). Pausa al hover (CSS).
 // ═══════════════════════════════════════════════════════════════
@@ -20,14 +21,17 @@ export interface TickerGame {
   downloads?: number
 }
 
-// Píldora de juego — cinta 1 (portada redonda + nombre + chip de versión)
-function Pill({ games }: { games: TickerGame[] }) {
+// Píldora de juego — cinta 1 (portada redonda + nombre + chip de versión). CLICABLE → detalle de la beta
+function Pill({ games, onOpen }: { games: TickerGame[]; onOpen?: (id: string) => void }) {
   return (
     <>
       {games.map((g, i) => (
-        <span
+        <button
           key={`${g.id}-${i}`}
-          className="inline-flex items-center gap-2.5 mx-2.5 whitespace-nowrap rounded-full bg-white/[0.08] border border-[#D9A441]/35 pl-1.5 pr-3.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+          type="button"
+          title={`Ver ${g.title}`}
+          onClick={(e) => { e.stopPropagation(); onOpen?.(g.id) }}
+          className="inline-flex items-center gap-2.5 mx-2.5 whitespace-nowrap rounded-full bg-white/[0.08] border border-[#D9A441]/35 pl-1.5 pr-3.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] cursor-pointer hover:bg-white/[0.16] hover:border-[#D9A441]/70 hover:scale-[1.04] active:scale-[0.97] transition-transform"
         >
           {g.coverImage ? (
             <img
@@ -46,7 +50,7 @@ function Pill({ games }: { games: TickerGame[] }) {
               v{g.version.replace(/^v/i, '')}
             </span>
           )}
-        </span>
+        </button>
       ))}
     </>
   )
@@ -93,7 +97,7 @@ function Label({ text, from }: { text: string; from: string }) {
   )
 }
 
-export function HeroTicker({ games }: { games: TickerGame[] }) {
+export function HeroTicker({ games, onOpenGame }: { games: TickerGame[]; onOpenGame?: (id: string) => void }) {
   const list = games.filter(g => g.title)
   if (list.length === 0) return null
 
@@ -103,13 +107,13 @@ export function HeroTicker({ games }: { games: TickerGame[] }) {
   const seq = Array.from({ length: reps }, () => list).flat()
 
   return (
-    <div aria-hidden className="-mt-1 select-none">
-      {/* Cinta 1 — píldoras con portada + nombre (va hacia la izquierda) */}
+    <div className="-mt-1 select-none">
+      {/* Cinta 1 — píldoras con portada + nombre, CLICABLES (va hacia la izquierda) */}
       <div className="relative overflow-hidden bg-[#40302A] border-y-2 border-[#D9A441]/60">
         <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(217,164,65,0.05)_12px,rgba(217,164,65,0.05)_24px)] pointer-events-none" />
         <div className="ticker-track py-2 relative">
-          <Pill games={seq} />
-          <Pill games={seq} />
+          <Pill games={seq} onOpen={onOpenGame} />
+          <Pill games={seq} onOpen={onOpenGame} />
         </div>
         <Label text="★ En DevPlay" from="#40302A" />
       </div>

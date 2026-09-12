@@ -157,7 +157,7 @@ export function ExploreView() {
       </div>
 
       {/* Cintas de teletipo — los juegos pasando, como en las gacetas retro 🎞️ */}
-      <HeroTicker games={tickerGames} />
+      <HeroTicker games={tickerGames} onOpenGame={(postId) => useUIStore.getState().openPostDetail(postId)} />
 
       {/* ===== DESCUBRIR JUEGOS — siempre arriba, justo bajo el hero, nada la baja ===== */}
       {discoverBetas.length > 0 && (
