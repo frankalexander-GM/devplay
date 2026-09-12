@@ -30,6 +30,8 @@ services:
       - MAIL_FROM=${MAIL_FROM:-DevPlay <devplay.online@gmail.com>}
       # Para avisar al realtime dentro de la red de compose
       - REALTIME_INTERNAL_URL=http://realtime:3004
+      # Reenvío del chat (rewrites de Next leen esto en runtime)
+      - REALTIME_PROXY_URL=http://realtime:3003
     depends_on:
       - realtime
     healthcheck:
@@ -52,7 +54,9 @@ services:
       - REALTIME_SECRET=${REALTIME_SECRET}
       - REALTIME_INTERNAL_HOST=0.0.0.0
     healthcheck:
-      test: ["CMD", "bun", "-e", "const r = await fetch('http://127.0.0.1:3003/'); if (!r.ok) process.exit(1)"]
+      # ⚠️ GET / en engine.io responde 400 "Transport unknown" — el healthcheck
+      # debe ser el HANDSHAKE de socket.io (EIO=4 + transport=polling)
+      test: ["CMD", "bun", "-e", "const r = await fetch('http://127.0.0.1:3003/socket.io/?EIO=4&transport=polling'); if (!r.ok) process.exit(1)"]
       interval: 30s
       timeout: 10s
       start_period: 20s

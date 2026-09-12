@@ -142,27 +142,7 @@ export function ExploreView() {
         </div>
       </div>
 
-      {/* ===== POST COMPOSER ===== */}
-      {user && (
-        <div className="glass-card p-3 flex items-center gap-3">
-          <UserAvatar username={user.username} avatar={user.avatar} size="md" className="shrink-0" />
-          <button
-            onClick={openCreatePost}
-            className="flex-1 text-left text-sm text-muted-foreground rounded-sm bg-secondary/50 px-4 py-2.5 hover:bg-secondary transition italic"
-          >
-            Que estas desarrollando hoy?
-          </button>
-          <div className="flex items-center gap-0.5 shrink-0">
-            <ComposerBtn icon={FileText} label="Publicar" onClick={openCreatePost} />
-            <ComposerBtn icon={Video} label="Video" onClick={openCreatePost} />
-            <ComposerBtn icon={Gamepad2} label="Beta" onClick={openCreateBeta} />
-            <ComposerBtn icon={BarChart3} label="Encuesta" onClick={openCreatePoll} />
-            <ComposerBtn icon={ImagePlus} label="Imagen" onClick={openCreatePost} />
-          </div>
-        </div>
-      )}
-
-      {/* ===== DESCUBRIR JUEGOS ===== */}
+      {/* ===== DESCUBRIR JUEGOS — siempre arriba, justo bajo el hero, nada la baja ===== */}
       {discoverBetas.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2 px-1">
@@ -218,6 +198,26 @@ export function ExploreView() {
                 </motion.button>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ===== POST COMPOSER ===== */}
+      {user && (
+        <div className="glass-card p-3 flex items-center gap-3">
+          <UserAvatar username={user.username} avatar={user.avatar} size="md" className="shrink-0" />
+          <button
+            onClick={openCreatePost}
+            className="flex-1 text-left text-sm text-muted-foreground rounded-sm bg-secondary/50 px-4 py-2.5 hover:bg-secondary transition italic"
+          >
+            Que estas desarrollando hoy?
+          </button>
+          <div className="flex items-center gap-0.5 shrink-0">
+            <ComposerBtn icon={FileText} label="Publicar" onClick={openCreatePost} />
+            <ComposerBtn icon={Video} label="Video" onClick={openCreatePost} />
+            <ComposerBtn icon={Gamepad2} label="Beta" onClick={openCreateBeta} />
+            <ComposerBtn icon={BarChart3} label="Encuesta" onClick={openCreatePoll} />
+            <ComposerBtn icon={ImagePlus} label="Imagen" onClick={openCreatePost} />
           </div>
         </div>
       )}

@@ -54,8 +54,9 @@ interface NavItem {
 }
 
 const MAIN_NAV: NavItem[] = [
-  { id: 'explore', label: 'Inicio', description: 'Feed principal', icon: Home, gradient: 'from-wine-400 to-wine-500' },
+  // Descubrir SIEMPRE arriba — nada la baja de la primera posición
   { id: 'discover', label: 'Descubrir', description: 'Novedades y trending', icon: Sparkles, gradient: 'from-wine-400 to-wine-500' },
+  { id: 'explore', label: 'Inicio', description: 'Feed principal', icon: Home, gradient: 'from-wine-400 to-wine-500' },
   { id: 'betas', label: 'Betas', description: 'Centro de betas', icon: Gamepad2, gradient: 'from-amber-400 to-bronze-500' },
   { id: 'videos', label: 'Videos', description: 'Gameplays y trailers', icon: Video, gradient: 'from-wine-400 to-sepia-500' },
   { id: 'chat', label: 'Chat Mundial', description: 'Chatea con la comunidad', icon: MessageCircle, gradient: 'from-amber-400 to-bronze-500' },

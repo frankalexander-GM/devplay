@@ -37,6 +37,15 @@ const securityHeaders = [
   },
 ];
 
+// Proxy del chat en tiempo real para desarrollo/preview:
+// en producción Caddy enruta ?XTransformPort=3003, pero en dev no hay Caddy.
+// En Docker (Coolify) el web apunta al servicio `realtime` por la red de compose:
+// se configura con REALTIME_PROXY_URL=http://realtime:3003 (ver docker-compose.yml).
+// Socket.io (engine.io) manda siempre el query param EIO — lo reenviamos al
+// mini-servicio de tiempo real. Si el upgrade de websocket no atraviesa el
+// proxy, el cliente hace fallback a polling automáticamente.
+const realtimeProxy = process.env.REALTIME_PROXY_URL || "http://localhost:3003";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   /* config options here */
@@ -57,18 +66,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Proxy del chat en tiempo real para desarrollo/preview:
-  // en producción Caddy enruta ?XTransformPort=3003, pero en dev no hay Caddy.
-  // Socket.io (engine.io) manda siempre el query param EIO — lo reenviamos al
-  // mini-servicio de tiempo real. Si el upgrade de websocket no atraviesa el
-  // proxy, el cliente hace fallback a polling automáticamente.
   async rewrites() {
     return {
       beforeFiles: [
         {
           source: "/:path*",
           has: [{ type: "query", key: "EIO", value: ".*" }],
-          destination: "http://localhost:3003/:path*",
+          destination: `${realtimeProxy}/:path*`,
         },
       ],
       afterFiles: [],

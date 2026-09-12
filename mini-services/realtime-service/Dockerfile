@@ -36,8 +36,10 @@ ENV REALTIME_INTERNAL_HOST=0.0.0.0
 
 EXPOSE 3003
 
-# Healthcheck con bun: el handshake de socket.io responde en /
+# Healthcheck con bun: el HANDSHAKE de socket.io (EIO=4 + transport=polling).
+# ⚠️ GET / a secas en engine.io responde 400 "Transport unknown" → el container
+# quedaría unhealthy aunque el servicio funcione perfecto.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD bun -e "const r = await fetch('http://127.0.0.1:3003/'); if (!r.ok) process.exit(1)" || exit 1
+  CMD bun -e "const r = await fetch('http://127.0.0.1:3003/socket.io/?EIO=4&transport=polling'); if (!r.ok) process.exit(1)" || exit 1
 
 CMD ["bun", "index.ts"]

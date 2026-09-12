@@ -15,6 +15,8 @@ import {
   Trash2,
   Pencil,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MoreVertical,
   Flag,
   Ban,
@@ -434,28 +436,76 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
   const beta = post.beta!
   const [showDetails, setShowDetails] = useState(false)
 
+  // Slides del carrusel (6 en total): PORTADA ARRIBA (slide 1, jamás se quita) + hasta 5 capturas.
+  // GIFs primero entre las capturas. Si la portada está repetida dentro de las screenshots se filtra.
+  const all = (beta.screenshots ?? []).filter(u => u !== beta.coverImage).slice(0, 5)
+  const isGif = (u: string) => u.toLowerCase().includes('.gif')
+  const caps = [...all.filter(isGif), ...all.filter((u) => !isGif(u))]
+  const slides = beta.coverImage ? [beta.coverImage, ...caps] : caps
+  const total = slides.length
+  const [slideIdx, setSlideIdx] = useState(0)
+  const current = slides[Math.min(slideIdx, Math.max(total - 1, 0))]
+
   return (
     <div className="mx-4 mb-3 card-peach rounded-lg overflow-hidden">
-      {/* Cover image */}
-      {beta.coverImage && (
-        <div className="relative h-40 bg-gradient-to-br from-amber-300 to-bronze-400">
-          <img src={beta.coverImage} alt={beta.title} className="w-full h-full object-contain p-2" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between">
-            <div className="text-white">
-              {beta.version && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur px-2 py-0.5 text-[10px] font-bold">
-                  {beta.version}
-                </span>
-              )}
+      {/* Carrusel: portada (slide 1) + capturas — con flechas y puntitos */}
+      {total > 0 && (
+        <div className="relative h-44 sm:h-52 bg-gradient-to-br from-amber-300 to-bronze-400 overflow-hidden">
+          <img
+            src={current}
+            alt={beta.title}
+            className="w-full h-full object-contain p-2 transition-opacity duration-200"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
+
+          {/* Badge de versión (solo en el slide de portada) */}
+          {beta.version && slideIdx === 0 && (
+            <div className="absolute bottom-2 left-3">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur px-2 py-0.5 text-[10px] font-bold text-white">
+                {beta.version}
+              </span>
             </div>
-          </div>
+          )}
+
+          {/* Flechas */}
+          {total > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); setSlideIdx((slideIdx - 1 + total) % total) }}
+                aria-label="Imagen anterior"
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur flex items-center justify-center transition"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setSlideIdx((slideIdx + 1) % total) }}
+                aria-label="Imagen siguiente"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur flex items-center justify-center transition"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              {/* Puntitos */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1">
+                {slides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => { e.stopPropagation(); setSlideIdx(i) }}
+                    aria-label={`Ir a imagen ${i + 1}`}
+                    className={cn(
+                      'h-1.5 rounded-full transition-all',
+                      i === slideIdx ? 'w-3.5 bg-white' : 'w-1.5 bg-white/50 hover:bg-white/80'
+                    )}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
       <div className="p-4">
         <div className="flex items-start gap-3">
-          {!beta.coverImage && (
+          {total === 0 && (
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-accent/30 overflow-hidden relative">
               <span className="text-xl font-black text-primary/50 select-none">
                 {beta.title.charAt(0).toUpperCase()}
@@ -465,7 +515,7 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-bold text-sm truncate">{beta.title}</h3>
-              {beta.version && !beta.coverImage && (
+              {beta.version && total === 0 && (
                 <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold">{beta.version}</span>
               )}
             </div>
@@ -505,24 +555,7 @@ function BetaSection({ post, onDownload, canInteract }: { post: Post; onDownload
           </div>
         </div>
 
-        {/* Screenshots */}
-        {beta.screenshots && beta.screenshots.length > 0 && (
-          <div className="grid grid-cols-3 gap-1.5 mt-3">
-            {beta.screenshots.slice(0, 3).map((s, i) => (
-              <div key={i} className="aspect-video rounded-md overflow-hidden glass">
-                <img src={s} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-            {beta.screenshots.length > 3 && (
-              <button
-                onClick={() => setShowDetails(!showDetails)}
-                className="aspect-video rounded-md glass flex items-center justify-center text-xs font-medium hover:bg-secondary"
-              >
-                +{beta.screenshots.length - 3}
-              </button>
-            )}
-          </div>
-        )}
+        {/* Las capturas se muestran en el carrusel de arriba (portada + hasta 5) */}
 
         {/* Expandir detalles */}
         {(beta.requirements || beta.installInstructions || beta.changelog) && (
