@@ -43,10 +43,6 @@ export function CreateDock() {
           side="top"
           className="w-52 rounded-md mb-1"
         >
-          <DropdownMenuItem onClick={openCreatePost} className="rounded-lg">
-            <FileText className="mr-2 h-4 w-4 text-wine-500" />
-            {t('Publicación')}
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={openCreateBeta} className="rounded-lg">
             <Gamepad className="mr-2 h-4 w-4 text-amber-500" />
             {t('Subir Beta')}

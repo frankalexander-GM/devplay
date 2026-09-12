@@ -13,7 +13,7 @@ import { AD_EVERY_POSTS } from '@/lib/ads'
 import { useUIStore } from '@/lib/stores'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import {
-  Radio, Sparkles, FileText, Gamepad2, Compass, Flame, TrendingUp, Users, Home,
+  Radio, Sparkles, Gamepad2, Compass, Flame, TrendingUp, Users, Home,
   Video, ImagePlus, BarChart3, ArrowRight, Eye,
 } from 'lucide-react'
 import { UserAvatar } from '@/components/devplay/shared/shared'
@@ -224,13 +224,12 @@ export function ExploreView() {
         <div className="glass-card p-3 flex items-center gap-3">
           <UserAvatar username={user.username} avatar={user.avatar} size="md" className="shrink-0" />
           <button
-            onClick={openCreatePost}
+            onClick={openCreateBeta}
             className="flex-1 text-left text-sm text-muted-foreground rounded-sm bg-secondary/50 px-4 py-2.5 hover:bg-secondary transition italic"
           >
-            Que estas desarrollando hoy?
+            Comparte tu juego con la comunidad 🎮
           </button>
           <div className="flex items-center gap-0.5 shrink-0">
-            <ComposerBtn icon={FileText} label="Publicar" onClick={openCreatePost} />
             <ComposerBtn icon={Video} label="Video" onClick={openCreatePost} />
             <ComposerBtn icon={Gamepad2} label="Beta" onClick={openCreateBeta} />
             <ComposerBtn icon={BarChart3} label="Encuesta" onClick={openCreatePoll} />

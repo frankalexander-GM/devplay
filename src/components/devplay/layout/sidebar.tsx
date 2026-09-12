@@ -189,7 +189,6 @@ export function Sidebar() {
           <div>
             <SectionTitle>{t('Crear contenido')}</SectionTitle>
             <div className="space-y-1">
-              <CreateButton icon={FileText} label={t('Nueva publicación')} gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={openCreatePost} />
               <CreateButton icon={Gamepad2} label={t('Subir beta')} gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={openCreateBeta} />
               <CreateButton icon={BarChart3} label={t('Crear encuesta')} gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePoll} />
             </div>
