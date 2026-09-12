@@ -35,6 +35,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
   const [liked, setLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(0)
   const [lightbox, setLightbox] = useState<{ urls: string[]; index: number } | null>(null)
+  const [showAllShots, setShowAllShots] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
 
@@ -73,6 +74,10 @@ export function BetaDetailView({ postId }: { postId: string }) {
 
   const statusMeta = getBetaStatusMeta(beta.betaStatus)
   const screenshots = beta.screenshots ?? []
+  // Algunas betas tienen cientos de capturas: se muestran 6 en grande y el
+  // resto tras un botón (evita un scroll infinito dentro del detalle).
+  const SHOWN_SHOTS = 6
+  const visibleShots = showAllShots ? screenshots : screenshots.slice(0, SHOWN_SHOTS)
   const comments = commentsData?.comments ?? []
   const canInteract = isAuthed && !isGuest
 
@@ -138,7 +143,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
         {/* ===== HERO ===== */}
         <div className="relative">
           {/* Cover background */}
-          <div className={cn('h-40 sm:h-56 relative overflow-hidden bg-gradient-to-br', statusMeta.color)}>
+          <div className={cn('h-48 sm:h-64 relative overflow-hidden bg-gradient-to-br', statusMeta.color)}>
             {beta.coverImage ? (
               <img src={beta.coverImage} alt={beta.title} className="absolute inset-0 w-full h-full object-contain p-3" />
             ) : (
@@ -276,20 +281,44 @@ export function BetaDetailView({ postId }: { postId: string }) {
           </div>
         )}
 
-        {/* ===== Screenshots gallery ===== */}
+        {/* ===== Screenshots gallery — capturas GRANDES y completas (estilo itch.io), nada recortado ===== */}
         {screenshots.length > 0 && (
           <div className="px-4 py-3 border-b border-border/40">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Capturas de pantalla</h3>
-            <div className="flex gap-2 overflow-x-auto custom-scroll pb-1">
-              {screenshots.map((url, idx) => (
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Capturas de pantalla</h3>
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                {screenshots.length} {screenshots.length === 1 ? 'captura' : 'capturas'} · clic para ampliar
+              </span>
+            </div>
+            <div className="space-y-3">
+              {visibleShots.map((url, idx) => (
                 <button
                   key={idx}
                   onClick={() => setLightbox({ urls: screenshots, index: idx })}
-                  className="shrink-0 w-40 h-24 rounded-lg overflow-hidden glass transition"
+                  className="block w-full overflow-hidden rounded-lg glass cursor-zoom-in group relative"
                 >
-                  <img src={url} alt={`Captura ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                  <img
+                    src={url}
+                    alt={`Captura ${idx + 1}`}
+                    className="w-full max-h-[460px] object-contain bg-black/[0.04] transition-transform duration-200 group-hover:scale-[1.01]"
+                    loading="lazy"
+                  />
+                  {/* Número de captura en la esquina */}
+                  <span className="absolute top-2 left-2 rounded-full bg-black/50 backdrop-blur px-2 py-0.5 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition">
+                    {idx + 1} / {screenshots.length}
+                  </span>
                 </button>
               ))}
+              {screenshots.length > SHOWN_SHOTS && !showAllShots && (
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full gap-1.5"
+                  onClick={() => setShowAllShots(true)}
+                >
+                  <Monitor className="h-4 w-4" />
+                  Ver todas las capturas ({screenshots.length})
+                </Button>
+              )}
             </div>
           </div>
         )}

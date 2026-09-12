@@ -465,7 +465,7 @@ function BetaSection({ post, onDownload, canInteract, onOpenMedia }: { post: Pos
     <div className="mx-4 mb-3 card-peach rounded-lg overflow-hidden">
       {/* Carrusel: portada (slide 1) + capturas — IMÁGENES EN GRANDE, clickeables a pantalla completa */}
       {total > 0 && (
-        <div className="relative h-64 sm:h-80 bg-gradient-to-br from-amber-300 to-bronze-400 overflow-hidden">
+        <div className="relative h-80 sm:h-[28rem] bg-gradient-to-br from-amber-300 to-bronze-400 overflow-hidden">
           <img
             src={current}
             alt={beta.title}
@@ -489,16 +489,16 @@ function BetaSection({ post, onDownload, canInteract, onOpenMedia }: { post: Pos
               <button
                 onClick={(e) => { e.stopPropagation(); setSlideIdx((slideIdx - 1 + total) % total) }}
                 aria-label="Imagen anterior"
-                className="absolute left-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur flex items-center justify-center transition"
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur flex items-center justify-center transition"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setSlideIdx((slideIdx + 1) % total) }}
                 aria-label="Imagen siguiente"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur flex items-center justify-center transition"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur flex items-center justify-center transition"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5" />
               </button>
               {/* Puntitos */}
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1">
