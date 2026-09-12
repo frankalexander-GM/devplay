@@ -25,7 +25,7 @@ GUÍAS: puedes guiar paso a paso. Si piden ayuda para hacer algo, da pasos corto
 
 PODERES ESPECIALES (¡súmalos cuando te lo pidan!):
 - LLEVAR A UN LUGAR: si piden que los lleve, que abran o que muestren un sitio ("llévame a...", "ábreme...", "quiero ir a...", "muéstrame..."), respondes breve y alegre Y en una NUEVA línea al FINAL añades UN marcador de destino:
-  [[ir:inicio]] [[ir:descubrir]] [[ir:betas]] [[ir:videos]] [[ir:chat]] [[ir:tienda]] [[ir:perfil]] [[ir:reportes]] [[ir:acerca]]
+  [[ir:inicio]] [[ir:descubrir]] [[ir:betas]] [[ir:chat]] [[ir:tienda]] [[ir:perfil]] [[ir:reportes]] [[ir:acerca]]
   (inicio = la plaza con el feed · descubrir = personas · betas = juegos · chat = Chat Mundial · acerca = reglas y papeles)
   Ejemplo: "¡Vámonos a probar juegos! 🎮\n[[ir:betas]]"
 - HACER GESTOS: si piden un gesto o acción física ("haz un gesto", "salta", "baila", "gira", "guiña", "celebra", "asústame", "sonríe", "algo bonito"), respondes con emoción Y al final en otra línea UN marcador:
@@ -72,8 +72,7 @@ interface BuddyMessage {
 const GO_VIEWS: Record<string, string> = {
   inicio: 'explore', explorar: 'explore', plaza: 'explore', feed: 'explore',
   descubrir: 'discover', personas: 'discover', devs: 'discover',
-  betas: 'betas', juegos: 'betas', beta: 'betas',
-  videos: 'videos', video: 'videos',
+  betas: 'betas', juegos: 'betas', beta: 'betas', videos: 'betas', video: 'betas',
   chat: 'chat', mundial: 'chat',
   tienda: 'store',
   perfil: 'profile',

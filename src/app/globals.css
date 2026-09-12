@@ -761,3 +761,15 @@ body {
 html { scroll-behavior: smooth; }
 
 /* recache 1788399601 */
+
+  /* Cinta de teletipo inversa — segunda fila del hero, va hacia la derecha */
+  .ticker-track-reverse {
+    animation: ticker-scroll-reverse 42s linear infinite;
+  }
+  .ticker-track-reverse:hover {
+    animation-play-state: paused;
+  }
+  @keyframes ticker-scroll-reverse {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+  }

@@ -8,7 +8,6 @@ import { ChatPanel } from '@/components/devplay/layout/chat-panel'
 import { CreateDock } from '@/components/devplay/layout/create-dock'
 import { ExploreView } from '@/components/devplay/views/explore-view'
 import { DiscoverView } from '@/components/devplay/views/discover-view'
-import { VideosView } from '@/components/devplay/views/videos-view'
 import { BetasView } from '@/components/devplay/views/betas-view'
 import { ProfileView } from '@/components/devplay/views/profile-view'
 import { StoreView } from '@/components/devplay/views/store-view'
@@ -32,7 +31,6 @@ const VIEW_TITLES: Record<ViewId, string> = {
   explore: 'Explorar',
   discover: 'Descubrir',
   chat: 'Chat Mundial',
-  videos: 'Videos',
   profile: 'Perfil',
   betas: 'Betas',
   store: 'Tienda',
@@ -112,8 +110,6 @@ export default function Home() {
                   <DiscoverView />
                 ) : currentView === 'chat' ? (
                   <ChatPanel variant="fullview" />
-                ) : currentView === 'videos' ? (
-                  <VideosView />
                 ) : currentView === 'betas' ? (
                   <BetasView />
                 ) : currentView === 'store' ? (

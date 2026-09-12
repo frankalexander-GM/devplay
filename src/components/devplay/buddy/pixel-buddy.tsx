@@ -29,7 +29,7 @@ interface ChatMsg {
 
 type BuddyAction = { type: 'go' | 'gesture'; value: string }
 
-const VALID_VIEWS = new Set<string>(['explore', 'discover', 'chat', 'videos', 'profile', 'betas', 'store', 'about', 'reportes'])
+const VALID_VIEWS = new Set<string>(['explore', 'discover', 'chat', 'profile', 'betas', 'store', 'about', 'reportes'])
 
 type Mood = 'idle' | 'happy' | 'excited' | 'wink' | 'sleepy' | 'dizzy' | 'shocked'
 type Emote = 'none' | 'jump' | 'dance' | 'land' | 'spin'

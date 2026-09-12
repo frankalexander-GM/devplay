@@ -17,6 +17,7 @@ import {
   Video, ImagePlus, BarChart3, ArrowRight, Eye,
 } from 'lucide-react'
 import { UserAvatar } from '@/components/devplay/shared/shared'
+import { HeroTicker } from '@/components/devplay/shared/hero-ticker'
 import { cn } from '@/lib/utils'
 
 type FeedFilter = 'foryou' | 'following' | 'all' | 'trending' | 'devlogs' | 'news'
@@ -68,6 +69,19 @@ export function ExploreView() {
   })
 
   const discoverBetas = (discoverData?.posts ?? []).slice(0, 4)
+
+  // Juegos para las cintas del hero (hasta 12 betas con título)
+  const tickerGames = (discoverData?.posts ?? [])
+    .filter(p => p.beta?.title)
+    .slice(0, 12)
+    .map(p => ({
+      id: p.id,
+      title: p.beta!.title,
+      version: p.beta!.version,
+      genre: p.beta!.genre,
+      coverImage: p.beta!.coverImage,
+      downloads: p.beta!.downloads,
+    }))
 
   const filters: { id: FeedFilter; label: string }[] = [
     { id: 'foryou', label: 'Para ti' },
@@ -141,6 +155,9 @@ export function ExploreView() {
           </motion.div>
         </div>
       </div>
+
+      {/* Cintas de teletipo — los juegos pasando, como en las gacetas retro 🎞️ */}
+      <HeroTicker games={tickerGames} />
 
       {/* ===== DESCUBRIR JUEGOS — siempre arriba, justo bajo el hero, nada la baja ===== */}
       {discoverBetas.length > 0 && (

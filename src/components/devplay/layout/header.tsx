@@ -91,7 +91,7 @@ export function Header() {
     toast(`${n.username} está en vivo ahora mismo`, {
       description: n.title,
       duration: 8000,
-      action: { label: 'Ver', onClick: () => setView('videos') },
+      action: { label: 'Ver', onClick: () => setView('explore') },
     })
     loadNotifs()
   }, [setView, loadNotifs])

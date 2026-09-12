@@ -6,7 +6,6 @@ import {
   Compass,
   Sparkles,
   MessageCircle,
-  Video,
   FileText,
   Gamepad2,
   Plus,
@@ -58,7 +57,6 @@ const MAIN_NAV: NavItem[] = [
   { id: 'discover', label: 'Descubrir', description: 'Novedades y trending', icon: Sparkles, gradient: 'from-wine-400 to-wine-500' },
   { id: 'explore', label: 'Inicio', description: 'Feed principal', icon: Home, gradient: 'from-wine-400 to-wine-500' },
   { id: 'betas', label: 'Betas', description: 'Centro de betas', icon: Gamepad2, gradient: 'from-amber-400 to-bronze-500' },
-  { id: 'videos', label: 'Videos', description: 'Gameplays y trailers', icon: Video, gradient: 'from-wine-400 to-sepia-500' },
   { id: 'chat', label: 'Chat Mundial', description: 'Chatea con la comunidad', icon: MessageCircle, gradient: 'from-amber-400 to-bronze-500' },
   { id: 'store', label: 'Tienda', description: 'Power-ups, avatar y premium', icon: ShoppingBag, gradient: 'from-bronze-400 to-bronze-600' },
 ]
@@ -193,7 +191,6 @@ export function Sidebar() {
             <div className="space-y-1">
               <CreateButton icon={FileText} label={t('Nueva publicación')} gradient="from-wine-400 to-wine-500" compact={sidebarCompact} onClick={openCreatePost} />
               <CreateButton icon={Gamepad2} label={t('Subir beta')} gradient="from-amber-400 to-bronze-500" compact={sidebarCompact} onClick={openCreateBeta} />
-              <CreateButton icon={Video} label={t('Subir video')} gradient="from-wine-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePost} />
               <CreateButton icon={BarChart3} label={t('Crear encuesta')} gradient="from-olive-400 to-sepia-500" compact={sidebarCompact} onClick={openCreatePoll} />
             </div>
           </div>
@@ -435,7 +432,6 @@ function MobileDrawer({
                   <div className="grid grid-cols-2 gap-2">
                     <QuickAction icon={FileText} label={t('Publicar')} gradient="from-wine-400 to-wine-500" onClick={() => { openCreatePost(); onClose() }} />
                     <QuickAction icon={Gamepad2} label={t('Beta')} gradient="from-amber-400 to-bronze-500" onClick={() => { openCreateBeta(); onClose() }} />
-                    <QuickAction icon={Video} label={t('Video')} gradient="from-wine-400 to-sepia-500" onClick={() => { openCreatePost(); onClose() }} />
                     <QuickAction icon={BarChart3} label={t('Encuesta')} gradient="from-olive-400 to-sepia-500" onClick={() => { openCreatePoll(); onClose() }} />
                   </div>
                 </div>

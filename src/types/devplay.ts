@@ -288,7 +288,7 @@ export interface ChatMessage {
 }
 
 // ===== Tipos de Vista (navegación) =====
-export type ViewId = 'explore' | 'discover' | 'chat' | 'videos' | 'profile' | 'betas' | 'store' | 'about' | 'reportes'
+export type ViewId = 'explore' | 'discover' | 'chat' | 'profile' | 'betas' | 'store' | 'about' | 'reportes'
 
 // ===== Tienda =====
 export type StoreCategory = 'powerup' | 'avatar' | 'premium' | 'bundle'
