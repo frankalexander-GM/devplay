@@ -62,3 +62,5 @@ server.log
 /db/*.db-wal
 /tests/
 /examples/
+# Resultados temporales de herramientas
+tool-results/
