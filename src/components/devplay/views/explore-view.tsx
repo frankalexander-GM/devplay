@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { postService } from '@/services/devplay-service'
+import { orderBetasByRichness } from '@/lib/beta-order'
 import { PostCard } from '@/components/devplay/post/post-card'
 import { AdSlot } from '@/components/devplay/shared/ad-slot'
 import { AD_EVERY_POSTS } from '@/lib/ads'
@@ -68,13 +69,15 @@ export function ExploreView() {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 
-  const discoverBetas = (discoverData?.posts ?? []).slice(0, 4)
+  // Descubrir juegos: GIF primero, luego los de más capturas (orden editorial)
+  const discoverBetas = orderBetasByRichness(discoverData?.posts ?? [], (p) => p.beta).slice(0, 4)
 
-  // Juegos para las cintas del hero (hasta 12 betas con título)
-  const tickerGames = (discoverData?.posts ?? [])
-    .filter(p => p.beta?.title)
-    .slice(0, 12)
-    .map(p => ({
+  // Cintas del hero: los juegos 5–16 del orden editorial (los 4 mejores ya
+  // aparecen en grande en la tira "Descubrir juegos" — evita repetirlos aquí)
+  const tickerGames = orderBetasByRichness(discoverData?.posts ?? [], (p) => p.beta)
+    .filter((p) => p.beta?.title)
+    .slice(4, 16)
+    .map((p) => ({
       id: p.id,
       title: p.beta!.title,
       version: p.beta!.version,

@@ -1,14 +1,22 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { AlertTriangle, ArrowLeft, Home, RefreshCw } from 'lucide-react'
 import { RetroScreen, RetroPrimaryButton, RetroSecondaryButton } from '@/components/devplay/shared/retro-screen'
-import { useUIStore } from '@/lib/stores'
 
 /**
  * Página de error de runtime (app/error.tsx) 🌋
  * Cuando un componente explota, esta pantalla bonita lo recoge:
  * "Algo salió mal" + Reintentar + Volver al inicio / atrás.
+ *
+ * ⚠️ Los botones usan navegación DURA (window.location) a propósito:
+ * después de un crash el router de Next puede quedar en mal estado, y
+ * router.push('/') / reset() vuelven a montar el mismo árbol roto —
+ * el usuario los clicaba y "no pasaba nada". Una recarga o navegación
+ * completa SIEMPRE recupera la app, por eso:
+ *  - Reintentar      → recarga completa de la página
+ *  - Volver al inicio → enlace real a "/" (carga completa)
+ *  - Volver atrás    → historial del navegador con red de seguridad a "/"
  */
 export default function ErrorPage({
   error,
@@ -17,8 +25,10 @@ export default function ErrorPage({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  const router = useRouter()
-  const setView = useUIStore((s) => s.setView)
+  // Dejamos rastro del error en consola para poder diagnosticarlo
+  useEffect(() => {
+    console.error('[DevPlay] Error de runtime:', error)
+  }, [error])
 
   return (
     <RetroScreen
@@ -29,20 +39,23 @@ export default function ErrorPage({
       note={error?.digest ? `Código de seguimiento: ${error.digest}` : undefined}
       actions={
         <>
-          <RetroPrimaryButton onClick={reset}>
+          <RetroPrimaryButton onClick={() => window.location.reload()}>
             <RefreshCw className="h-5 w-5" />
             Reintentar
           </RetroPrimaryButton>
-          <RetroSecondaryButton
-            onClick={() => {
-              setView('explore')
-              router.push('/')
-            }}
-          >
+          <RetroSecondaryButton href="/">
             <Home className="h-5 w-5" />
             Volver al inicio
           </RetroSecondaryButton>
-          <RetroSecondaryButton onClick={() => router.back()}>
+          <RetroSecondaryButton
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                window.history.back()
+              } else {
+                window.location.assign('/')
+              }
+            }}
+          >
             <ArrowLeft className="h-5 w-5" />
             Volver atrás
           </RetroSecondaryButton>

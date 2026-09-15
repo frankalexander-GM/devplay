@@ -42,12 +42,6 @@ export function AuthModal() {
   const [rememberMe, setRememberMe] = useState(true)
   const [capsLockOn, setCapsLockOn] = useState(false)
 
-  // Paso 2 del login: código de acceso enviado por correo 🔐
-  const [codeStep, setCodeStep] = useState(false)
-  const [loginCode, setLoginCode] = useState('')
-  const [sentTo, setSentTo] = useState('')
-  const [resendLoading, setResendLoading] = useState(false)
-
   // register state
   const [regEmail, setRegEmail] = useState('')
   const [regUsername, setRegUsername] = useState('')
@@ -142,89 +136,26 @@ export function AuthModal() {
     setLoading(true)
     setErrors([])
     try {
-      // Paso 1: validar credenciales y enviar código al correo 🔐
-      const res = await fetch('/api/devplay/auth/login-challenge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      // Login DIRECTO con email + contraseña — sin código de verificación.
+      // El authorize de NextAuth acepta el camino 2 (contraseña clásica).
+      const res = await signIn('credentials', {
+        email: loginEmail,
+        password: loginPassword,
+        redirect: false,
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setErrors([{ field: 'loginPassword', message: data.error || 'Email o contraseña incorrectos' }])
+      if (res?.error) {
+        setErrors([{ field: 'loginPassword', message: 'Email o contraseña incorrectos' }])
         return
       }
-      setSentTo(data.sentTo || 'tu correo')
-      setCodeStep(true)
-      if (data.demoCode) {
-        toast.info(`Modo demo (sin correo): tu código es ${data.demoCode}`)
-      } else {
-        toast.success(`Código enviado a ${data.sentTo} 📬`)
-      }
+      toast.success('¡Bienvenido de vuelta! 🔓')
+      setLoginEmail(''); setLoginPassword('')
+      await refreshAfterLogin()
+      closeAuth()
     } catch {
       setErrors([{ field: 'loginEmail', message: 'Error de conexión. Intenta de nuevo.' }])
     } finally {
       setLoading(false)
     }
-  }
-
-  async function handleVerifyCode(e: React.FormEvent) {
-    e.preventDefault()
-    if (loginCode.replace(/\D/g, '').length !== 6) {
-      setErrors([{ field: 'loginCode', message: 'Escribe los 6 dígitos del código' }])
-      return
-    }
-    setLoading(true)
-    setErrors([])
-    try {
-      const res = await signIn('credentials', {
-        email: loginEmail,
-        code: loginCode.replace(/\D/g, ''),
-        redirect: false,
-      })
-      if (res?.error) {
-        setErrors([{ field: 'loginCode', message: 'Código incorrecto o expirado. Revisa tu correo.' }])
-        return
-      }
-      toast.success('¡Bienvenido de vuelta! 🔓')
-      setLoginEmail(''); setLoginPassword(''); setLoginCode(''); setCodeStep(false)
-      await refreshAfterLogin()
-      closeAuth()
-    } catch {
-      setErrors([{ field: 'loginCode', message: 'Error de conexión. Intenta de nuevo.' }])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleResendCode() {
-    setResendLoading(true)
-    try {
-      const res = await fetch('/api/devplay/auth/login-challenge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        toast.error(data.error || 'No se pudo reenviar el código')
-        return
-      }
-      setSentTo(data.sentTo || sentTo)
-      setLoginCode('')
-      setErrors([])
-      if (data.demoCode) toast.info(`Modo demo: tu nuevo código es ${data.demoCode}`)
-      else toast.success('Código reenviado 📬')
-    } catch {
-      toast.error('Error de conexión')
-    } finally {
-      setResendLoading(false)
-    }
-  }
-
-  function backToPassword() {
-    setCodeStep(false)
-    setLoginCode('')
-    setErrors([])
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -363,7 +294,7 @@ export function AuthModal() {
           <div className="grid w-full grid-cols-2 gap-1 rounded-lg bg-secondary/50 p-1">
             <button
               type="button"
-              onClick={() => { setActiveTab('login'); setErrors([]); setCodeStep(false); setRegCodeStep(false) }}
+              onClick={() => { setActiveTab('login'); setErrors([]); setRegCodeStep(false) }}
               className={cn(
                 'rounded-md py-2 text-sm font-semibold transition-all',
                 activeTab === 'login'
@@ -375,7 +306,7 @@ export function AuthModal() {
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('register'); setErrors([]); setCodeStep(false); setRegCodeStep(false) }}
+              onClick={() => { setActiveTab('register'); setErrors([]); setRegCodeStep(false) }}
               className={cn(
                 'rounded-md py-2 text-sm font-semibold transition-all',
                 activeTab === 'register'
@@ -392,70 +323,6 @@ export function AuthModal() {
         <div className="px-6 pb-6 pt-4">
           <AnimatePresence mode="wait">
             {activeTab === 'login' ? (
-              codeStep ? (
-                /* ===== Paso 2: código de acceso enviado por correo 🔐 ===== */
-                <motion.form
-                  key="code"
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                  onSubmit={handleVerifyCode}
-                  className="space-y-4"
-                >
-                  <div className="text-center">
-                    <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-sm frame-double bg-secondary">
-                      <Shield className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="font-display font-bold text-lg">Escribe tu código</h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Enviamos un código de 6 dígitos a<br /><b className="text-foreground">{sentTo}</b>
-                    </p>
-                  </div>
-
-                  <FormField label="Código de acceso" icon={Shield} error={getFieldError('loginCode')}>
-                    <Input
-                      value={loginCode}
-                      onChange={(e) => { setLoginCode(e.target.value.replace(/\D/g, '').slice(0, 6)); clearFieldError('loginCode') }}
-                      placeholder="000000"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      required
-                      className="rounded-md pl-10 pr-4 h-12 text-center text-xl font-bold tracking-[0.4em] font-mono"
-                    />
-                  </FormField>
-
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full btn-gradient-primary rounded-md h-11 font-semibold"
-                  >
-                    {loading ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando...</>
-                    ) : (
-                      <>Verificar y entrar <ArrowRight className="ml-2 h-4 w-4" /></>
-                    )}
-                  </Button>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <button
-                      type="button"
-                      onClick={backToPassword}
-                      className="text-muted-foreground hover:text-foreground font-medium"
-                    >
-                      ← Volver
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleResendCode}
-                      disabled={resendLoading}
-                      className="text-primary hover:underline font-medium disabled:opacity-50"
-                    >
-                      {resendLoading ? 'Reenviando…' : 'Reenviar código'}
-                    </button>
-                  </div>
-                </motion.form>
-              ) : (
               <motion.form
                 key="login"
                 initial={{ opacity: 0, x: -10 }}
@@ -548,7 +415,6 @@ export function AuthModal() {
                   )}
                 </Button>
               </motion.form>
-              )
             ) : (
               regCodeStep ? (
                 /* ===== Paso 2 del registro: confirmar correo 🔐 ===== */

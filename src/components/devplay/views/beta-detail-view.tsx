@@ -151,7 +151,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
                 <img src="/logo-devplay.png" alt="DevPlay" className="h-12 w-12 opacity-40" />
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
           </div>
 
           {/* Close button */}
@@ -473,7 +473,7 @@ export function BetaDetailView({ postId }: { postId: string }) {
       />
 
       {/* ===== Lightbox ===== */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {lightbox && (
           <motion.div
             initial={{ opacity: 0 }}

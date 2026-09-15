@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { postService } from '@/services/devplay-service'
+import { orderBetasByRichness } from '@/lib/beta-order'
 import { useUIStore } from '@/lib/stores'
 import { UserAvatar, BetaStatusBadge, formatBytes } from '@/components/devplay/shared/shared'
 import { BETA_STATUSES, getBetaStatusMeta, type BetaStatus } from '@/types/devplay'
@@ -34,7 +35,8 @@ export function BetasView() {
     refetchInterval: false,
   })
 
-  const allBetas = data?.posts ?? []
+  // Orden editorial: juegos con GIF de primeros, luego los de más capturas
+  const allBetas = orderBetasByRichness(data?.posts ?? [], (p) => p.beta)
 
   // Apply filters
   const filtered = allBetas.filter(post => {

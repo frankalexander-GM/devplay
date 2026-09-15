@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { discoverService, followService, postService } from '@/services/devplay-service'
+import { orderBetasByRichness, betaHasGif } from '@/lib/beta-order'
 import { PostCard } from '@/components/devplay/post/post-card'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useUIStore } from '@/lib/stores'
@@ -16,6 +17,7 @@ import {
   Sparkles, TrendingUp, Users, Flame, ArrowRight, Gamepad2,
   Hash, Clock, Heart, MessageCircle, Download, RefreshCw, UserPlus, UserCheck,
   Star, Eye, Share2, Swords, Palette, Ghost, Puzzle, Cpu, Joystick, Compass,
+  Clapperboard, Images,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -35,7 +37,7 @@ export function DiscoverView() {
   const { user, isAuthed, isGuest } = useCurrentUser()
   const { openProfile, openPostDetail } = useUIStore()
   const qc = useQueryClient()
-  const [filter, setFilter] = useState<SortFilters>('popular')
+  const [filter, setFilter] = useState<SortFilter>('popular')
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['discover'],
@@ -57,7 +59,25 @@ export function DiscoverView() {
     queryFn: () => postService.list({ type: 'BETA' }),
     staleTime: 5 * 60 * 1000,
   })
-  const vitrinaBetas = (vitrinaData?.posts ?? []).slice(0, 6)
+  const vitrinaBetas = useMemo(
+    () => orderBetasByRichness(vitrinaData?.posts ?? [], (p) => p.beta),
+    [vitrinaData]
+  )
+
+  // ===== Kiosco de juegos 🎪 — parrilla interactiva con filtro por género =====
+  const [kioscoGenre, setKioscoGenre] = useState<string>('todos')
+  const kioscoGenres = useMemo(
+    () => Array.from(new Set(vitrinaBetas.map((p) => p.beta?.genre).filter(Boolean))) as string[],
+    [vitrinaBetas]
+  )
+  const kioscoGames = useMemo(
+    () =>
+      (kioscoGenre === 'todos'
+        ? vitrinaBetas
+        : vitrinaBetas.filter((p) => p.beta?.genre === kioscoGenre)
+      ).slice(0, 12),
+    [vitrinaBetas, kioscoGenre]
+  )
   const isBlankSlate = trending.length === 0 && recommendedUsers.length === 0 && popularBetas.length === 0
 
   // Apply filter to recent posts
@@ -70,7 +90,7 @@ export function DiscoverView() {
     }
   })
 
-  const filters: { id: SortFilters; label: string; icon: any }[] = [
+  const filters: { id: SortFilter; label: string; icon: any }[] = [
     { id: 'recent', label: 'Recientes', icon: Clock },
     { id: 'popular', label: 'Populares', icon: Flame },
     { id: 'commented', label: 'Comentados', icon: MessageCircle },
@@ -142,32 +162,65 @@ export function DiscoverView() {
             </DiscoverSection>
           )}
 
-          {/* 🕹️ Betas en vitrina — respaldo con betas reales */}
-          {popularBetas.length === 0 && vitrinaBetas.length > 0 && (
+          {/* 🎪 Kiosco de juegos — GIF de primeros, luego los de más capturas */}
+          {vitrinaBetas.length > 0 && (
             <DiscoverSection
               icon={Gamepad2}
-              title="Betas en vitrina"
+              title="Kiosco de juegos"
               gradient="from-amber-400 to-bronze-500"
             >
-              <p className="text-xs text-muted-foreground italic mb-3 -mt-1">
-                Lo último que la comunidad ha puesto en escaparate
+              <p className="text-xs text-muted-foreground italic mb-2 -mt-1">
+                Los que traen GIF (mini-video) van de primeros 🎞️ — toca una etiqueta para filtrar
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {vitrinaBetas.map((post, i) => {
+              {/* Chips de género — filtro en vivo */}
+              <div className="flex gap-1.5 overflow-x-auto custom-scroll pb-2 mb-2">
+                {['todos', ...kioscoGenres].map((g) => {
+                  const active = kioscoGenre === g
+                  const count = g === 'todos'
+                    ? vitrinaBetas.length
+                    : vitrinaBetas.filter((p) => p.beta?.genre === g).length
+                  return (
+                    <button
+                      key={g}
+                      onClick={() => setKioscoGenre(g)}
+                      className={cn(
+                        'shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition border',
+                        active
+                          ? 'btn-gradient-primary border-transparent text-white shadow-sm'
+                          : 'glass text-muted-foreground hover:text-foreground hover:border-primary/40'
+                      )}
+                    >
+                      {g === 'todos' ? 'Todos' : g}
+                      <span className={cn('ml-1', active ? 'text-white/80' : 'opacity-60')}>{count}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                {kioscoGames.map((post, i) => {
                   const beta = post.beta
                   if (!beta) return null
+                  const gif = betaHasGif(beta.screenshots)
+                  const shots = (beta.screenshots ?? []).length
                   return (
                     <motion.button
                       key={post.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.05 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(i * 0.04, 0.4) }}
                       onClick={() => openPostDetail(post.id)}
-                      className="glass-card overflow-hidden text-left transition"
+                      className="glass-card frame-double overflow-hidden text-left group cursor-pointer"
+                      whileHover={{ y: -3 }}
+                      whileTap={{ scale: 0.97 }}
                     >
                       <div className="aspect-video bg-gradient-to-br from-primary/15 to-accent/25 relative overflow-hidden">
                         {beta.coverImage ? (
-                          <img src={beta.coverImage} alt="" className="absolute inset-0 w-full h-full object-contain p-2" />
+                          <img
+                            src={beta.coverImage}
+                            alt={beta.title}
+                            loading="lazy"
+                            className="absolute inset-0 w-full h-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.05]"
+                          />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <span className="text-3xl font-black text-primary/40 select-none">
@@ -175,23 +228,51 @@ export function DiscoverView() {
                             </span>
                           </div>
                         )}
+                        {/* Insignias: GIF (mini-video) y nº de capturas */}
+                        <div className="absolute top-1.5 left-1.5 flex gap-1">
+                          {gif && (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-wine-600/90 px-1.5 py-0.5 text-[8px] font-black text-white uppercase tracking-wide shadow">
+                              <Clapperboard className="h-2.5 w-2.5" /> GIF
+                            </span>
+                          )}
+                          {shots > 1 && (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-black/55 backdrop-blur px-1.5 py-0.5 text-[8px] font-bold text-white">
+                              <Images className="h-2.5 w-2.5" /> {shots}
+                            </span>
+                          )}
+                        </div>
+                        {beta.version && (
+                          <span className="absolute top-1.5 right-1.5 rounded-full bg-black/55 backdrop-blur px-1.5 py-0.5 text-[8px] font-bold text-white">
+                            {beta.version}
+                          </span>
+                        )}
                       </div>
-                      <div className="p-3">
-                        <p className="text-sm font-bold truncate">{beta.title}</p>
+                      <div className="p-2.5">
+                        <p className="text-xs font-bold truncate group-hover:text-primary transition-colors">{beta.title}</p>
                         <p className="text-[10px] text-muted-foreground truncate">@{post.author.username}</p>
-                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-0.5"><Download className="h-3 w-3" /> {beta.downloads}</span>
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           {beta.genre && (
-                            <span className="rounded-sm bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
+                            <span className="rounded-sm bg-wine-100 dark:bg-wine-500/20 px-1.5 py-0.5 text-[9px] font-semibold text-wine-700 dark:text-wine-300">
                               {beta.genre}
                             </span>
                           )}
+                          <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                            <Download className="h-2.5 w-2.5" /> {beta.downloads}
+                          </span>
                         </div>
                       </div>
                     </motion.button>
                   )
                 })}
               </div>
+              {vitrinaBetas.length > 12 && (
+                <button
+                  onClick={() => useUIStore.getState().setView('betas')}
+                  className="mt-3 w-full rounded-sm border border-border/60 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition flex items-center justify-center gap-1.5"
+                >
+                  Ver los {vitrinaBetas.length} juegos en el Centro de Betas <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              )}
             </DiscoverSection>
           )}
 
@@ -254,47 +335,9 @@ export function DiscoverView() {
             </DiscoverSection>
           )}
 
-          {/* Betas populares */}
-          {popularBetas.length > 0 && (
-            <DiscoverSection
-              icon={Gamepad2}
-              title="Betas populares"
-              gradient="from-amber-400 to-bronze-500"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {popularBetas.map((beta, i) => (
-                  <motion.button
-                    key={beta.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => openPostDetail(beta.id)}
-                    className="glass-card card-peach p-4 text-left transition"
-                  >
-                    <div className="flex items-start gap-2 mb-2">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-bronze-500 text-white">
-                        <Gamepad2 className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold truncate">{beta.title}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">@{beta.author.username}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{beta.description}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      <span className="flex items-center gap-0.5"><Download className="h-3 w-3" /> {beta.downloads}</span>
-                      <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" /> {beta.likesCount}</span>
-                      {beta.genre && (
-                        <span className="rounded-sm bg-wine-100 px-1.5 py-0.5 font-medium text-wine-700 dark:bg-wine-500/20 dark:text-wine-300">
-                          {beta.genre}
-                        </span>
-                      )}
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </DiscoverSection>
-          )}
+          {/* (Betas populares retirada: el Kiosco de juegos ya muestra
+              todos los juegos ordenados — evita repetir el mismo juego dos
+              veces en la misma página) */}
 
           {/* 🏷️ Tags populares */}
           {popularTags.length > 0 && (

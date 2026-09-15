@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, Gamepad2, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,15 +18,25 @@ const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
 
 export default function NotFound() {
   const setView = useUIStore((s) => s.setView)
-  const router = useRouter()
   const reduceMotion = useReducedMotion()
 
   const handleGoHome = () => {
     // Update SPA view state (in case the user was already on "/")
     setView('explore')
-    // Also navigate to "/" — this handles the common case where the 404
-    // was reached via a direct URL (e.g. /some-broken-route).
-    router.push('/')
+    // Navegación DURA a "/": a diferencia de router.push(), una carga
+    // completa siempre funciona — incluso si el router quedó en mal estado
+    // o la página se abrió directamente en una URL rota.
+    window.location.assign('/')
+  }
+
+  const handleGoBack = () => {
+    // Historial del navegador con red de seguridad: si no hay dónde volver,
+    // nos lleva al inicio en vez de no hacer nada.
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back()
+    } else {
+      window.location.assign('/')
+    }
   }
 
   return (
@@ -251,7 +260,7 @@ export default function NotFound() {
             </Button>
             {/* Volver a la página anterior 🡐 */}
             <Button
-              onClick={() => router.back()}
+              onClick={handleGoBack}
               variant="outline"
               className="h-11 px-6 text-base gap-2 w-full sm:w-auto"
               size="lg"

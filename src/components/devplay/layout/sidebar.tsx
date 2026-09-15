@@ -10,14 +10,11 @@ import {
   Gamepad2,
   Plus,
   X,
-  TrendingUp,
-  Flame,
   Bookmark,
   Library,
   HelpCircle,
   Info,
   Award,
-  Users,
   Home,
   BarChart3,
   ShoppingBag,
@@ -32,7 +29,6 @@ import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { UserAvatar, UserTags } from '@/components/devplay/shared/shared'
 import type { ViewId } from '@/types/devplay'
-import { useState } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,13 +57,6 @@ const MAIN_NAV: NavItem[] = [
   { id: 'store', label: 'Tienda', description: 'Power-ups, avatar y premium', icon: ShoppingBag, gradient: 'from-bronze-400 to-bronze-600' },
 ]
 
-// Vistas rápidas de comunidad (filtros del feed)
-const COMMUNITY_ITEMS = [
-  { id: 'trending' as const, label: 'Trending', desc: 'Lo más popular', icon: Flame, gradient: 'from-wine-400 to-bronze-400' },
-  { id: 'betas' as const, label: 'Betas', desc: 'Solo betas', icon: Gamepad2, gradient: 'from-amber-400 to-bronze-500' },
-  { id: 'devs' as const, label: 'Devs', desc: 'Desarrolladores top', icon: Users, gradient: 'from-wine-400 to-wine-400' },
-]
-
 export function Sidebar() {
   const { t } = useT()
   const {
@@ -81,7 +70,6 @@ export function Sidebar() {
     closeMobileSidebar,
     onboardingDone,
     setOnboardingDone,
-    setCommunityTab,
     startTour,
     openSettings,
   } = useUIStore()
@@ -89,29 +77,7 @@ export function Sidebar() {
 
   const canCreate = isAuthed && !isGuest
 
-  const { sidebarCompact, hideCommunity, hideHelp } = useUIStore()
-
-  const [activeFilter, setActiveFilter] = useState<string | null>(null)
-
-  // Filtros de comunidad con destino real:
-  // - trending → feed de Inicio con pestaña "Trending" (orden por interacciones)
-  // - betas    → vista Betas (centro de betas)
-  // - devs     → vista Descubrir ( devs a seguir + follow )
-  function handleCommunityClick(id: string) {
-    if (id === 'trending') {
-      setCommunityTab('trending')
-      setView('explore')
-    } else if (id === 'betas') {
-      setActiveFilter(null)
-      setView('betas')
-    } else if (id === 'devs') {
-      setActiveFilter(null)
-      setView('discover')
-    } else {
-      setActiveFilter(id)
-      setView('explore')
-    }
-  }
+  const { sidebarCompact, hideHelp } = useUIStore()
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
@@ -140,51 +106,13 @@ export function Sidebar() {
                 item={item}
                 active={currentView === item.id}
                 compact={sidebarCompact}
-                onClick={() => { setView(item.id); setActiveFilter(null) }}
+                onClick={() => setView(item.id)}
               />
             ))}
           </div>
         </div>
 
-        {/* ===== Sección 2: Comunidad (filtros rápidos) — ocultable ===== */}
-        {!hideCommunity && (
-        <div>
-          <SectionTitle>{t('Comunidad')}</SectionTitle>
-          <div className="space-y-1">
-            {COMMUNITY_ITEMS.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => handleCommunityClick(c.id)}
-                className={cn(
-                  'group flex w-full items-center gap-3 rounded-md px-3 text-sm font-medium transition-all',
-                  sidebarCompact ? 'py-1.5' : 'py-2',
-                  activeFilter === c.id
-                    ? 'nav-active shadow-sm'
-                    : 'hover:bg-secondary/60 text-foreground/90 hover:text-foreground'
-                )}
-              >
-                <span className={cn(
-                  'flex shrink-0 items-center justify-center rounded-lg transition',
-                  sidebarCompact ? 'h-7 w-7' : 'h-8 w-8',
-                  activeFilter === c.id ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary/10 text-primary'
-                )}>
-                  <c.icon className={sidebarCompact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} />
-                </span>
-                <div className="min-w-0 flex-1 text-left">
-                  <div className="truncate text-sm font-semibold">{t(c.label)}</div>
-                  {!sidebarCompact && (
-                    <div className={cn('truncate text-[11px]', activeFilter === c.id ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-                      {t(c.desc)}
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-        )}
-
-        {/* ===== Sección 3: Crear (logueados) ===== */}
+        {/* ===== Sección 2: Crear (logueados) ===== */}
         {canCreate && (
           <div>
             <SectionTitle>{t('Crear contenido')}</SectionTitle>
@@ -195,7 +123,7 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* ===== Sección 4: Biblioteca (logueados) ===== */}
+        {/* ===== Sección 3: Biblioteca (logueados) ===== */}
         {canCreate && (
           <div>
             <SectionTitle>{t('Mi biblioteca')}</SectionTitle>
@@ -208,7 +136,7 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* ===== Sección 5: Ayuda — ocultable ===== */}
+        {/* ===== Sección 4: Ayuda — ocultable ===== */}
         {!hideHelp && (
         <div>
           <SectionTitle>{t('Ayuda')}</SectionTitle>
@@ -278,9 +206,7 @@ export function Sidebar() {
         isAuthed={isAuthed}
         isGuest={isGuest}
         canCreate={canCreate}
-        activeFilter={activeFilter}
         setView={setView}
-        setActiveFilter={setActiveFilter}
         openProfile={openProfile}
         openCreatePost={openCreatePost}
         openCreateBeta={openCreateBeta}
@@ -301,9 +227,7 @@ interface MobileDrawerProps {
   isAuthed: boolean
   isGuest: boolean
   canCreate: boolean
-  activeFilter: string | null
   setView: (v: ViewId) => void
-  setActiveFilter: (s: string | null) => void
   openProfile: (id: string, tab?: string) => void
   openCreatePost: () => void
   openCreateBeta: () => void
@@ -314,33 +238,17 @@ interface MobileDrawerProps {
 
 function MobileDrawer({
   open, onClose, currentView, user, isAuthed, isGuest, canCreate,
-  activeFilter, setView, setActiveFilter, openProfile,
+  setView, openProfile,
   openCreatePost, openCreateBeta, openCreatePoll, openAuth, setOnboardingDone,
 }: MobileDrawerProps) {
+  const { t } = useT()
+
   function handleNav(view: ViewId) {
     setView(view)
-    setActiveFilter(null)
     onClose()
   }
 
-  function handleCommunity(id: string) {
-    if (id === 'trending') {
-      useUIStore.getState().setCommunityTab('trending')
-      setView('explore')
-    } else if (id === 'betas') {
-      setActiveFilter(null)
-      setView('betas')
-    } else if (id === 'devs') {
-      setActiveFilter(null)
-      setView('discover')
-    } else {
-      setActiveFilter(id)
-      setView('explore')
-    }
-    onClose()
-  }
-
-  const { hideCommunity, hideHelp } = useUIStore()
+  const { hideHelp } = useUIStore()
 
   return (
     <AnimatePresence>
@@ -456,38 +364,6 @@ function MobileDrawer({
                   ))}
                 </div>
               </div>
-
-              {/* Comunidad — ocultable desde opciones */}
-              {!hideCommunity && (
-              <div>
-                <SectionTitle>{t('Comunidad')}</SectionTitle>
-                <div className="space-y-1">
-                  {COMMUNITY_ITEMS.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => handleCommunity(c.id)}
-                      className={cn(
-                        'group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
-                        activeFilter === c.id
-                          ? 'nav-active shadow-sm'
-                          : 'hover:bg-secondary/60 text-foreground/90 hover:text-foreground'
-                      )}
-                    >
-                      <span className={cn(
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition',
-                        activeFilter === c.id ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-primary/10 text-primary'
-                      )}>
-                        <c.icon className="h-[18px] w-[18px]" />
-                      </span>
-                      <div className="min-w-0 flex-1 text-left">
-                        <div className="truncate text-sm font-semibold">{t(c.label)}</div>
-                        <div className={cn('truncate text-[11px]', activeFilter === c.id ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{t(c.desc)}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              )}
 
               {/* Biblioteca */}
               {canCreate && (
@@ -706,7 +582,6 @@ function SidebarOptionsButton() {
   const { t } = useT()
   const {
     sidebarCompact, setSidebarCompact,
-    hideCommunity, setHideCommunity,
     hideHelp, setHideHelp,
     resetSidebarPrefs,
   } = useUIStore()
@@ -735,14 +610,6 @@ function SidebarOptionsButton() {
           className="gap-2 rounded-lg text-xs"
         >
           {t('Modo compacto')}
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={hideCommunity}
-          onCheckedChange={(v) => setHideCommunity(v === true)}
-          onSelect={(e) => e.preventDefault()}
-          className="gap-2 rounded-lg text-xs"
-        >
-          {t('Ocultar sección Comunidad')}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={hideHelp}
